@@ -33,7 +33,7 @@ export default function CloakPrivacyAnimation() {
         <div className="flex justify-between items-center px-4">
           <div className="w-1/3 text-center">
             <motion.div
-              className="text-sm font-medium text-black"
+              className="text-sm font-medium text-primary"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: [0, 1, 1, 0], y: [-10, 0, 0, -10] }}
               transition={{
@@ -47,7 +47,7 @@ export default function CloakPrivacyAnimation() {
           </div>
           <div className="w-1/3 text-center">
             <motion.div
-              className="text-sm font-medium text-black"
+              className="text-sm font-medium text-primary"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: [0, 1, 1, 0], y: [-10, 0, 0, -10] }}
               transition={{
@@ -61,7 +61,7 @@ export default function CloakPrivacyAnimation() {
           </div>
           <div className="w-1/3 text-center">
             <motion.div
-              className="text-sm font-medium text-black"
+              className="text-sm font-medium text-primary"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: [0, 1, 1, 0], y: [-10, 0, 0, -10] }}
               transition={{

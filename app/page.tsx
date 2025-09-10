@@ -260,7 +260,138 @@ export default function CloakLandingPage() {
         {/* Hero Section */}
         <section className="w-full py-20 md:py-32 lg:py-40 overflow-hidden">
           <div className="container px-4 md:px-6 relative">
-            <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-black bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1f1f1f_1px,transparent_1px),linear-gradient(to_bottom,#1f1f1f_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]"></div>
+            {/* Animated Lines Background */}
+            <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-black [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]">
+              {/* Horizontal scanning lines */}
+              {[...Array(12)].map((_, i) => (
+                <motion.div
+                  key={`h-${i}`}
+                  className="absolute left-0 w-full h-px bg-gradient-to-r from-transparent via-primary to-transparent"
+                  style={{
+                    top: `${8 + i * 8}%`,
+                  }}
+                  animate={{
+                    opacity: [0, 0.8, 0],
+                    scaleX: [0, 1, 0],
+                  }}
+                  transition={{
+                    duration: 2.5,
+                    repeat: Infinity,
+                    delay: i * 0.3,
+                    ease: "easeInOut",
+                  }}
+                />
+              ))}
+
+              {/* Vertical scanning lines */}
+              {[...Array(8)].map((_, i) => (
+                <motion.div
+                  key={`v-${i}`}
+                  className="absolute top-0 w-px h-full bg-gradient-to-b from-transparent via-primary to-transparent"
+                  style={{
+                    left: `${12.5 + i * 12.5}%`,
+                  }}
+                  animate={{
+                    opacity: [0, 0.6, 0],
+                    scaleY: [0, 1, 0],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    delay: i * 0.4,
+                    ease: "easeInOut",
+                  }}
+                />
+              ))}
+
+              {/* Additional diagonal lines */}
+              {[...Array(6)].map((_, i) => (
+                <motion.div
+                  key={`d1-${i}`}
+                  className="absolute w-full h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent"
+                  style={{
+                    top: `${15 + i * 15}%`,
+                    transform: `rotate(${15 + i * 10}deg)`,
+                    transformOrigin: "left center",
+                  }}
+                  animate={{
+                    opacity: [0, 0.7, 0],
+                    scaleX: [0, 1, 0],
+                  }}
+                  transition={{
+                    duration: 2.8,
+                    repeat: Infinity,
+                    delay: i * 0.6,
+                    ease: "easeInOut",
+                  }}
+                />
+              ))}
+
+              {/* Reverse diagonal lines */}
+              {[...Array(6)].map((_, i) => (
+                <motion.div
+                  key={`d2-${i}`}
+                  className="absolute w-full h-px bg-gradient-to-l from-transparent via-primary/60 to-transparent"
+                  style={{
+                    top: `${20 + i * 12}%`,
+                    transform: `rotate(${-15 - i * 8}deg)`,
+                    transformOrigin: "right center",
+                  }}
+                  animate={{
+                    opacity: [0, 0.5, 0],
+                    scaleX: [0, 1, 0],
+                  }}
+                  transition={{
+                    duration: 3.2,
+                    repeat: Infinity,
+                    delay: i * 0.5,
+                    ease: "easeInOut",
+                  }}
+                />
+              ))}
+
+              {/* Diagonal scan effect */}
+              <motion.div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(45deg, transparent 48%, #3D146E 50%, transparent 52%)",
+                  backgroundSize: "4rem 4rem",
+                }}
+                animate={{
+                  backgroundPosition: ["0% 0%", "100% 100%"],
+                  opacity: [0, 0.2, 0],
+                }}
+                transition={{
+                  duration: 10,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+              />
+
+              {/* Floating particles */}
+              {[...Array(8)].map((_, i) => (
+                <motion.div
+                  key={`p-${i}`}
+                  className="absolute w-1 h-1 bg-primary/60 rounded-full"
+                  style={{
+                    left: `${10 + i * 12}%`,
+                    top: `${20 + (i % 4) * 20}%`,
+                  }}
+                  animate={{
+                    y: [-30, 30, -30],
+                    opacity: [0.2, 0.8, 0.2],
+                    scale: [0.5, 1.5, 0.5],
+                  }}
+                  transition={{
+                    duration: 4 + i * 0.3,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: i * 0.4,
+                  }}
+                />
+              ))}
+            </div>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -283,41 +414,85 @@ export default function CloakLandingPage() {
                 maintaining lightning-fast speed and reliability.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button
-                  size="lg"
-                  className="rounded-full h-12 px-8 text-base bg-primary hover:bg-primary/90 text-primary-foreground"
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  Send Privately
-                  <ArrowRight className="ml-2 size-4" />
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="rounded-full h-12 px-8 text-base border-primary/20 hover:bg-primary/5 bg-transparent text-foreground"
+                  <Button
+                    size="lg"
+                    className="rounded-full h-12 px-8 text-base bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
+                    Send Privately
+                    <motion.div
+                      animate={{ x: [0, 4, 0] }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    >
+                      <ArrowRight className="ml-2 size-4" />
+                    </motion.div>
+                  </Button>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  Learn More
-                </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="rounded-full h-12 px-8 text-base border-primary/20 hover:bg-primary/5 bg-transparent text-foreground"
+                  >
+                    Learn More
+                  </Button>
+                </motion.div>
               </div>
-              <div className="flex items-center justify-center gap-6 mt-6 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Shield className="size-4 text-primary" />
-                  <span>Fully Private</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Zap className="size-4 text-primary" />
-                  <span>Solana Speed</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Receipt className="size-4 text-primary" />
-                  <span>Verifiable</span>
-                </div>
-              </div>
+              <motion.div
+                className="flex items-center justify-center gap-6 mt-6 text-sm text-muted-foreground"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                {[
+                  { icon: Shield, text: "Fully Private" },
+                  { icon: Zap, text: "Solana Speed" },
+                  { icon: Receipt, text: "Verifiable" },
+                ].map((item, index) => (
+                  <motion.div
+                    key={item.text}
+                    className="flex items-center gap-2"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3, delay: 0.6 + index * 0.1 }}
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <motion.div
+                      animate={{
+                        rotate: [0, 5, -5, 0],
+                        scale: [1, 1.1, 1],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        delay: index * 0.5,
+                        ease: "easeInOut",
+                      }}
+                    >
+                      <item.icon className="size-4 text-primary" />
+                    </motion.div>
+                    <span>{item.text}</span>
+                  </motion.div>
+                ))}
+              </motion.div>
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
+              initial={{ opacity: 0, y: 40, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
               className="relative mx-auto max-w-5xl"
             >
               <div className="rounded-xl overflow-hidden shadow-2xl border border-border/40 bg-gradient-to-b from-background to-card/20 p-8">
@@ -395,12 +570,29 @@ export default function CloakLandingPage() {
               className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
             >
               {features.map((feature, i) => (
-                <motion.div key={i} variants={item}>
-                  <Card className="h-full overflow-hidden border-border/40 bg-gradient-to-b from-card to-card/50 backdrop-blur transition-all hover:shadow-md hover:border-primary/20">
+                <motion.div
+                  key={i}
+                  variants={item}
+                  whileHover={{
+                    y: -8,
+                    scale: 1.02,
+                    transition: { duration: 0.2, ease: "easeOut" },
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Card className="h-full overflow-hidden border-border/40 bg-gradient-to-b from-card to-card/50 backdrop-blur transition-all hover:shadow-lg hover:shadow-primary/10 hover:border-primary/20">
                     <CardContent className="p-6 flex flex-col h-full">
-                      <div className="size-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary mb-4">
+                      <motion.div
+                        className="size-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary mb-4"
+                        whileHover={{
+                          scale: 1.1,
+                          rotate: 5,
+                          backgroundColor: "hsl(var(--primary) / 0.2)",
+                        }}
+                        transition={{ duration: 0.2 }}
+                      >
                         {feature.icon}
-                      </div>
+                      </motion.div>
                       <h3 className="text-xl font-bold mb-2 font-space-grotesk text-card-foreground">
                         {feature.title}
                       </h3>
@@ -457,7 +649,7 @@ export default function CloakLandingPage() {
                     "Connect your wallet and deposit SOL into your secure, private balance environment.",
                 },
                 {
-                  /* Changed "Configure Your Send" to more user-friendly "Customize Your Transfer" */
+                  step: "02",
                   title: "Customize Your Transfer",
                   description:
                     "Choose recipients, split amounts, add timing variations, or use our waiting room for maximum anonymity.",
@@ -471,18 +663,43 @@ export default function CloakLandingPage() {
               ].map((step, i) => (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
+                  whileHover={{ y: -5, scale: 1.02 }}
                   className="relative z-10 flex flex-col items-center text-center space-y-4"
                 >
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-xl font-bold shadow-lg">
+                  <motion.div
+                    className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-xl font-bold shadow-lg"
+                    whileHover={{
+                      scale: 1.1,
+                      rotate: 5,
+                      boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+                    }}
+                    animate={{
+                      boxShadow: [
+                        "0 4px 15px rgba(0,0,0,0.1)",
+                        "0 8px 25px rgba(0,0,0,0.15)",
+                        "0 4px 15px rgba(0,0,0,0.1)",
+                      ],
+                    }}
+                    transition={{
+                      boxShadow: {
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      },
+                    }}
+                  >
                     {step.step}
-                  </div>
-                  <h3 className="text-xl font-bold font-space-grotesk text-foreground">
+                  </motion.div>
+                  <motion.h3
+                    className="text-xl font-bold font-space-grotesk text-foreground"
+                    whileHover={{ scale: 1.05 }}
+                  >
                     {step.title}
-                  </h3>
+                  </motion.h3>
                   <p className="text-muted-foreground">{step.description}</p>
                 </motion.div>
               ))}
@@ -675,14 +892,29 @@ export default function CloakLandingPage() {
                 complete anonymity while maintaining speed and reliability.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mt-4">
-                <Button
-                  size="lg"
-                  variant="default"
-                  className="rounded-full h-12 px-8 text-base bg-primary text-primary-foreground hover:bg-primary/90"
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  Send Privately
-                  <ArrowRight className="ml-2 size-4" />
-                </Button>
+                  <Button
+                    size="lg"
+                    variant="default"
+                    className="rounded-full h-12 px-8 text-base bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    Send Privately
+                    <motion.div
+                      animate={{ x: [0, 4, 0] }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    >
+                      <ArrowRight className="ml-2 size-4" />
+                    </motion.div>
+                  </Button>
+                </motion.div>
                 {/* <Button
                   size="lg"
                   variant="outline"
@@ -782,36 +1014,56 @@ export default function CloakLandingPage() {
               </h4>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <Link
-                    href="#features"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  <motion.div
+                    whileHover={{ x: 4 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    Features
-                  </Link>
+                    <Link
+                      href="#features"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Features
+                    </Link>
+                  </motion.div>
                 </li>
                 <li>
-                  <Link
-                    href="#how-it-works"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  <motion.div
+                    whileHover={{ x: 4 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    How It Works
-                  </Link>
+                    <Link
+                      href="#how-it-works"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      How It Works
+                    </Link>
+                  </motion.div>
                 </li>
                 <li>
-                  <Link
-                    href="#security"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  <motion.div
+                    whileHover={{ x: 4 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    Security
-                  </Link>
+                    <Link
+                      href="#security"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Security
+                    </Link>
+                  </motion.div>
                 </li>
                 <li>
-                  <Link
-                    href="#"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  <motion.div
+                    whileHover={{ x: 4 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    API Docs
-                  </Link>
+                    <Link
+                      href="#"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      API Docs
+                    </Link>
+                  </motion.div>
                 </li>
               </ul>
             </div>
