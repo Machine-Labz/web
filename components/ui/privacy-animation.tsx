@@ -12,7 +12,10 @@ import { Wallet, Shield, Stamp } from "lucide-react";
  * - Receipt NFT at the end
  * - Smooth infinite loop (~7s)
  */
-export default function CloakPrivacyAnimation() {
+export default function CloakPrivacyAnimation(props?: {
+  size?: "normal" | "compact";
+}) {
+  const compact = props?.size === "compact";
   // timeline (seconds)
   const T = 7; // loop duration
   const tIn = 0.6; // start of source→zone line
@@ -27,9 +30,14 @@ export default function CloakPrivacyAnimation() {
   const nt = (sec: number) => sec / T;
 
   return (
-    <div className="w-full h-[420px] flex flex-col items-center justify-center relative">
+    <div
+      className={
+        "w-full flex flex-col items-center justify-center relative " +
+        (compact ? "h-[260px] md:h-[300px]" : "h-[420px]")
+      }
+    >
       {/* Labels positioned above the animation */}
-      <div className="w-full max-w-4xl mb-8 relative">
+      <div className={`w-full max-w-4xl ${compact ? "mb-3" : "mb-8"} relative`}>
         <div className="flex justify-between items-center px-4">
           <div className="w-1/3 text-center">
             <motion.div
@@ -77,7 +85,9 @@ export default function CloakPrivacyAnimation() {
       </div>
 
       {/* Main animation */}
-      <div className="w-full max-w-4xl">
+      <div
+        className={`w-full max-w-4xl ${compact ? "scale-95 md:scale-100" : ""}`}
+      >
         <svg
           width="960"
           height="240"

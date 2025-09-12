@@ -169,10 +169,12 @@ export default function CloakLandingPage() {
             >
               Connect Wallet
             </Link> */}
-            <Button className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground">
-              Send Privately
-              <ChevronRight className="ml-1 size-4" />
-            </Button>
+            <Link href="/transaction">
+              <Button className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                Send Privately
+                <ChevronRight className="ml-1 size-4" />
+              </Button>
+            </Link>
           </div>
           <div className="flex items-center gap-4 md:hidden">
             <Button
@@ -247,10 +249,15 @@ export default function CloakLandingPage() {
                 >
                   Connect Wallet
                 </Link> */}
-                <Button className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                  Send Privately
-                  <ChevronRight className="ml-1 size-4" />
-                </Button>
+                <Link
+                  href="/transaction"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Button className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                    Send Privately
+                    <ChevronRight className="ml-1 size-4" />
+                  </Button>
+                </Link>
               </div>
             </div>
           </motion.div>
@@ -419,22 +426,24 @@ export default function CloakLandingPage() {
                   whileTap={{ scale: 0.95 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Button
-                    size="lg"
-                    className="rounded-full h-12 px-8 text-base bg-primary hover:bg-primary/90 text-primary-foreground"
-                  >
-                    Send Privately
-                    <motion.div
-                      animate={{ x: [0, 4, 0] }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
+                  <Link href="/transaction">
+                    <Button
+                      size="lg"
+                      className="rounded-full h-12 px-8 text-base bg-primary hover:bg-primary/90 text-primary-foreground"
                     >
-                      <ArrowRight className="ml-2 size-4" />
-                    </motion.div>
-                  </Button>
+                      Send Privately
+                      <motion.div
+                        animate={{ x: [0, 4, 0] }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        <ArrowRight className="ml-2 size-4" />
+                      </motion.div>
+                    </Button>
+                  </Link>
                 </motion.div>
                 <motion.div
                   whileHover={{ scale: 1.05 }}
@@ -897,23 +906,25 @@ export default function CloakLandingPage() {
                   whileTap={{ scale: 0.95 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Button
-                    size="lg"
-                    variant="default"
-                    className="rounded-full h-12 px-8 text-base bg-primary text-primary-foreground hover:bg-primary/90"
-                  >
-                    Send Privately
-                    <motion.div
-                      animate={{ x: [0, 4, 0] }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
+                  <Link href="/transaction">
+                    <Button
+                      size="lg"
+                      variant="default"
+                      className="rounded-full h-12 px-8 text-base bg-primary text-primary-foreground hover:bg-primary/90"
                     >
-                      <ArrowRight className="ml-2 size-4" />
-                    </motion.div>
-                  </Button>
+                      Send Privately
+                      <motion.div
+                        animate={{ x: [0, 4, 0] }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        <ArrowRight className="ml-2 size-4" />
+                      </motion.div>
+                    </Button>
+                  </Link>
                 </motion.div>
                 {/* <Button
                   size="lg"
