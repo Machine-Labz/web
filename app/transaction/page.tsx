@@ -256,6 +256,7 @@ export default function TransactionPage() {
                             }
                             className="w-full h-12 text-base relative overflow-hidden"
                             size="lg"
+                            suppressHydrationWarning
                           >
                             {isLoading ? (
                               <motion.div
@@ -333,6 +334,7 @@ export default function TransactionPage() {
                             onClick={resetTransaction}
                             variant="outline"
                             className="w-full"
+                            suppressHydrationWarning
                           >
                             Send Another Transaction
                           </Button>
@@ -408,6 +410,7 @@ export default function TransactionPage() {
                             onClick={resetTransaction}
                             variant="outline"
                             className="w-full"
+                            suppressHydrationWarning
                           >
                             Try Again
                           </Button>

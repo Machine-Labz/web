@@ -64,7 +64,7 @@ const popularTokens: Token[] = [
   },
 ];
 
-export default function TokenSelector({
+const TokenSelector = React.memo(function TokenSelector({
   selectedToken,
   onTokenSelect,
   tokens,
@@ -242,6 +242,7 @@ export default function TokenSelector({
       </AnimatePresence>
     </div>
   );
-}
+});
 
+export default TokenSelector;
 export { popularTokens };

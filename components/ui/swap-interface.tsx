@@ -90,6 +90,9 @@ export default function SwapInterface({
 
   // Get quote when amount or tokens change
   useEffect(() => {
+    // Don't get quote during swap animation
+    if (isSwappingTokens) return;
+
     if (fromToken && toToken && fromAmount && parseFloat(fromAmount) > 0) {
       const timeoutId = setTimeout(() => {
         getQuote(
@@ -105,7 +108,15 @@ export default function SwapInterface({
       setToAmount("");
       clearQuote();
     }
-  }, [fromToken, toToken, fromAmount, slippage, getQuote, clearQuote]);
+  }, [
+    fromToken,
+    toToken,
+    fromAmount,
+    slippage,
+    getQuote,
+    clearQuote,
+    isSwappingTokens,
+  ]);
 
   // Update toAmount when quote changes
   useEffect(() => {
@@ -123,62 +134,82 @@ export default function SwapInterface({
     }
   }, [connected, publicKey, loadTokenBalances]);
 
-  const handleSwapTokens = async () => {
+  const handleSwapTokens = useCallback(async () => {
     if (isSwappingTokens) return;
 
     setIsSwappingTokens(true);
 
-    // Animate swap button rotation
-    await swapButtonControls.start({
-      rotate: 180,
-      transition: { duration: 0.3, ease: "easeInOut" },
-    });
+    try {
+      // Start all animations simultaneously
+      const animations = [
+        // Swap button rotation
+        swapButtonControls.start({
+          rotate: 180,
+          transition: { duration: 0.4, ease: "easeInOut" },
+        }),
+        // Tokens sliding out
+        fromTokenControls.start({
+          y: 100,
+          opacity: 0,
+          transition: { duration: 0.25, ease: "easeInOut" },
+        }),
+        toTokenControls.start({
+          y: -100,
+          opacity: 0,
+          transition: { duration: 0.25, ease: "easeInOut" },
+        }),
+      ];
 
-    // Animate tokens sliding
-    await Promise.all([
-      fromTokenControls.start({
-        y: 100,
-        opacity: 0,
-        transition: { duration: 0.2, ease: "easeInOut" },
-      }),
-      toTokenControls.start({
-        y: -100,
-        opacity: 0,
-        transition: { duration: 0.2, ease: "easeInOut" },
-      }),
-    ]);
+      // Wait for slide out animations to complete
+      await Promise.all(animations.slice(1));
 
-    // Swap the tokens
-    const tempToken = fromToken;
-    const tempAmount = fromAmount;
-    setFromToken(toToken);
-    setToToken(tempToken);
-    setFromAmount(toAmount);
-    setToAmount(tempAmount);
-    clearQuote();
+      // Update state after animations complete
+      const tempToken = fromToken;
+      const tempAmount = fromAmount;
+      setFromToken(toToken);
+      setToToken(tempToken);
+      setFromAmount(toAmount);
+      setToAmount(tempAmount);
+      clearQuote();
 
-    // Animate tokens sliding back
-    await Promise.all([
-      fromTokenControls.start({
-        y: 0,
-        opacity: 1,
-        transition: { duration: 0.2, ease: "easeInOut" },
-      }),
-      toTokenControls.start({
-        y: 0,
-        opacity: 1,
-        transition: { duration: 0.2, ease: "easeInOut" },
-      }),
-    ]);
+      // Start slide in animations
+      const slideInAnimations = [
+        fromTokenControls.start({
+          y: 0,
+          opacity: 1,
+          transition: { duration: 0.25, ease: "easeInOut" },
+        }),
+        toTokenControls.start({
+          y: 0,
+          opacity: 1,
+          transition: { duration: 0.25, ease: "easeInOut" },
+        }),
+      ];
 
-    // Reset swap button
-    await swapButtonControls.start({
-      rotate: 0,
-      transition: { duration: 0.3, ease: "easeInOut" },
-    });
-
-    setIsSwappingTokens(false);
-  };
+      // Wait for all animations to complete
+      await Promise.all([
+        ...slideInAnimations,
+        swapButtonControls.start({
+          rotate: 0,
+          transition: { duration: 0.4, ease: "easeInOut" },
+        }),
+      ]);
+    } catch (error) {
+      console.error("Swap animation error:", error);
+    } finally {
+      setIsSwappingTokens(false);
+    }
+  }, [
+    isSwappingTokens,
+    fromToken,
+    toToken,
+    fromAmount,
+    toAmount,
+    swapButtonControls,
+    fromTokenControls,
+    toTokenControls,
+    clearQuote,
+  ]);
 
   const handleSwap = async () => {
     if (!quote || !fromToken || !toToken) return;
@@ -239,6 +270,7 @@ export default function SwapInterface({
               size="sm"
               onClick={() => setShowSettings(!showSettings)}
               className="h-8 w-8 p-0"
+              suppressHydrationWarning
             >
               <Settings className="h-4 w-4" />
             </Button>
@@ -320,6 +352,7 @@ export default function SwapInterface({
             className="space-y-2"
             animate={fromTokenControls}
             initial={{ y: 0, opacity: 1 }}
+            style={{ willChange: "transform, opacity" }}
           >
             <Label className="text-sm font-medium text-muted-foreground">
               From
@@ -349,6 +382,7 @@ export default function SwapInterface({
                 onClick={handleSwapTokens}
                 disabled={swapState === "loading" || isSwappingTokens}
                 className="h-10 w-10 rounded-full border-2 bg-background hover:bg-muted/50 transition-colors"
+                suppressHydrationWarning
               >
                 <ArrowUpDown className="h-4 w-4" />
               </Button>
@@ -360,6 +394,7 @@ export default function SwapInterface({
             className="space-y-2"
             animate={toTokenControls}
             initial={{ y: 0, opacity: 1 }}
+            style={{ willChange: "transform, opacity" }}
           >
             <Label className="text-sm font-medium text-muted-foreground">
               To
@@ -438,6 +473,7 @@ export default function SwapInterface({
               disabled={!canSwap || swapState === "loading"}
               className="w-full h-12 text-base relative overflow-hidden"
               size="lg"
+              suppressHydrationWarning
             >
               {swapState === "loading" && (
                 <motion.div
