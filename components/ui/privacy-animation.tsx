@@ -265,12 +265,14 @@ export default function CloakPrivacyAnimation(props?: {
               cy={120}
               r="2"
               fill="hsl(var(--primary))"
-              initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
+              initial={{ opacity: 0, scale: 0, x: 0, y: 0, cx: 480, cy: 120 }}
               animate={{
                 opacity: [0, 1, 0],
                 scale: [0, 1, 0],
                 x: [0, (i % 2 ? 1 : -1) * (10 + i * 2)],
                 y: [0, (i % 3 ? -1 : 1) * (8 + i * 1.5)],
+                cx: 480,
+                cy: 120,
               }}
               transition={{
                 times: [
@@ -355,10 +357,12 @@ export default function CloakPrivacyAnimation(props?: {
 
           {/* Fast beam (bundle) over the second line */}
           <motion.circle
+            cx={540}
+            cy={110}
             r="4"
             fill="hsl(var(--primary))"
             filter="url(#glow)"
-            initial={{ opacity: 0 }}
+            initial={{ opacity: 0, cx: 540, cy: 110 }}
             animate={{
               opacity: [0, 1, 0],
               cx: [540, 655, 790],

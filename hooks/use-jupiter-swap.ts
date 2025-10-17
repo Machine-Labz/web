@@ -45,7 +45,7 @@ export interface SwapError {
 }
 
 const JUPITER_API_BASE = "https://quote-api.jup.ag/v6";
-const SOLANA_RPC_URL = "https://api.mainnet-beta.solana.com";
+const SOLANA_RPC_URL = "http://localhost:8899";
 
 export function useJupiterSwap() {
   const { connected, publicKey, signTransaction } = useWallet();

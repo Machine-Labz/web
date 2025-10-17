@@ -1,0 +1,15 @@
+{
+  "name": "cloak-wasm-prover",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "cloak_wasm_prover_bg.wasm",
+    "cloak_wasm_prover.js",
+    "cloak_wasm_prover.d.ts"
+  ],
+  "main": "cloak_wasm_prover.js",
+  "types": "cloak_wasm_prover.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
