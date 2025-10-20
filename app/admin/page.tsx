@@ -15,8 +15,9 @@ import { CheckCircle, Loader2, Copy, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 const PROGRAM_ID = process.env.NEXT_PUBLIC_PROGRAM_ID || "c1oak6tetxYnNfvXKFkpn1d98FxtK7B68vBQLYQpWKp";
-const ROOTS_RING_SIZE = 2056; // 8 + 64 * 32
-const NULLIFIER_SHARD_SIZE = 4; // Start with just count field
+const COMMITMENTS_SIZE = 16 + 256 * 32; // 16 bytes header (u64 count + u64 reserved) + 256 * 32 bytes = 8208 bytes
+const ROOTS_RING_SIZE = 8 + 64 * 32; // 8 bytes header (u8 head + 7 padding) + 64 * 32 bytes = 2056 bytes
+const NULLIFIER_SHARD_SIZE = 4; // 4 bytes for count field (u32)
 
 type AccountState = {
   address?: string;
@@ -28,6 +29,7 @@ type AccountState = {
 
 type Accounts = {
   pool: AccountState;
+  commitments: AccountState;
   rootsRing: AccountState;
   nullifierShard: AccountState;
   treasury: AccountState;
@@ -39,6 +41,7 @@ export default function AdminPage() {
 
   const [accounts, setAccounts] = useState<Accounts>({
     pool: { status: "pending" },
+    commitments: { status: "pending" },
     rootsRing: { status: "pending" },
     nullifierShard: { status: "pending" },
     treasury: { status: "pending" },
@@ -65,6 +68,7 @@ export default function AdminPage() {
     try {
       // Get addresses from environment
       const poolAddress = process.env.NEXT_PUBLIC_POOL_ADDRESS;
+      const commitmentsAddress = process.env.NEXT_PUBLIC_COMMITMENTS_ADDRESS;
       const rootsRingAddress = process.env.NEXT_PUBLIC_ROOTS_RING_ADDRESS;
       const treasuryAddress = process.env.NEXT_PUBLIC_TREASURY_ADDRESS;
       const nullifierShardAddress = process.env.NEXT_PUBLIC_NULLIFIER_SHARD_ADDRESS;
@@ -90,6 +94,28 @@ export default function AdminPage() {
         }
       } else {
         updateAccountState("pool", { status: "missing" });
+      }
+
+      // Check Commitments Account
+
+      if (commitmentsAddress) {
+        updateAccountState("commitments", { status: "checking", address: commitmentsAddress });
+        try {
+          const accountInfo = await connection.getAccountInfo(new PublicKey(commitmentsAddress));
+          if (accountInfo) {
+            updateAccountState("commitments", {
+              status: "exists",
+              balance: accountInfo.lamports,
+              owner: accountInfo.owner.toBase58(),
+            });
+          } else {
+            updateAccountState("commitments", { status: "missing" });
+          }
+        } catch (err) {
+          updateAccountState("commitments", { status: "missing" });
+        }
+      } else {
+        updateAccountState("commitments", { status: "missing" });
       }
 
       // Check Roots Ring Account
@@ -182,30 +208,35 @@ export default function AdminPage() {
 
       // Generate keypairs for all accounts
       const poolKeypair = Keypair.generate();
+      const commitmentsKeypair = Keypair.generate();
       const rootsRingKeypair = Keypair.generate();
       const nullifierShardKeypair = Keypair.generate();
       const treasuryKeypair = Keypair.generate();
 
       console.log("Generated keypairs:");
       console.log("Pool:", poolKeypair.publicKey.toBase58());
+      console.log("Commitments:", commitmentsKeypair.publicKey.toBase58());
       console.log("Roots Ring:", rootsRingKeypair.publicKey.toBase58());
       console.log("Nullifier Shard:", nullifierShardKeypair.publicKey.toBase58());
       console.log("Treasury:", treasuryKeypair.publicKey.toBase58());
 
       // Update UI with addresses
       updateAccountState("pool", { address: poolKeypair.publicKey.toBase58() });
+      updateAccountState("commitments", { address: commitmentsKeypair.publicKey.toBase58() });
       updateAccountState("rootsRing", { address: rootsRingKeypair.publicKey.toBase58() });
       updateAccountState("nullifierShard", { address: nullifierShardKeypair.publicKey.toBase58() });
       updateAccountState("treasury", { address: treasuryKeypair.publicKey.toBase58() });
 
       // Get rent-exempt balances
       const poolRent = await connection.getMinimumBalanceForRentExemption(0);
+      const commitmentsRent = await connection.getMinimumBalanceForRentExemption(COMMITMENTS_SIZE);
       const rootsRingRent = await connection.getMinimumBalanceForRentExemption(ROOTS_RING_SIZE);
       const nullifierShardRent = await connection.getMinimumBalanceForRentExemption(NULLIFIER_SHARD_SIZE);
       const treasuryRent = await connection.getMinimumBalanceForRentExemption(0);
 
       console.log("Rent amounts:", {
         poolRent,
+        commitmentsRent,
         rootsRingRent,
         nullifierShardRent,
         treasuryRent,
@@ -217,6 +248,14 @@ export default function AdminPage() {
         newAccountPubkey: poolKeypair.publicKey,
         lamports: poolRent,
         space: 0,
+        programId: programId,
+      });
+
+      const createCommitmentsIx = SystemProgram.createAccount({
+        fromPubkey: publicKey,
+        newAccountPubkey: commitmentsKeypair.publicKey,
+        lamports: commitmentsRent,
+        space: COMMITMENTS_SIZE,
         programId: programId,
       });
 
@@ -247,12 +286,14 @@ export default function AdminPage() {
       // Create transaction
       const tx = new Transaction().add(
         createPoolIx,
+        createCommitmentsIx,
         createRootsRingIx,
         createNullifierShardIx,
         createTreasuryIx
       );
 
       updateAccountState("pool", { status: "creating" });
+      updateAccountState("commitments", { status: "creating" });
       updateAccountState("rootsRing", { status: "creating" });
       updateAccountState("nullifierShard", { status: "creating" });
       updateAccountState("treasury", { status: "creating" });
@@ -263,6 +304,7 @@ export default function AdminPage() {
       const signature = await sendTransaction(tx, connection, {
         signers: [
           poolKeypair,
+          commitmentsKeypair,
           rootsRingKeypair,
           nullifierShardKeypair,
           treasuryKeypair,
@@ -300,6 +342,7 @@ export default function AdminPage() {
       }
 
       updateAccountState("pool", { status: "created" });
+      updateAccountState("commitments", { status: "created" });
       updateAccountState("rootsRing", { status: "created" });
       updateAccountState("nullifierShard", { status: "created" });
       updateAccountState("treasury", { status: "created" });
@@ -312,6 +355,7 @@ export default function AdminPage() {
       toast.error(error.message || "Failed to create accounts");
 
       updateAccountState("pool", { status: "error", error: error.message });
+      updateAccountState("commitments", { status: "error", error: error.message });
       updateAccountState("rootsRing", { status: "error", error: error.message });
       updateAccountState("nullifierShard", { status: "error", error: error.message });
       updateAccountState("treasury", { status: "error", error: error.message });
@@ -319,18 +363,20 @@ export default function AdminPage() {
   };
 
   const copyEnvConfig = () => {
+    const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "http://localhost:8899";
     const envConfig = `# Solana Program Configuration
 # Deployed on Localnet
 NEXT_PUBLIC_PROGRAM_ID=${PROGRAM_ID}
 
 # Shield Pool Account Addresses (Keypair Accounts)
 NEXT_PUBLIC_POOL_ADDRESS=${accounts.pool.address || "PENDING"}
+NEXT_PUBLIC_COMMITMENTS_ADDRESS=${accounts.commitments.address || "PENDING"}
 NEXT_PUBLIC_ROOTS_RING_ADDRESS=${accounts.rootsRing.address || "PENDING"}
 NEXT_PUBLIC_TREASURY_ADDRESS=${accounts.treasury.address || "PENDING"}
 NEXT_PUBLIC_NULLIFIER_SHARD_ADDRESS=${accounts.nullifierShard.address || "PENDING"}
 
 # Solana RPC endpoint - LOCALNET
-NEXT_PUBLIC_SOLANA_RPC_URL=http://localhost:8899
+NEXT_PUBLIC_SOLANA_RPC_URL=${rpcUrl}
 
 # Indexer API endpoint
 NEXT_PUBLIC_INDEXER_URL=http://localhost:3001
@@ -345,12 +391,14 @@ NEXT_PUBLIC_RELAY_URL=http://localhost:3002
 
   const allExist =
     (accounts.pool.status === "created" || accounts.pool.status === "exists") &&
+    (accounts.commitments.status === "created" || accounts.commitments.status === "exists") &&
     (accounts.rootsRing.status === "created" || accounts.rootsRing.status === "exists") &&
     (accounts.nullifierShard.status === "created" || accounts.nullifierShard.status === "exists") &&
     (accounts.treasury.status === "created" || accounts.treasury.status === "exists");
 
   const anyMissing =
     accounts.pool.status === "missing" ||
+    accounts.commitments.status === "missing" ||
     accounts.rootsRing.status === "missing" ||
     accounts.nullifierShard.status === "missing" ||
     accounts.treasury.status === "missing";
@@ -401,7 +449,7 @@ NEXT_PUBLIC_RELAY_URL=http://localhost:3002
                 <div className="flex justify-between items-center py-2">
                   <span className="text-sm font-medium">Network:</span>
                   <code className="text-sm bg-muted px-2 py-1 rounded">
-                    Localnet (http://localhost:8899)
+                    {process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "http://localhost:8899"}
                   </code>
                 </div>
               </CardContent>
@@ -416,6 +464,11 @@ NEXT_PUBLIC_RELAY_URL=http://localhost:3002
                   name="Pool Account"
                   description="Holds deposited SOL"
                   state={accounts.pool}
+                />
+                <AccountRow
+                  name="Commitments Account"
+                  description="Stores deposit commitments (8208 bytes)"
+                  state={accounts.commitments}
                 />
                 <AccountRow
                   name="Roots Ring"

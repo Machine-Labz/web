@@ -29,8 +29,7 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({
   // const network = 
 
   // You can also provide a custom RPC endpoint
-  const endpoint =
-    "http://localhost:8899"
+  const endpoint = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "http://localhost:8899";
   // useMemo(() => 
   // clusterApiUrl(network), [network]
   // );

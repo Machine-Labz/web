@@ -60,13 +60,21 @@ export default function DepositFlow() {
   };
 
   const handleDeposit = async () => {
+    console.log("handleDeposit");
+
+    console.log("connected", connected);
+    console.log("publicKey", publicKey?.toBase58());
+    console.log("note", note);
+
     if (!connected || !publicKey || !note) {
       toast.error("Please connect wallet and generate a note first");
+      console.log("error", "Please connect wallet and generate a note first");
       return;
     }
 
     if (!POOL_ADDRESS || !COMMITMENTS_ADDRESS) {
       toast.error("Missing program configuration (POOL_ADDRESS or COMMITMENTS_ADDRESS)");
+      console.log("error", "Missing program configuration (POOL_ADDRESS or COMMITMENTS_ADDRESS)");
       return;
     }
 
@@ -293,11 +301,12 @@ export default function DepositFlow() {
       setNote(updatedNote);
       setDepositSignature(signature);
 
+      const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "http://localhost:8899";
       console.log("🎉 Deposit complete!", {
         signature,
         leafIndex,
         slot: depositSlot,
-        explorerUrl: `https://explorer.solana.com/tx/${signature}?cluster=custom&customUrl=http://localhost:8899`,
+        explorerUrl: `https://explorer.solana.com/tx/${signature}?cluster=custom&customUrl=${encodeURIComponent(rpcUrl)}`,
       });
 
       setState("success");
@@ -439,7 +448,7 @@ export default function DepositFlow() {
               </p>
               {depositSignature && (
                 <a
-                  href={`https://explorer.solana.com/tx/${depositSignature}?cluster=custom&customUrl=http://localhost:8899`}
+                  href={`https://explorer.solana.com/tx/${depositSignature}?cluster=custom&customUrl=${encodeURIComponent(process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "http://localhost:8899")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-primary hover:underline block"
