@@ -156,10 +156,8 @@ export default function WithdrawFlow() {
       const fee = calculateFee(note.amount);
       const recipientAmountAfterFee = note.amount - fee;
 
-      // Calculate relay fee
-      const relayFeeBps = Math.floor((fee * 10_000) / note.amount);
-      const actualRelayFee = Math.floor((note.amount * relayFeeBps) / 10_000);
-      const adjustedRecipientForRelay = note.amount - actualRelayFee;
+      // Calculate relay fee BPS (for the API) - use ceiling division to match relay
+      const relayFeeBps = Math.ceil((fee * 10_000) / note.amount);
 
       // Generate nullifier
       const skSpend = Buffer.from(note.sk_spend, "hex");
@@ -234,7 +232,7 @@ export default function WithdrawFlow() {
           amount: note.amount,
         },
         recipient,
-        recipientAmountLamports: adjustedRecipientForRelay,
+        recipientAmountLamports: recipientAmountAfterFee,
         feeBps: relayFeeBps,
       });
 
@@ -558,25 +556,34 @@ async function submitWithdrawViaRelay(params: {
 
   // Poll for completion
   let attempts = 0;
-  const maxAttempts = 60;
+  const maxAttempts = 120; // 10 minutes (120 * 5s = 600s)
+
+  console.log(`[Relay] Starting to poll for completion of request ${requestId}`);
 
   while (attempts < maxAttempts) {
     await sleep(5000);
     attempts++;
 
     try {
+      console.log(`[Relay] Polling attempt ${attempts}/${maxAttempts} for request ${requestId}`);
       const statusResp = await fetch(`${RELAY_URL}/status/${requestId}`);
-      if (!statusResp.ok) continue;
+      if (!statusResp.ok) {
+        console.warn(`[Relay] Status check failed with status ${statusResp.status}`);
+        continue;
+      }
 
       const statusJson = await statusResp.json();
       const statusData = statusJson.data;
       const status: string | undefined = statusData?.status;
+
+      console.log(`[Relay] Status for request ${requestId}: ${status}`);
 
       if (status === "completed") {
         const txId: string | undefined = statusData?.tx_id;
         if (!txId) {
           throw new Error("Relay completed without tx_id");
         }
+        console.log(`[Relay] Withdraw completed successfully! Transaction: ${txId}`);
         return txId;
       }
 
