@@ -15,6 +15,9 @@ import {
   Shield,
   Shuffle,
   Zap,
+  TrendingUp,
+  Building,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -235,15 +238,16 @@ export default function CloakLandingPage() {
                 className="mb-4 rounded-full px-4 py-1.5 text-sm font-medium bg-accent text-accent-foreground border-0"
                 variant="secondary"
               >
-                Privacy-First Solana Transactions
+                Private execution on Solana
               </Badge>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-foreground font-space-grotesk">
                 Send SOL with Complete Privacy in Seconds
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto text-balance">
-                Experience true anonymity on Solana. Our privacy layer ensures
-                your transactions remain completely untraceable while
-                maintaining lightning-fast speed and reliability.
+              <p className="text-lg md:text-xl text-muted-foreground mb-4 max-w-3xl mx-auto text-balance">
+                Send, swap and route privately with fixed & transparent fees.
+              </p>
+              <p className="text-sm text-muted-foreground mb-8">
+                0.025 SOL + 0.5% · No mixers · Auditable receipts
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <motion.div
@@ -339,6 +343,106 @@ export default function CloakLandingPage() {
           </div>
         </section>
 
+                {/* Differentiation Section */}
+                <section className="w-full py-20 md:py-32">
+          <div className="container px-4 md:px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="text-center space-y-4 mb-16"
+            >
+              <Badge variant="secondary" className="mb-4">
+                Why Cloak is Different
+              </Badge>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight font-space-grotesk text-balance">
+                Built for True Privacy & Performance
+              </h2>
+              <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl text-balance">
+                Unlike traditional mixers, Cloak combines zero-knowledge proofs,
+                permissionless mining, and Solana's speed for unmatched privacy.
+              </p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="text-center space-y-4"
+              >
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                  <Shield className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold font-space-grotesk">
+                  ZK for Truth
+                </h3>
+                <p className="text-muted-foreground">
+                  Proves correctness and conservation without trusting servers.
+                  On-chain verification ensures mathematical guarantees.
+                </p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="text-center space-y-4"
+              >
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+                  <Layers className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold font-space-grotesk">
+                  PoW for Fairness
+                </h3>
+                <p className="text-muted-foreground">
+                  Permissionless miners ensure liquidity and fair access. No
+                  central operator controls the system.
+                </p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="text-center space-y-4"
+              >
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+                  <Zap className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold font-space-grotesk">
+                  Solana for Scale
+                </h3>
+                <p className="text-muted-foreground">
+                  Low latency, high throughput, L1 UX. Privacy without
+                  compromising on speed or cost.
+                </p>
+              </motion.div>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="text-center mt-12"
+            >
+              <Button
+                variant="outline"
+                size="lg"
+                className="rounded-full h-12 px-8"
+              >
+                Read Technical Comparison
+                <ArrowRight className="ml-2 size-4" />
+              </Button>
+            </motion.div>
+          </div>
+        </section>
+
         {/* Trust Indicators */}
         <section className="w-full py-12 border-y bg-muted/30">
           <div className="container px-4 md:px-6">
@@ -369,6 +473,9 @@ export default function CloakLandingPage() {
             </div>
           </div>
         </section>
+
+
+
 
         {/* Features Section */}
         <section id="features" className="w-full py-20 md:py-32">
@@ -616,6 +723,358 @@ export default function CloakLandingPage() {
           </div>
         </section>
 
+        {/* SDK Section */}
+        <section className="w-full py-20 md:py-32">
+          <div className="container px-4 md:px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="text-center space-y-4 mb-16"
+            >
+              <Badge variant="secondary" className="mb-4">
+                Developer Tools
+              </Badge>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight font-space-grotesk text-balance">
+                Cloak SDK
+              </h2>
+              <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl text-balance">
+                Integrate privacy into your Solana applications with our
+                comprehensive SDK. Build private DeFi, NFT marketplaces, and
+                more with zero-knowledge proofs.
+              </p>
+            </motion.div>
+
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              {/* Text Content */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="space-y-8"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <TrendingUp className="w-4 h-4 text-primary" />
+                    </div>
+                    <h3 className="text-2xl font-bold font-space-grotesk">
+                      Trading Terminals & DEXs
+                    </h3>
+                  </div>
+                  <p className="text-muted-foreground text-lg">
+                    Integrate Cloak as a "Private Route" option in Jupiter,
+                    Mango Markets, and Drift. Users can perform private swaps
+                    without exposing addresses or trading volumes, preventing
+                    front-running and MEV attacks.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Building className="w-4 h-4 text-primary" />
+                    </div>
+                    <h3 className="text-2xl font-bold font-space-grotesk">
+                      DeFi Protocols
+                    </h3>
+                  </div>
+                  <p className="text-muted-foreground text-lg">
+                    Add privacy layers to lending protocols, yield farming, and
+                    liquidity provision. Protect user positions and strategies
+                    while maintaining composability with existing DeFi
+                    infrastructure.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Shield className="w-4 h-4 text-primary" />
+                    </div>
+                    <h3 className="text-2xl font-bold font-space-grotesk">
+                      MEV Protection
+                    </h3>
+                  </div>
+                  <p className="text-muted-foreground text-lg">
+                    Shield high-value transactions from MEV bots and sandwich
+                    attacks. Perfect for institutional traders, large position
+                    managers, and anyone requiring transaction privacy on
+                    Solana.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                  <Button size="lg" className="rounded-full h-12 px-8">
+                    Get Started with SDK
+                    <ArrowRight className="ml-2 size-4" />
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="rounded-full h-12 px-8"
+                  >
+                    View on GitHub
+                  </Button>
+                </div>
+              </motion.div>
+
+              {/* Code Snippet */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="relative"
+              >
+                {/* macOS-style window */}
+                <div className="bg-gray-900 rounded-lg shadow-2xl overflow-hidden">
+                  {/* macOS traffic lights */}
+                  <div className="flex items-center gap-2 px-4 py-3 bg-gray-800 border-b border-gray-700">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <div className="flex-1 text-center">
+                      <span className="text-gray-400 text-sm font-mono">
+                        main.rs
+                      </span>
+                    </div>
+                    <div className="w-6 h-6 flex items-center justify-center">
+                      <svg
+                        className="w-4 h-4 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* Code content */}
+                  <div className="p-6 bg-gray-900">
+                    <pre className="text-sm text-gray-100 font-mono leading-relaxed">
+                      <code>
+                        <span className="text-gray-500">
+                          // Jupiter DEX Integration
+                        </span>
+                        <br />
+                        <span className="text-blue-400">use</span>{" "}
+                        <span className="text-yellow-300">jupiter_swap</span>::
+                        <span className="text-green-400">JupiterClient</span>;
+                        <br />
+                        <span className="text-blue-400">use</span>{" "}
+                        <span className="text-yellow-300">cloak_sdk</span>::
+                        <span className="text-green-400">CloakRoute</span>;
+                        <br />
+                        <br />
+                        <span className="text-blue-400">async</span>{" "}
+                        <span className="text-blue-400">fn</span>{" "}
+                        <span className="text-yellow-300">
+                          execute_private_swap
+                        </span>
+                        (
+                        <br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <span className="text-yellow-300">
+                          input_mint
+                        </span>: <span className="text-green-400">Pubkey</span>,
+                        <br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <span className="text-yellow-300">
+                          output_mint
+                        </span>: <span className="text-green-400">Pubkey</span>,
+                        <br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <span className="text-yellow-300">amount</span>:{" "}
+                        <span className="text-blue-400">u64</span>,<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <span className="text-yellow-300">user</span>:{" "}
+                        <span className="text-green-400">Pubkey</span>,<br />){" "}
+                        <span className="text-blue-400">-&gt;</span>{" "}
+                        <span className="text-green-400">Result</span>&lt;
+                        <span className="text-green-400">String</span>,{" "}
+                        <span className="text-red-400">Error</span>&gt;{" "}
+                        <span className="text-gray-500">{`{`}</span>
+                        <br />
+                        <br />
+                        &nbsp;&nbsp;
+                        <span className="text-gray-500">
+                          // 1. Get Jupiter quote
+                        </span>
+                        <br />
+                        &nbsp;&nbsp;<span className="text-blue-400">
+                          let
+                        </span>{" "}
+                        <span className="text-yellow-300">quote</span> ={" "}
+                        <span className="text-yellow-300">JupiterClient</span>::
+                        <span className="text-yellow-300">new</span>()
+                        <br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;.
+                        <span className="text-green-400">get_quote</span>(
+                        <span className="text-yellow-300">input_mint</span>,{" "}
+                        <span className="text-yellow-300">output_mint</span>,{" "}
+                        <span className="text-yellow-300">amount</span>)<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;.
+                        <span className="text-blue-400">await</span>?;
+                        <br />
+                        <br />
+                        &nbsp;&nbsp;
+                        <span className="text-gray-500">
+                          // 2. Create private route
+                        </span>
+                        <br />
+                        &nbsp;&nbsp;<span className="text-blue-400">
+                          let
+                        </span>{" "}
+                        <span className="text-yellow-300">cloak_route</span> ={" "}
+                        <span className="text-green-400">CloakRoute</span>::
+                        <span className="text-yellow-300">new</span>()
+                        <br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;.
+                        <span className="text-green-400">
+                          with_jupiter_quote
+                        </span>
+                        (<span className="text-yellow-300">quote</span>)<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;.
+                        <span className="text-green-400">enable_privacy</span>(
+                        <span className="text-orange-400">true</span>);
+                        <br />
+                        <br />
+                        &nbsp;&nbsp;
+                        <span className="text-gray-500">
+                          // 3. Execute private swap
+                        </span>
+                        <br />
+                        &nbsp;&nbsp;<span className="text-blue-400">
+                          let
+                        </span>{" "}
+                        <span className="text-yellow-300">signature</span> ={" "}
+                        <span className="text-yellow-300">cloak_route</span>
+                        <br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;.
+                        <span className="text-green-400">execute_swap</span>(
+                        <span className="text-yellow-300">user</span>)<br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;.
+                        <span className="text-blue-400">await</span>?;
+                        <br />
+                        <br />
+                        &nbsp;&nbsp;<span className="text-green-400">Ok</span>(
+                        <span className="text-yellow-300">signature</span>)
+                        <br />
+                        <span className="text-gray-500">{`}`}</span>
+                      </code>
+                    </pre>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Partners Section */}
+        <section className="w-full py-12 bg-muted/30 relative">
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm"></div>
+          <div className="container px-4 md:px-6 relative z-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="text-center"
+            >
+              <p className="text-sm text-muted-foreground mb-8">
+                Partnered with
+              </p>
+
+              <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
+                <div className="flex items-center justify-center">
+                  <Image
+                    src="https://cdn.prod.website-files.com/670670901c57408478ad4a9f/67121f25b01a10c4e680cc87_logo%20-%20source.svg"
+                    alt="Source Logo"
+                    width={100}
+                    height={50}
+                    className="opacity-60 hover:opacity-100 transition-opacity duration-300"
+                  />
+                </div>
+
+  
+
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="w-full py-20 md:py-32 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground relative overflow-hidden">
+          <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#ffffff10_1px,transparent_1px),linear-gradient(to_bottom,#ffffff10_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
+          <div className="absolute -top-24 -left-24 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+
+          <div className="container px-4 md:px-6 relative">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="flex flex-col items-center justify-center space-y-6 text-center"
+            >
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight font-space-grotesk text-balance">
+                Ready to Experience True Privacy?
+              </h2>
+              <p className="mx-auto max-w-[700px] text-primary-foreground/80 md:text-xl text-balance">
+                Join the privacy revolution on Solana. Start sending SOL with
+                complete anonymity while maintaining speed and reliability.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 mt-4">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Link href="/transaction">
+                    <Button
+                      size="lg"
+                      variant="default"
+                      className="rounded-full h-12 px-8 text-base bg-primary text-primary-foreground hover:bg-primary/90"
+                    >
+                      Send Privately
+                      <motion.div
+                        animate={{ x: [0, 4, 0] }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        <ArrowRight className="ml-2 size-4" />
+                      </motion.div>
+                    </Button>
+                  </Link>
+                </motion.div>
+                {/* <Button
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full h-12 px-8 text-base bg-transparent border-white text-white hover:bg-white/10"
+                >
+                  Connect Wallet
+                </Button> */}
+              </div>
+              <p className="text-sm text-primary-foreground/80 mt-4">
+                No registration required. Connect your Solana wallet to get
+                started.
+              </p>
+            </motion.div>
+          </div>
+        </section>
+
         {/* FAQ Section */}
         <section id="faq" className="w-full py-20 md:py-32 bg-muted/30">
           <div className="container px-4 md:px-6">
@@ -701,69 +1160,6 @@ export default function CloakLandingPage() {
                 ))}
               </Accordion>
             </div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="w-full py-20 md:py-32 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground relative overflow-hidden">
-          <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#ffffff10_1px,transparent_1px),linear-gradient(to_bottom,#ffffff10_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
-          <div className="absolute -top-24 -left-24 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-
-          <div className="container px-4 md:px-6 relative">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="flex flex-col items-center justify-center space-y-6 text-center"
-            >
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight font-space-grotesk text-balance">
-                Ready to Experience True Privacy?
-              </h2>
-              <p className="mx-auto max-w-[700px] text-primary-foreground/80 md:text-xl text-balance">
-                Join the privacy revolution on Solana. Start sending SOL with
-                complete anonymity while maintaining speed and reliability.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 mt-4">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Link href="/transaction">
-                    <Button
-                      size="lg"
-                      variant="default"
-                      className="rounded-full h-12 px-8 text-base bg-primary text-primary-foreground hover:bg-primary/90"
-                    >
-                      Send Privately
-                      <motion.div
-                        animate={{ x: [0, 4, 0] }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                      >
-                        <ArrowRight className="ml-2 size-4" />
-                      </motion.div>
-                    </Button>
-                  </Link>
-                </motion.div>
-                {/* <Button
-                  size="lg"
-                  variant="outline"
-                  className="rounded-full h-12 px-8 text-base bg-transparent border-white text-white hover:bg-white/10"
-                >
-                  Connect Wallet
-                </Button> */}
-              </div>
-              <p className="text-sm text-primary-foreground/80 mt-4">
-                No registration required. Connect your Solana wallet to get
-                started.
-              </p>
-            </motion.div>
           </div>
         </section>
       </main>
