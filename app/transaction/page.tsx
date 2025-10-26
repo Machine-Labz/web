@@ -2,12 +2,10 @@
 
 import React, { useState } from "react";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import SvgIcon from "@/components/ui/logo";
 import {
   Send,
   Wallet,
@@ -151,7 +149,7 @@ const ZCashIcon = () => (
 );
 import Link from "next/link";
 import { toast } from "sonner";
-import { ClientOnly } from "@/components/client-only";
+import { SiteHeader } from "@/components/site-header";
 import {
   TransactionStatus,
   type TransactionStatus as Status,
@@ -626,19 +624,7 @@ export default function TransactionPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between px-4">
-          <Link
-            href="/"
-            className="flex items-center gap-2 font-bold text-foreground"
-          >
-            <SvgIcon className="size-20" />
-          </Link>
-          <ClientOnly>
-            <WalletMultiButton className="!bg-primary !text-primary-foreground hover:!bg-primary/90" />
-          </ClientOnly>
-        </div>
-      </header>
+      <SiteHeader showWalletButton />
 
       <main className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-2xl">
