@@ -42,6 +42,13 @@ export default function CloakLandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+  const [isLaunched, setIsLaunched] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -55,6 +62,36 @@ export default function CloakLandingPage() {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Countdown logic
+  useEffect(() => {
+    const targetDate = new Date("2025-10-31T03:59:15-03:00"); // America/São_Paulo timezone
+
+    const updateCountdown = () => {
+      const now = new Date().getTime();
+      const distance = targetDate.getTime() - now;
+
+      if (distance < 0) {
+        setIsLaunched(true);
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor(
+        (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      );
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      setTimeLeft({ days, hours, minutes, seconds });
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const toggleTheme = () => {
@@ -415,39 +452,51 @@ export default function CloakLandingPage() {
               >
                 Private execution on Solana
               </Badge>
+
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-foreground font-space-grotesk">
-                Send SOL with Complete Privacy in Seconds
+                {isLaunched
+                  ? "Send SOL with Complete Privacy in Seconds"
+                  : "Coming Soon - Private SOL Transfers"}
               </h1>
+
               <p className="text-lg md:text-xl text-muted-foreground mb-4 max-w-3xl mx-auto text-balance">
                 Send, swap and route privately with fixed & transparent fees.
               </p>
-              <p className="text-sm text-muted-foreground mb-8">
-                0.025 SOL + 0.5% · No mixers · Auditable receipts
-              </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: isLaunched ? 1.05 : 1 }}
+                  whileTap={{ scale: isLaunched ? 0.95 : 1 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Link href="/transaction">
+                  {isLaunched ? (
+                    <Link href="/transaction">
+                      <Button
+                        size="lg"
+                        className="rounded-full h-12 px-8 text-base bg-primary hover:bg-primary/90 text-primary-foreground"
+                      >
+                        Send Privately
+                        <motion.div
+                          animate={{ x: [0, 4, 0] }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                          }}
+                        >
+                          <ArrowRight className="ml-2 size-4" />
+                        </motion.div>
+                      </Button>
+                    </Link>
+                  ) : (
                     <Button
                       size="lg"
-                      className="rounded-full h-12 px-8 text-base bg-primary hover:bg-primary/90 text-primary-foreground"
+                      disabled
+                      className="rounded-full h-12 px-8 text-base bg-muted text-muted-foreground cursor-not-allowed"
                     >
-                      Send Privately
-                      <motion.div
-                        animate={{ x: [0, 4, 0] }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                      >
-                        <ArrowRight className="ml-2 size-4" />
-                      </motion.div>
+                      <Lock className="mr-2 size-4" />
+                      Coming Soon
                     </Button>
-                  </Link>
+                  )}
                 </motion.div>
                 <motion.div
                   whileHover={{ scale: 1.05 }}
@@ -463,6 +512,7 @@ export default function CloakLandingPage() {
                   </Button>
                 </motion.div>
               </div>
+
               <motion.div
                 className="flex items-center justify-center gap-6 mt-6 text-sm text-muted-foreground"
                 initial={{ opacity: 0, y: 20 }}
@@ -501,6 +551,45 @@ export default function CloakLandingPage() {
                 ))}
               </motion.div>
             </motion.div>
+            {/* Countdown */}
+            {!isLaunched && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="mb-6"
+              >
+                <div className="flex justify-center gap-3 md:gap-10">
+                  <div className="text-center">
+                    <div className="text-xl md:text-2xl font-bold text-primary">
+                      {timeLeft.days.toString().padStart(2, "0")}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Days</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl md:text-2xl font-bold text-primary">
+                      {timeLeft.hours.toString().padStart(2, "0")}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Hours</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl md:text-2xl font-bold text-primary">
+                      {timeLeft.minutes.toString().padStart(2, "0")}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Min</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl md:text-2xl font-bold text-primary">
+                      {timeLeft.seconds.toString().padStart(2, "0")}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Sec</div>
+                  </div>
+                </div>
+                <p className="text-center text-xs text-muted-foreground mt-2">
+                  Launching on Devnet on October 31, 2025 at 06:59 UTC
+                </p>
+              </motion.div>
+            )}
 
             <motion.div
               initial={{ opacity: 0, y: 40, scale: 0.95 }}
@@ -518,15 +607,20 @@ export default function CloakLandingPage() {
           </div>
         </section>
 
-                {/* Differentiation Section */}
-                <section className="w-full py-20 md:py-32">
-          <div className="container px-4 md:px-6">
+        {/* Differentiation Section */}
+        <section className="w-full py-20 md:py-32 bg-gradient-to-br from-muted/30 via-background to-muted/20 relative overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff10_1px,transparent_1px),linear-gradient(to_bottom,#ffffff10_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-accent/5 rounded-full blur-3xl"></div>
+
+          <div className="container px-4 md:px-6 relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="text-center space-y-4 mb-16"
+              className="text-center space-y-4 mb-20"
             >
               <Badge variant="secondary" className="mb-4">
                 Why Cloak is Different
@@ -540,24 +634,34 @@ export default function CloakLandingPage() {
               </p>
             </motion.div>
 
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid lg:grid-cols-3 gap-8 mb-16">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="text-center space-y-4"
+                className="group"
               >
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                  <Shield className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-xl font-bold font-space-grotesk">
-                  ZK for Truth
-                </h3>
-                <p className="text-muted-foreground">
-                  Proves correctness and conservation without trusting servers.
-                  On-chain verification ensures mathematical guarantees.
-                </p>
+                <Card className="h-full border-border/40 bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-300 hover:shadow-lg">
+                  <CardContent className="p-8 text-center space-y-6">
+                    <div className="w-20 h-20 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300">
+                      <Shield className="w-10 h-10 text-primary" />
+                    </div>
+                    <div className="space-y-3">
+                      <h3 className="text-2xl font-bold font-space-grotesk text-foreground">
+                        ZK for Truth
+                      </h3>
+                      <p className="text-muted-foreground leading-relaxed">
+                        Proves correctness and conservation without trusting
+                        servers. On-chain verification ensures mathematical
+                        guarantees.
+                      </p>
+                    </div>
+                    <div className="pt-4">
+                      <div className="w-full h-1 bg-gradient-to-r from-primary/20 via-primary to-primary/20 rounded-full"></div>
+                    </div>
+                  </CardContent>
+                </Card>
               </motion.div>
 
               <motion.div
@@ -565,18 +669,27 @@ export default function CloakLandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="text-center space-y-4"
+                className="group"
               >
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
-                  <Layers className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-xl font-bold font-space-grotesk">
-                  PoW for Fairness
-                </h3>
-                <p className="text-muted-foreground">
-                  Permissionless miners ensure liquidity and fair access. No
-                  central operator controls the system.
-                </p>
+                <Card className="h-full border-border/40 bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-300 hover:shadow-lg">
+                  <CardContent className="p-8 text-center space-y-6">
+                    <div className="w-20 h-20 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300">
+                      <Layers className="w-10 h-10 text-primary" />
+                    </div>
+                    <div className="space-y-3">
+                      <h3 className="text-2xl font-bold font-space-grotesk text-foreground">
+                        PoW for Fairness
+                      </h3>
+                      <p className="text-muted-foreground leading-relaxed">
+                        Permissionless miners ensure liquidity and fair access.
+                        No central operator controls the system.
+                      </p>
+                    </div>
+                    <div className="pt-4">
+                      <div className="w-full h-1 bg-gradient-to-r from-primary/20 via-primary to-primary/20 rounded-full"></div>
+                    </div>
+                  </CardContent>
+                </Card>
               </motion.div>
 
               <motion.div
@@ -584,37 +697,29 @@ export default function CloakLandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.3 }}
-                className="text-center space-y-4"
+                className="group"
               >
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
-                  <Zap className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-xl font-bold font-space-grotesk">
-                  Solana for Scale
-                </h3>
-                <p className="text-muted-foreground">
-                  Low latency, high throughput, L1 UX. Privacy without
-                  compromising on speed or cost.
-                </p>
+                <Card className="h-full border-border/40 bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-300 hover:shadow-lg">
+                  <CardContent className="p-8 text-center space-y-6">
+                    <div className="w-20 h-20 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300">
+                      <Zap className="w-10 h-10 text-primary" />
+                    </div>
+                    <div className="space-y-3">
+                      <h3 className="text-2xl font-bold font-space-grotesk text-foreground">
+                        Solana for Scale
+                      </h3>
+                      <p className="text-muted-foreground leading-relaxed">
+                        Low latency, high throughput, L1 UX. Privacy without
+                        compromising on speed or cost.
+                      </p>
+                    </div>
+                    <div className="pt-4">
+                      <div className="w-full h-1 bg-gradient-to-r from-primary/20 via-primary to-primary/20 rounded-full"></div>
+                    </div>
+                  </CardContent>
+                </Card>
               </motion.div>
             </div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="text-center mt-12"
-            >
-              <Button
-                variant="outline"
-                size="lg"
-                className="rounded-full h-12 px-8"
-              >
-                Read Technical Comparison
-                <ArrowRight className="ml-2 size-4" />
-              </Button>
-            </motion.div>
           </div>
         </section>
 
@@ -648,9 +753,6 @@ export default function CloakLandingPage() {
             </div>
           </div>
         </section>
-
-
-
 
         {/* Features Section */}
         <section id="features" className="w-full py-20 md:py-32">
@@ -1179,9 +1281,6 @@ export default function CloakLandingPage() {
                     className="opacity-60 hover:opacity-100 transition-opacity duration-300"
                   />
                 </div>
-
-  
-
               </div>
             </motion.div>
           </div>
