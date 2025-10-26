@@ -76,6 +76,7 @@ export default function TransactionPage() {
       console.log(
         `✅ Proof generated in ${(result.generationTimeMs / 1000).toFixed(1)}s`
       );
+      setTransactionStatus("proof_generated");
       toast.success("Proof generated successfully!");
     },
     onError: (error) => {

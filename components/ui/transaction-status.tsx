@@ -9,6 +9,7 @@ export type TransactionStatus =
   | "depositing"
   | "deposited"
   | "generating_proof"
+  | "proof_generated"
   | "queued"
   | "being_mined"
   | "mined"
@@ -29,13 +30,15 @@ const statusConfig = {
     color: "bg-muted",
     textColor: "text-muted-foreground",
     description: "Enter amount and recipient to start",
+    estimatedTime: "~30 seconds total",
   },
   depositing: {
     label: "Depositing...",
     icon: Loader2,
     color: "bg-blue-500",
     textColor: "text-blue-600",
-    description: "Creating private deposit",
+    description: "Creating private deposit (5-15 seconds)",
+    estimatedTime: "5-15 seconds",
   },
   deposited: {
     label: "Deposited",
@@ -43,27 +46,39 @@ const statusConfig = {
     color: "bg-green-500",
     textColor: "text-green-600",
     description: "Funds deposited privately",
+    estimatedTime: "Complete",
   },
   generating_proof: {
     label: "Generating Proof",
     icon: Loader2,
     color: "bg-purple-500",
     textColor: "text-purple-600",
-    description: "Creating zero-knowledge proof",
+    description: "Creating zero-knowledge proof (30-180 seconds)",
+    estimatedTime: "30-180 seconds",
+  },
+  proof_generated: {
+    label: "Proof Generated",
+    icon: CheckCircle,
+    color: "bg-purple-500",
+    textColor: "text-purple-600",
+    description: "Zero-knowledge proof created successfully",
+    estimatedTime: "Complete",
   },
   queued: {
     label: "Queued",
     icon: Clock,
     color: "bg-yellow-500",
     textColor: "text-yellow-600",
-    description: "Transaction queued for processing",
+    description: "Transaction queued for processing (10-30 seconds)",
+    estimatedTime: "10-30 seconds",
   },
   being_mined: {
     label: "Being Mined",
     icon: Loader2,
     color: "bg-orange-500",
     textColor: "text-orange-600",
-    description: "Mining transaction",
+    description: "Mining transaction (15-45 seconds)",
+    estimatedTime: "15-45 seconds",
   },
   mined: {
     label: "Mined",
@@ -71,6 +86,7 @@ const statusConfig = {
     color: "bg-green-500",
     textColor: "text-green-600",
     description: "Transaction mined successfully",
+    estimatedTime: "Complete",
   },
   sent: {
     label: "Sent",
@@ -78,6 +94,7 @@ const statusConfig = {
     color: "bg-green-500",
     textColor: "text-green-600",
     description: "Tokens sent privately to recipient",
+    estimatedTime: "Complete",
   },
   error: {
     label: "Error",
@@ -85,6 +102,7 @@ const statusConfig = {
     color: "bg-red-500",
     textColor: "text-red-600",
     description: "Transaction failed",
+    estimatedTime: "Failed",
   },
 };
 
@@ -123,6 +141,14 @@ export function TransactionStatus({
           showZone: true,
           showDestination: false,
           ballPosition: "zone", // Ball is in privacy zone (processing)
+        };
+      case "proof_generated":
+        return {
+          showSource: true,
+          showLine: true,
+          showZone: true,
+          showDestination: false,
+          ballPosition: "zone", // Ball is in privacy zone (proof ready)
         };
       case "queued":
         return {
@@ -206,6 +232,11 @@ export function TransactionStatus({
               <p className="text-sm text-muted-foreground">
                 {config.description}
               </p>
+              {config.estimatedTime && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  ⏱️ {config.estimatedTime}
+                </p>
+              )}
             </div>
           </div>
           <Badge variant={status === "error" ? "destructive" : "secondary"}>
@@ -383,9 +414,10 @@ export function TransactionStatus({
             <span>Progress</span>
             <span>
               {status === "idle" && "0%"}
-              {status === "depositing" && "25%"}
-              {status === "deposited" && "25%"}
-              {status === "generating_proof" && "50%"}
+              {status === "depositing" && "15%"}
+              {status === "deposited" && "20%"}
+              {status === "generating_proof" && "40%"}
+              {status === "proof_generated" && "50%"}
               {status === "queued" && "60%"}
               {status === "being_mined" && "80%"}
               {status === "mined" && "90%"}
@@ -401,10 +433,12 @@ export function TransactionStatus({
                   status === "idle"
                     ? "0%"
                     : status === "depositing"
-                    ? "25%"
+                    ? "15%"
                     : status === "deposited"
-                    ? "25%"
+                    ? "20%"
                     : status === "generating_proof"
+                    ? "40%"
+                    : status === "proof_generated"
                     ? "50%"
                     : status === "queued"
                     ? "60%"
