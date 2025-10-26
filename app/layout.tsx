@@ -1,5 +1,6 @@
 import type React from "react";
 import "@/app/globals.css";
+import "@/styles/wallet-adapter.css";
 import { Space_Grotesk, DM_Sans } from "next/font/google";
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";

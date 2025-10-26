@@ -1,0 +1,274 @@
+/* Custom Wallet Adapter Styles */
+
+/* Override default wallet adapter styles */
+.wallet-adapter-button {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90 border-0 rounded-full h-10 px-6 font-medium transition-all duration-200;
+}
+
+.wallet-adapter-button:hover {
+  @apply bg-primary/90 shadow-md;
+}
+
+.wallet-adapter-button:not([disabled]):hover {
+  @apply bg-primary/90;
+}
+
+.wallet-adapter-button[disabled] {
+  @apply bg-muted text-muted-foreground cursor-not-allowed opacity-50;
+}
+
+/* Wallet adapter modal styles */
+.wallet-adapter-modal-wrapper {
+  @apply bg-background/95 backdrop-blur-sm;
+}
+
+.wallet-adapter-modal {
+  @apply bg-card border border-border rounded-lg shadow-lg;
+}
+
+.wallet-adapter-modal-title {
+  @apply text-foreground font-semibold;
+}
+
+.wallet-adapter-modal-list {
+  @apply space-y-2;
+}
+
+.wallet-adapter-modal-list-item {
+  @apply bg-card hover:bg-muted border border-border rounded-lg p-4 transition-colors duration-200;
+}
+
+.wallet-adapter-modal-list-item:hover {
+  @apply bg-muted shadow-sm;
+}
+
+.wallet-adapter-modal-list-item:not([disabled]):hover {
+  @apply bg-muted;
+}
+
+.wallet-adapter-modal-list-item[disabled] {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.wallet-adapter-modal-list-item-name {
+  @apply text-foreground font-medium;
+}
+
+.wallet-adapter-modal-list-item-description {
+  @apply text-muted-foreground text-sm;
+}
+
+/* Wallet adapter button variants */
+.wallet-adapter-button-trigger {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90 border-0 rounded-full h-10 px-6 font-medium transition-all duration-200;
+}
+
+.wallet-adapter-button-trigger:hover {
+  @apply bg-primary/90 shadow-md;
+}
+
+.wallet-adapter-button-trigger[disabled] {
+  @apply bg-muted text-muted-foreground cursor-not-allowed opacity-50;
+}
+
+/* Wallet adapter dropdown */
+.wallet-adapter-dropdown {
+  @apply bg-card border border-border rounded-lg shadow-lg;
+}
+
+.wallet-adapter-dropdown-list {
+  @apply space-y-1;
+}
+
+.wallet-adapter-dropdown-list-item {
+  @apply bg-card hover:bg-muted border-0 rounded-md p-3 transition-colors duration-200;
+}
+
+.wallet-adapter-dropdown-list-item:hover {
+  @apply bg-muted;
+}
+
+.wallet-adapter-dropdown-list-item:not([disabled]):hover {
+  @apply bg-muted;
+}
+
+.wallet-adapter-dropdown-list-item[disabled] {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Wallet adapter button states */
+.wallet-adapter-button-start-icon {
+  @apply text-primary-foreground;
+}
+
+.wallet-adapter-button-end-icon {
+  @apply text-primary-foreground;
+}
+
+/* Wallet adapter modal close button */
+.wallet-adapter-modal-close {
+  @apply text-muted-foreground hover:text-foreground;
+}
+
+/* Wallet adapter modal overlay */
+.wallet-adapter-modal-overlay {
+  @apply bg-black/50 backdrop-blur-sm;
+}
+
+/* Custom wallet button for our design system */
+.cloak-wallet-button {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90 border-0 rounded-full h-10 px-6 font-medium transition-all duration-200 flex items-center justify-center gap-2;
+}
+
+.cloak-wallet-button:hover {
+  @apply bg-primary/90 shadow-md;
+}
+
+.cloak-wallet-button[disabled] {
+  @apply bg-muted text-muted-foreground cursor-not-allowed opacity-50;
+}
+
+/* Wrapper for wallet adapter button */
+.wallet-adapter-wrapper {
+  @apply w-full flex items-center justify-center;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Force centering for wallet adapter button */
+.wallet-adapter-button-trigger {
+  @apply flex items-center justify-center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100% !important;
+}
+
+.wallet-adapter-button-trigger > * {
+  @apply flex items-center justify-center;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+/* Override any conflicting styles */
+.wallet-adapter-button-trigger .wallet-adapter-button-start-icon,
+.wallet-adapter-button-trigger .wallet-adapter-button-end-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+}
+
+.wallet-adapter-button-trigger .wallet-adapter-button-text {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  margin: 0 !important;
+}
+
+/* Force all internal elements to be centered */
+.wallet-adapter-button-trigger * {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+/* Specific overrides for wallet adapter internal structure */
+.wallet-adapter-button-trigger button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+}
+
+.wallet-adapter-button-trigger button > span {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+}
+
+/* Wallet adapter modal custom styles */
+.wallet-adapter-modal .wallet-adapter-modal-wrapper {
+  @apply bg-background/95 backdrop-blur-sm;
+}
+
+.wallet-adapter-modal .wallet-adapter-modal {
+  @apply bg-card border border-border rounded-xl shadow-2xl;
+}
+
+.wallet-adapter-modal .wallet-adapter-modal-title {
+  @apply text-foreground font-bold text-xl;
+}
+
+.wallet-adapter-modal .wallet-adapter-modal-list {
+  @apply space-y-3 p-4;
+}
+
+.wallet-adapter-modal .wallet-adapter-modal-list-item {
+  @apply bg-card hover:bg-muted border border-border rounded-lg p-4 transition-all duration-200 cursor-pointer;
+}
+
+.wallet-adapter-modal .wallet-adapter-modal-list-item:hover {
+  @apply bg-muted shadow-sm border-primary/20;
+}
+
+.wallet-adapter-modal .wallet-adapter-modal-list-item:not([disabled]):hover {
+  @apply bg-muted shadow-sm border-primary/20;
+}
+
+.wallet-adapter-modal .wallet-adapter-modal-list-item[disabled] {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.wallet-adapter-modal .wallet-adapter-modal-list-item-name {
+  @apply text-foreground font-semibold text-base;
+}
+
+.wallet-adapter-modal .wallet-adapter-modal-list-item-description {
+  @apply text-muted-foreground text-sm;
+}
+
+/* Wallet adapter button custom styles */
+.wallet-adapter-button-trigger {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90 border-0 rounded-full h-10 px-6 font-medium transition-all duration-200 flex items-center justify-center gap-2;
+}
+
+.wallet-adapter-button-trigger:hover {
+  @apply bg-primary/90 shadow-md;
+}
+
+.wallet-adapter-button-trigger[disabled] {
+  @apply bg-muted text-muted-foreground cursor-not-allowed opacity-50;
+}
+
+/* Wallet adapter dropdown custom styles */
+.wallet-adapter-dropdown {
+  @apply bg-card border border-border rounded-lg shadow-lg;
+}
+
+.wallet-adapter-dropdown-list {
+  @apply space-y-1;
+}
+
+.wallet-adapter-dropdown-list-item {
+  @apply bg-card hover:bg-muted border-0 rounded-md p-3 transition-colors duration-200;
+}
+
+.wallet-adapter-dropdown-list-item:hover {
+  @apply bg-muted;
+}
+
+.wallet-adapter-dropdown-list-item:not([disabled]):hover {
+  @apply bg-muted;
+}
+
+.wallet-adapter-dropdown-list-item[disabled] {
+  @apply opacity-50 cursor-not-allowed;
+}
