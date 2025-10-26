@@ -1,26 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import SvgIcon from "@/components/ui/logo";
 import CloakPrivacyAnimation from "@/components/ui/privacy-animation";
 import {
-  ChevronRight,
-  Menu,
-  X,
-  Moon,
-  Sun,
   ArrowRight,
-  Shield,
-  Zap,
+  ChevronRight,
   Eye,
-  Receipt,
   Layers,
   Lock,
-  Shuffle,
   Mail,
+  Receipt,
+  Shield,
+  Shuffle,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,31 +26,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useTheme } from "next-themes";
+import { SiteHeader } from "@/components/site-header";
+import SvgIcon from "@/components/ui/logo";
 
 export default function CloakLandingPage() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
 
   const container = {
     hidden: { opacity: 0 },
@@ -114,155 +87,7 @@ export default function CloakLandingPage() {
 
   return (
     <div className="flex min-h-[100dvh] flex-col">
-      <header
-        className={`sticky top-0 z-50 w-full backdrop-blur-lg transition-all duration-300 ${
-          isScrolled ? "bg-background/80 shadow-sm" : "bg-transparent"
-        }`}
-      >
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2 font-bold text-foreground">
-            <SvgIcon className="size-20" />
-          </div>
-          <nav className="hidden md:flex gap-8">
-            <Link
-              href="#features"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Features
-            </Link>
-            <Link
-              href="#how-it-works"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              How It Works
-            </Link>
-            <Link
-              href="#security"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Security
-            </Link>
-            <Link
-              href="#faq"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              FAQ
-            </Link>
-          </nav>
-          <div className="hidden md:flex gap-4 items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="rounded-full text-foreground"
-            >
-              {mounted && theme === "dark" ? (
-                <Sun className="size-[18px]" />
-              ) : (
-                <Moon className="size-[18px]" />
-              )}
-              <span className="sr-only text-foreground">Toggle theme</span>
-            </Button>
-            {/* <Link
-              href="#"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Connect Wallet
-            </Link> */}
-            <Link href="/transaction">
-              <Button className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                Send Privately
-                <ChevronRight className="ml-1 size-4" />
-              </Button>
-            </Link>
-          </div>
-          <div className="flex items-center gap-4 md:hidden">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="rounded-full text-foreground"
-            >
-              {mounted && theme === "dark" ? (
-                <Sun className="size-[18px]" />
-              ) : (
-                <Moon className="size-[18px]" />
-              )}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-foreground"
-            >
-              {mobileMenuOpen ? (
-                <X className="size-5" />
-              ) : (
-                <Menu className="size-5" />
-              )}
-              <span className="sr-only">Toggle menu</span>
-            </Button>
-          </div>
-        </div>
-        {/* Mobile menu */}
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="md:hidden absolute top-16 inset-x-0 bg-background/95 backdrop-blur-lg border-b"
-          >
-            <div className="container py-4 flex flex-col gap-4">
-              <Link
-                href="#features"
-                className="py-2 text-sm font-medium text-foreground"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Features
-              </Link>
-              <Link
-                href="#how-it-works"
-                className="py-2 text-sm font-medium text-foreground"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                How It Works
-              </Link>
-              <Link
-                href="#security"
-                className="py-2 text-sm font-medium text-foreground"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Security
-              </Link>
-              <Link
-                href="#faq"
-                className="py-2 text-sm font-medium text-foreground"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                FAQ
-              </Link>
-              <div className="flex flex-col gap-2 pt-2 border-t">
-                {/* <Link
-                  href="#"
-                  className="py-2 text-sm font-medium text-foreground"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Connect Wallet
-                </Link> */}
-                <Link
-                  href="/transaction"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Button className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                    Send Privately
-                    <ChevronRight className="ml-1 size-4" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </header>
+      <SiteHeader />
       <main className="flex-1">
         {/* Hero Section */}
         <section className="w-full py-20 md:py-32 lg:py-40 overflow-hidden">
