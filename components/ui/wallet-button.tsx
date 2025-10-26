@@ -41,19 +41,15 @@ export function WalletButton({
   if (!connected) {
     return (
       <ClientOnly>
-        <div className="w-full flex items-center justify-center">
-          <div className="wallet-adapter-wrapper">
-            <WalletMultiButton
-              className={cn(
-                "wallet-adapter-button-trigger",
-                sizeClasses[size],
-                variantClasses[variant],
-                "rounded-full font-medium transition-all duration-200",
-                className
-              )}
-            />
-          </div>
-        </div>
+        <WalletMultiButton
+          className={cn(
+            "wallet-adapter-button-trigger",
+            sizeClasses[size],
+            variantClasses[variant],
+            "rounded-full font-medium transition-all duration-200",
+            className
+          )}
+        />
       </ClientOnly>
     );
   }

@@ -196,31 +196,68 @@
 
 /* Wallet adapter modal custom styles */
 .wallet-adapter-modal .wallet-adapter-modal-wrapper {
-  @apply bg-background/95 backdrop-blur-sm;
+  @apply bg-black/50 backdrop-blur-sm;
+  background: hsla(0, 0%, 36%, 0.5) !important;
 }
 
 .wallet-adapter-modal .wallet-adapter-modal {
   @apply bg-card border border-border rounded-xl shadow-2xl;
+  background: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+}
+
+/* Override any default black backgrounds */
+.wallet-adapter-modal * {
+  background-color: transparent !important;
+}
+
+.wallet-adapter-modal .wallet-adapter-modal {
+  background: hsl(var(--card)) !important;
+}
+
+.wallet-adapter-modal .wallet-adapter-modal-list {
+  background: transparent !important;
+}
+
+.wallet-adapter-modal .wallet-adapter-modal-list-item {
+  background: hsl(var(--card)) !important;
+}
+
+/* Force all text to be white */
+.wallet-adapter-modal * {
+  color: white !important;
+}
+
+.wallet-adapter-modal .wallet-adapter-modal-list-item-description {
+  color: rgba(255, 255, 255, 0.7) !important;
 }
 
 .wallet-adapter-modal .wallet-adapter-modal-title {
   @apply text-foreground font-bold text-xl;
+  color: white !important;
 }
 
 .wallet-adapter-modal .wallet-adapter-modal-list {
   @apply space-y-3 p-4;
+  background: transparent !important;
 }
 
 .wallet-adapter-modal .wallet-adapter-modal-list-item {
   @apply bg-card hover:bg-muted border border-border rounded-lg p-4 transition-all duration-200 cursor-pointer;
+  background: hsl(var(--card)) !important;
+  border: 1px solid hsl(var(--border)) !important;
 }
 
 .wallet-adapter-modal .wallet-adapter-modal-list-item:hover {
   @apply bg-muted shadow-sm border-primary/20;
+  background: hsl(var(--muted)) !important;
+  border-color: hsl(var(--primary) / 0.2) !important;
 }
 
 .wallet-adapter-modal .wallet-adapter-modal-list-item:not([disabled]):hover {
   @apply bg-muted shadow-sm border-primary/20;
+  background: hsl(var(--muted)) !important;
+  border-color: hsl(var(--primary) / 0.2) !important;
 }
 
 .wallet-adapter-modal .wallet-adapter-modal-list-item[disabled] {
@@ -229,10 +266,12 @@
 
 .wallet-adapter-modal .wallet-adapter-modal-list-item-name {
   @apply text-foreground font-semibold text-base;
+  color: white !important;
 }
 
 .wallet-adapter-modal .wallet-adapter-modal-list-item-description {
   @apply text-muted-foreground text-sm;
+  color: rgba(255, 255, 255, 0.7) !important;
 }
 
 /* Wallet adapter button custom styles */

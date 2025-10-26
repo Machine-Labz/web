@@ -495,18 +495,9 @@ export default function TransactionPage() {
       setTransactionStatus("sent");
       toast.success("Transaction completed successfully!");
 
-      // Show success modal instead of closing
-      setTransactionStatus("sent");
       // Keep modal open to show success state
-
-      // Reset form
-      setTimeout(() => {
-        setAmount("");
-        setRecipientWallet("");
-        setTransactionStatus("idle");
-        setTransactionSignature("");
-        setShowNotification(false);
-      }, 5000);
+      // User can close manually with the X button
+      // Don't auto-reset - let user see the success state
     } catch (error: any) {
       console.error("Transaction failed:", error);
       setTransactionStatus("error");
@@ -884,7 +875,14 @@ export default function TransactionPage() {
               <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
                 <div className="bg-card rounded-xl shadow-2xl border max-w-2xl w-full mx-4 relative">
                   <button
-                    onClick={() => setShowStatusModal(false)}
+                    onClick={() => {
+                      setShowStatusModal(false);
+                      // Reset form when closing modal
+                      setAmount("");
+                      setRecipientWallet("");
+                      setTransactionStatus("idle");
+                      setTransactionSignature("");
+                    }}
                     className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-muted transition-colors"
                     aria-label="Close modal"
                   >

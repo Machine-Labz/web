@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
-import { WalletButton } from "@/components/ui/wallet-button";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import SvgIcon from "@/components/ui/logo";
 import { ClientOnly } from "@/components/client-only";
 
@@ -62,7 +62,7 @@ export function DappHeader() {
 
           {/* Wallet Status */}
           <ClientOnly>
-            <WalletButton showDisconnect size="sm" />
+            <WalletMultiButton className="wallet-adapter-button-trigger" />
           </ClientOnly>
         </div>
       </div>
