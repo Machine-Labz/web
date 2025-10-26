@@ -933,9 +933,10 @@ export default function TransactionPage() {
               <div className="flex justify-center gap-4 mt-2">
                 <Link
                   href="/privacy-demo"
-                  className="hover:text-foreground transition-colors font-semibold text-primary"
+                  className="hover:text-foreground transition-colors font-semibold text-primary inline-flex items-center gap-2"
                 >
-                  🛡️ See Privacy in Action
+                  <Shield className="w-4 h-4" />
+                  See Privacy in Action
                 </Link>
                 <Link
                   href="/admin"

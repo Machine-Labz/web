@@ -18,6 +18,11 @@ import {
   TrendingUp,
   Building,
   ExternalLink,
+  Workflow,
+  Brain,
+  Cog,
+  Hash,
+  Rocket,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -849,6 +854,217 @@ export default function CloakLandingPage() {
           </div>
         </section>
 
+        {/* Documentation Section */}
+        <section className="w-full py-20 md:py-32 relative overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-muted/10" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.1),transparent_50%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
+
+          <div className="container px-4 md:px-6 relative z-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="text-center space-y-6 mb-20"
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                Complete Developer Guide
+              </div>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight font-space-grotesk text-balance">
+                Everything you need to ship private Solana exits
+              </h2>
+              <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl text-balance">
+                Deep-dive reference for architects, protocol engineers, relayer
+                operators, and front-end teams working on Cloak.
+              </p>
+            </motion.div>
+
+            {/* Main Documentation Grid */}
+            <div className="grid lg:grid-cols-2 gap-8 mb-16">
+              {/* Left Column - Main Documentation Card */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="lg:col-span-1"
+              >
+                <Card className="h-full border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background hover:border-primary/40 transition-all duration-500 group">
+                  <CardContent className="p-8 h-full flex flex-col">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center group-hover:bg-primary/30 transition-colors">
+                        <ExternalLink className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold font-space-grotesk text-foreground">
+                          Full Documentation
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Complete technical reference
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-muted-foreground mb-6 flex-grow">
+                      Access our comprehensive documentation covering
+                      architecture, zero-knowledge proofs, services, and
+                      implementation guides. Everything you need to build with
+                      Cloak.
+                    </p>
+                    <div className="space-y-3">
+                      <a
+                        href="https://cloak-eqpl.vercel.app/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center w-full px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors group-hover:scale-[1.02] transition-transform"
+                      >
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        View Full Documentation
+                      </a>
+                      <p className="text-xs text-muted-foreground text-center">
+                        Opens in new tab
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Right Column - Quick Access Cards */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="lg:col-span-1 space-y-6"
+              >
+                {[
+                  {
+                    title: "Quick Start",
+                    description: "Get up and running in minutes",
+                    color: "from-emerald-500/10 to-emerald-600/5",
+                    borderColor: "border-emerald-200/50",
+                    icon: Rocket,
+                    link: "https://cloak-eqpl.vercel.app/docs/overview/quickstart",
+                    highlight: true,
+                    badge: "Popular",
+                  },
+                  {
+                    title: "ZK Layer",
+                    description: "SP1 circuits and Groth16 verification",
+                    color: "from-purple-500/10 to-purple-600/5",
+                    borderColor: "border-purple-200/50",
+                    icon: Brain,
+                    link: "https://cloak-eqpl.vercel.app/docs/zk",
+                    highlight: true,
+                    badge: "Core",
+                  },
+                  {
+                    title: "PoW Mining System",
+                    description: "Wildcard mining and performance",
+                    color: "from-orange-500/10 to-orange-600/5",
+                    borderColor: "border-orange-200/50",
+                    icon: Hash,
+                    link: "https://cloak-eqpl.vercel.app/docs/pow/overview",
+                    highlight: true,
+                    badge: "Advanced",
+                  },
+                  {
+                    title: "Packages & Tooling",
+                    description: "SDK, CLI, and development tools",
+                    color: "from-blue-500/10 to-blue-600/5",
+                    borderColor: "border-blue-200/50",
+                    icon: Cog,
+                    link: "https://cloak-eqpl.vercel.app/docs/packages/",
+                    highlight: true,
+                    badge: "Dev Tools",
+                  },
+                ].map((doc, index) => {
+                  const IconComponent = doc.icon;
+                  return (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: 0.1 * index }}
+                    >
+                      <a
+                        href={doc.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block"
+                      >
+                        <Card
+                          className={`h-full bg-gradient-to-r ${
+                            doc.color
+                          } border-2 ${
+                            doc.borderColor
+                          } hover:shadow-lg transition-all duration-300 group cursor-pointer ${
+                            doc.highlight
+                              ? "ring-2 ring-primary/20 hover:ring-primary/40"
+                              : ""
+                          }`}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={`w-10 h-10 rounded-xl ${
+                                    doc.highlight
+                                      ? "bg-primary/30"
+                                      : "bg-primary/20"
+                                  } flex items-center justify-center group-hover:bg-primary/40 transition-colors`}
+                                >
+                                  <IconComponent className="w-5 h-5 text-primary" />
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-foreground group-hover:text-primary transition-colors text-lg">
+                                    {doc.title}
+                                  </h4>
+                                  {doc.highlight && (
+                                    <Badge
+                                      variant="secondary"
+                                      className="mt-1 text-xs"
+                                    >
+                                      {doc.badge}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                              <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {doc.description}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </a>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+            </div>
+
+            {/* Bottom CTA Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="text-center"
+            >
+              <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-muted/50 border border-border/50">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-sm font-medium text-foreground">
+                  Documentation is live and updated regularly
+                </span>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
         {/* SDK Section */}
         <section className="w-full py-20 md:py-32">
           <div className="container px-4 md:px-6">
@@ -1412,12 +1628,14 @@ export default function CloakLandingPage() {
                     whileHover={{ x: 4 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <Link
-                      href="#"
+                    <a
+                      href="https://cloak-eqpl.vercel.app/"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="text-muted-foreground hover:text-foreground transition-colors"
                     >
                       API Docs
-                    </Link>
+                    </a>
                   </motion.div>
                 </li>
               </ul>
@@ -1428,12 +1646,14 @@ export default function CloakLandingPage() {
               </h4>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <Link
-                    href="#"
+                  <a
+                    href="https://cloak-eqpl.vercel.app/"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Documentation
-                  </Link>
+                  </a>
                 </li>
                 <li>
                   <Link

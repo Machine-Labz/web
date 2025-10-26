@@ -2,13 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  ChevronRight,
-  Menu,
-  Moon,
-  Sun,
-  X,
-} from "lucide-react";
+import { ChevronRight, Menu, Moon, Sun, X } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import SvgIcon from "@/components/ui/logo";
@@ -18,7 +12,17 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 const navItems = [
   { label: "Features", href: "/#features" },
   { label: "How It Works", href: "/#how-it-works" },
-  { label: "Security", href: "/#security" },
+  { label: "Security", href: "/#security" },  
+  {
+    label: "Documentation",
+    href: "https://cloak-eqpl.vercel.app/",
+    external: true,
+  },
+  {
+    label: "Miners",
+    href: "/miners",
+    external: false,
+  },
   { label: "FAQ", href: "/#faq" },
 ];
 
@@ -53,20 +57,35 @@ export function SiteHeader({ showWalletButton = false }: SiteHeaderProps) {
       }`}
     >
       <div className="container flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 font-bold text-foreground">
+        <Link
+          href="/"
+          className="flex items-center gap-2 font-bold text-foreground"
+        >
           <SvgIcon className="size-20" />
         </Link>
 
         <nav className="hidden gap-8 md:flex">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {item.label}
-            </Link>
-          ))}
+          {navItems.map((item) =>
+            item.external ? (
+              <a
+                key={item.href}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {item.label}
+              </a>
+            ) : (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {item.label}
+              </Link>
+            )
+          )}
         </nav>
 
         <div className="hidden items-center gap-4 md:flex">
@@ -118,7 +137,11 @@ export function SiteHeader({ showWalletButton = false }: SiteHeaderProps) {
             onClick={() => setMobileMenuOpen((open) => !open)}
             className="text-foreground"
           >
-            {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+            {mobileMenuOpen ? (
+              <X className="size-5" />
+            ) : (
+              <Menu className="size-5" />
+            )}
             <span className="sr-only">Toggle navigation</span>
           </Button>
         </div>
@@ -128,16 +151,29 @@ export function SiteHeader({ showWalletButton = false }: SiteHeaderProps) {
         <div className="md:hidden">
           <div className="space-y-4 px-4 pb-6">
             <nav className="flex flex-col space-y-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {navItems.map((item) =>
+                item.external ? (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {item.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {item.label}
+                  </Link>
+                )
+              )}
             </nav>
 
             {showWalletButton && (
@@ -158,4 +194,3 @@ export function SiteHeader({ showWalletButton = false }: SiteHeaderProps) {
     </header>
   );
 }
-
