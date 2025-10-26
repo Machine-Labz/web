@@ -1,13 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  CheckCircle,
-  Clock,
-  Loader2,
-  Shield,
-  Wallet,
-} from "lucide-react";
+import { CheckCircle, Clock, Loader2, Shield, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export type TransactionStatus =
@@ -112,6 +106,7 @@ export function TransactionStatus({
           showLine: true,
           showZone: false,
           showDestination: false,
+          ballPosition: "moving", // Moving from source to privacy zone
         };
       case "deposited":
         return {
@@ -119,6 +114,7 @@ export function TransactionStatus({
           showLine: true,
           showZone: true,
           showDestination: false,
+          ballPosition: "zone", // Ball is in privacy zone
         };
       case "generating_proof":
         return {
@@ -126,6 +122,7 @@ export function TransactionStatus({
           showLine: true,
           showZone: true,
           showDestination: false,
+          ballPosition: "zone", // Ball is in privacy zone (processing)
         };
       case "queued":
         return {
@@ -133,6 +130,7 @@ export function TransactionStatus({
           showLine: true,
           showZone: true,
           showDestination: false,
+          ballPosition: "zone", // Ball is in privacy zone (queued)
         };
       case "being_mined":
         return {
@@ -140,6 +138,7 @@ export function TransactionStatus({
           showLine: true,
           showZone: true,
           showDestination: true,
+          ballPosition: "moving_to_dest", // Moving from zone to destination
         };
       case "mined":
         return {
@@ -147,6 +146,7 @@ export function TransactionStatus({
           showLine: true,
           showZone: true,
           showDestination: true,
+          ballPosition: "destination", // Ball reached destination
         };
       case "sent":
         return {
@@ -154,6 +154,7 @@ export function TransactionStatus({
           showLine: true,
           showZone: true,
           showDestination: true,
+          ballPosition: "destination", // Ball at destination (completed)
         };
       default:
         return {
@@ -161,6 +162,7 @@ export function TransactionStatus({
           showLine: false,
           showZone: false,
           showDestination: false,
+          ballPosition: "source",
         };
     }
   };
@@ -237,11 +239,29 @@ export function TransactionStatus({
                 <motion.div
                   className="absolute w-2 h-2 bg-primary rounded-full -top-0.5"
                   animate={{
-                    x: animationState.showLine ? [0, 200, 0] : 0,
+                    x:
+                      animationState.ballPosition === "moving"
+                        ? [0, 200, 0]
+                        : animationState.ballPosition === "zone"
+                        ? 200
+                        : animationState.ballPosition === "moving_to_dest"
+                        ? [200, 400, 200]
+                        : animationState.ballPosition === "destination"
+                        ? 400
+                        : 0,
                   }}
                   transition={{
-                    duration: 2,
-                    repeat: status.includes("ing") ? Infinity : 0,
+                    duration:
+                      animationState.ballPosition === "moving"
+                        ? 3
+                        : animationState.ballPosition === "moving_to_dest"
+                        ? 3
+                        : 0.3,
+                    repeat:
+                      animationState.ballPosition === "moving" ||
+                      animationState.ballPosition === "moving_to_dest"
+                        ? Infinity
+                        : 0,
                     ease: "easeInOut",
                   }}
                 />
@@ -294,14 +314,19 @@ export function TransactionStatus({
                   className="absolute w-2 h-2 bg-primary rounded-full -top-0.5"
                   animate={{
                     x:
-                      animationState.showZone && animationState.showDestination
+                      animationState.ballPosition === "moving_to_dest"
                         ? [0, 200, 0]
+                        : animationState.ballPosition === "destination"
+                        ? 200
                         : 0,
                   }}
                   transition={{
-                    duration: 2,
+                    duration:
+                      animationState.ballPosition === "moving_to_dest"
+                        ? 3
+                        : 0.3,
                     repeat:
-                      status === "being_mined" || status === "mined"
+                      animationState.ballPosition === "moving_to_dest"
                         ? Infinity
                         : 0,
                     ease: "easeInOut",

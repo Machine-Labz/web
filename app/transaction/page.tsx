@@ -15,7 +15,15 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import SvgIcon from "@/components/ui/logo";
-import { Send, Wallet, Shield, Plus, Lock } from "lucide-react";
+import {
+  Send,
+  Wallet,
+  Shield,
+  Plus,
+  Lock,
+  CheckCircle,
+  ExternalLink,
+} from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { ClientOnly } from "@/components/client-only";
@@ -56,6 +64,8 @@ export default function TransactionPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [transactionStatus, setTransactionStatus] = useState<Status>("idle");
   const [transactionSignature, setTransactionSignature] = useState<string>("");
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
 
   const prover = useSP1Prover({
     onStart: () => {
@@ -63,7 +73,9 @@ export default function TransactionPage() {
       setTransactionStatus("generating_proof");
     },
     onSuccess: (result) => {
-      console.log(`✅ Proof generated in ${(result.generationTimeMs / 1000).toFixed(1)}s`);
+      console.log(
+        `✅ Proof generated in ${(result.generationTimeMs / 1000).toFixed(1)}s`
+      );
       toast.success("Proof generated successfully!");
     },
     onError: (error) => {
@@ -95,6 +107,7 @@ export default function TransactionPage() {
 
     setIsLoading(true);
     setTransactionStatus("depositing");
+    setShowStatusModal(true);
 
     try {
       console.log("🚀 Starting private transaction flow");
@@ -131,11 +144,16 @@ export default function TransactionPage() {
 
       const POOL_ADDRESS = process.env.NEXT_PUBLIC_POOL_ADDRESS;
       const COMMITMENTS_ADDRESS = process.env.NEXT_PUBLIC_COMMITMENTS_ADDRESS;
-      const PROGRAM_ID = process.env.NEXT_PUBLIC_PROGRAM_ID || "c1oak6tetxYnNfvXKFkpn1d98FxtK7B68vBQLYQpWKp";
-      const INDEXER_URL = process.env.NEXT_PUBLIC_INDEXER_URL || "http://localhost:3001";
+      const PROGRAM_ID =
+        process.env.NEXT_PUBLIC_PROGRAM_ID ||
+        "c1oak6tetxYnNfvXKFkpn1d98FxtK7B68vBQLYQpWKp";
+      const INDEXER_URL =
+        process.env.NEXT_PUBLIC_INDEXER_URL || "http://localhost:3001";
 
       if (!POOL_ADDRESS || !COMMITMENTS_ADDRESS) {
-        throw new Error("Missing program configuration. Please initialize accounts from admin page.");
+        throw new Error(
+          "Missing program configuration. Please initialize accounts from admin page."
+        );
       }
 
       const programId = new PublicKey(PROGRAM_ID);
@@ -149,14 +167,21 @@ export default function TransactionPage() {
       ]);
 
       if (!poolAccount) throw new Error("Pool account not initialized");
-      if (!commitmentsAccount) throw new Error("Commitments account not initialized");
+      if (!commitmentsAccount)
+        throw new Error("Commitments account not initialized");
 
-      const computeUnitLimitIx = ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 });
-      const computeUnitPriceIx = ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1_000 });
+      const computeUnitLimitIx = ComputeBudgetProgram.setComputeUnitLimit({
+        units: 200_000,
+      });
+      const computeUnitPriceIx = ComputeBudgetProgram.setComputeUnitPrice({
+        microLamports: 1_000,
+      });
 
       const commitmentBytes = Buffer.from(note.commitment, "hex");
       if (commitmentBytes.length !== 32) {
-        throw new Error(`Invalid commitment length: ${commitmentBytes.length} bytes (expected 32)`);
+        throw new Error(
+          `Invalid commitment length: ${commitmentBytes.length} bytes (expected 32)`
+        );
       }
 
       console.log("Creating deposit instruction with accounts:", {
@@ -188,7 +213,8 @@ export default function TransactionPage() {
         dataLength: depositIx.data.length,
       });
 
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+      const { blockhash, lastValidBlockHeight } =
+        await connection.getLatestBlockhash();
       const depositTx = new Transaction({
         feePayer: publicKey,
         blockhash,
@@ -203,8 +229,10 @@ export default function TransactionPage() {
         console.log("Simulation logs:", simulation.value.logs);
 
         if (simulation.value.err) {
-          const errorMsg = `Simulation failed: ${JSON.stringify(simulation.value.err)}`;
-          const logs = simulation.value.logs?.join('\n') || 'No logs';
+          const errorMsg = `Simulation failed: ${JSON.stringify(
+            simulation.value.err
+          )}`;
+          const logs = simulation.value.logs?.join("\n") || "No logs";
           console.error("Simulation failed with logs:", logs);
           throw new Error(`${errorMsg}\nLogs:\n${logs}`);
         }
@@ -235,12 +263,17 @@ export default function TransactionPage() {
 
       while (!confirmed && attempts < maxAttempts) {
         const status = await connection.getSignatureStatus(signature);
-        if (status?.value?.confirmationStatus === "confirmed" || status?.value?.confirmationStatus === "finalized") {
+        if (
+          status?.value?.confirmationStatus === "confirmed" ||
+          status?.value?.confirmationStatus === "finalized"
+        ) {
           confirmed = true;
           break;
         }
         if (status?.value?.err) {
-          throw new Error(`Transaction failed: ${JSON.stringify(status.value.err)}`);
+          throw new Error(
+            `Transaction failed: ${JSON.stringify(status.value.err)}`
+          );
         }
         await new Promise((resolve) => setTimeout(resolve, 1000));
         attempts++;
@@ -257,11 +290,13 @@ export default function TransactionPage() {
 
       // Submit to indexer
       console.log("📡 Submitting to indexer...");
-      const encryptedOutput = btoa(JSON.stringify({
-        amount: note.amount,
-        r: note.r,
-        sk_spend: note.sk_spend,
-      }));
+      const encryptedOutput = btoa(
+        JSON.stringify({
+          amount: note.amount,
+          r: note.r,
+          sk_spend: note.sk_spend,
+        })
+      );
 
       const depositResponse = await fetch(`${INDEXER_URL}/api/v1/deposit`, {
         method: "POST",
@@ -299,14 +334,18 @@ export default function TransactionPage() {
       setTransactionStatus("sent");
       toast.success("Transaction completed successfully!");
 
+      // Show notification and close modal
+      setShowStatusModal(false);
+      setShowNotification(true);
+
       // Reset form
       setTimeout(() => {
         setAmount("");
         setRecipientWallet("");
         setTransactionStatus("idle");
         setTransactionSignature("");
+        setShowNotification(false);
       }, 5000);
-
     } catch (error: any) {
       console.error("Transaction failed:", error);
       setTransactionStatus("error");
@@ -318,7 +357,11 @@ export default function TransactionPage() {
     }
   };
 
-  const performWithdraw = async (note: CloakNote, leafIndex: number, recipient: string) => {
+  const performWithdraw = async (
+    note: CloakNote,
+    leafIndex: number,
+    recipient: string
+  ) => {
     try {
       setTransactionStatus("generating_proof");
       console.log("🔐 Starting withdraw process...");
@@ -326,14 +369,19 @@ export default function TransactionPage() {
       // Fetch Merkle root and proof
       console.log("📡 Fetching Merkle proof...");
       const { root: merkleRoot } = await indexerClient.getMerkleRoot();
-      const merkleProof: MerkleProof = await indexerClient.getMerkleProof(leafIndex);
+      const merkleProof: MerkleProof = await indexerClient.getMerkleProof(
+        leafIndex
+      );
 
       // Wait for root to be pushed on-chain
       console.log("⏳ Waiting for root to be available on-chain...");
       await waitForRootOnChain(merkleRoot);
 
-      const merklePathElements = ((merkleProof as any).path_elements ?? merkleProof.pathElements) as string[];
-      const merklePathIndices = ((merkleProof as any).path_indices ?? merkleProof.pathIndices).map((idx: number | string) => Number(idx));
+      const merklePathElements = ((merkleProof as any).path_elements ??
+        merkleProof.pathElements) as string[];
+      const merklePathIndices = (
+        (merkleProof as any).path_indices ?? merkleProof.pathIndices
+      ).map((idx: number | string) => Number(idx));
 
       // Calculate fees
       const fee = calculateFee(note.amount);
@@ -349,10 +397,19 @@ export default function TransactionPage() {
 
       // Generate outputs hash
       const recipientPubkey = new PublicKey(recipient);
-      const recipientHex = Buffer.from(recipientPubkey.toBytes()).toString("hex");
+      const recipientHex = Buffer.from(recipientPubkey.toBytes()).toString(
+        "hex"
+      );
       const recipientAmountBytes = new Uint8Array(8);
-      new DataView(recipientAmountBytes.buffer).setBigUint64(0, BigInt(recipientAmountAfterFee), true);
-      const outputsHashBytes = blake3HashMany([recipientPubkey.toBytes(), recipientAmountBytes]);
+      new DataView(recipientAmountBytes.buffer).setBigUint64(
+        0,
+        BigInt(recipientAmountAfterFee),
+        true
+      );
+      const outputsHashBytes = blake3HashMany([
+        recipientPubkey.toBytes(),
+        recipientAmountBytes,
+      ]);
       const outputsHashHex = Buffer.from(outputsHashBytes).toString("hex");
 
       // Prepare SP1 proof inputs
@@ -373,17 +430,23 @@ export default function TransactionPage() {
           outputs_hash: outputsHashHex,
           amount: note.amount,
         },
-        outputs: [{
-          address: recipientHex,
-          amount: recipientAmountAfterFee,
-        }],
+        outputs: [
+          {
+            address: recipientHex,
+            amount: recipientAmountAfterFee,
+          },
+        ],
       };
 
       // Generate proof
       console.log("🔐 Generating zero-knowledge proof...");
       const proofResult: SP1ProofResult = await generateProof(sp1Inputs);
 
-      if (!proofResult.success || !proofResult.proof || !proofResult.publicInputs) {
+      if (
+        !proofResult.success ||
+        !proofResult.proof ||
+        !proofResult.publicInputs
+      ) {
         throw new Error(proofResult.error || "Proof generation failed");
       }
 
@@ -392,25 +455,27 @@ export default function TransactionPage() {
 
       // Submit withdraw via relay
       console.log("📤 Submitting to relay...");
-      const withdrawSig = await submitWithdrawViaRelay({
-        proof: proofResult.proof,
-        publicInputs: {
-          root: merkleRoot,
-          nf: nullifierHex,
-          outputs_hash: outputsHashHex,
-          amount: note.amount,
+      const withdrawSig = await submitWithdrawViaRelay(
+        {
+          proof: proofResult.proof,
+          publicInputs: {
+            root: merkleRoot,
+            nf: nullifierHex,
+            outputs_hash: outputsHashHex,
+            amount: note.amount,
+          },
+          recipient,
+          recipientAmountLamports: recipientAmountAfterFee,
+          feeBps: relayFeeBps,
         },
-        recipient,
-        recipientAmountLamports: recipientAmountAfterFee,
-        feeBps: relayFeeBps,
-      }, (status: string) => {
-        if (status === "processing") setTransactionStatus("being_mined");
-        else if (status === "completed") setTransactionStatus("mined");
-      });
+        (status: string) => {
+          if (status === "processing") setTransactionStatus("being_mined");
+          else if (status === "completed") setTransactionStatus("mined");
+        }
+      );
 
       console.log("✅ Withdraw completed:", withdrawSig);
       setTransactionSignature(withdrawSig);
-
     } catch (error: any) {
       console.error("❌ Withdraw failed:", error);
       throw error;
@@ -418,10 +483,13 @@ export default function TransactionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-2 font-bold text-foreground">
+          <Link
+            href="/"
+            className="flex items-center gap-2 font-bold text-foreground"
+          >
             <SvgIcon className="size-20" />
           </Link>
           <ClientOnly>
@@ -430,8 +498,8 @@ export default function TransactionPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-12">
-        <div className="mx-auto max-w-2xl">
+      <main className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-2xl">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold font-space-grotesk text-foreground mb-2">
               Send Tokens Privately
@@ -457,7 +525,9 @@ export default function TransactionPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="SOL">SOL (Solana)</SelectItem>
-                    <SelectItem value="USDC" disabled>USDC (Coming Soon)</SelectItem>
+                    <SelectItem value="USDC" disabled>
+                      USDC (Coming Soon)
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -473,14 +543,20 @@ export default function TransactionPage() {
                   className="text-lg"
                 />
                 <p className="text-sm text-muted-foreground">
-                  Available: {connected ? "Loading..." : "Connect wallet to see balance"}
+                  Available:{" "}
+                  {connected ? "Loading..." : "Connect wallet to see balance"}
                 </p>
               </div>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label>Recipients</Label>
-                  <Button variant="outline" size="sm" disabled className="opacity-50 cursor-not-allowed">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled
+                    className="opacity-50 cursor-not-allowed"
+                  >
                     <Plus className="h-4 w-4 mr-2" />
                     Add Recipient
                     <Lock className="h-3 w-3 ml-2" />
@@ -508,11 +584,15 @@ export default function TransactionPage() {
 
               <Button
                 onClick={handleSendTokens}
-                disabled={!connected || !amount || !recipientWallet || isLoading}
+                disabled={
+                  !connected || !amount || !recipientWallet || isLoading
+                }
                 className="w-full h-12 text-lg"
                 size="lg"
               >
-                {isLoading ? "Processing..." : (
+                {isLoading ? (
+                  "Processing..."
+                ) : (
                   <>
                     <Send className="h-5 w-5 mr-2" />
                     Send Privately
@@ -531,24 +611,61 @@ export default function TransactionPage() {
             </CardContent>
           </Card>
 
-          {transactionStatus !== "idle" && (
-            <div className="mt-6">
-              <TransactionStatus
-                status={transactionStatus}
-                amount={amount}
-                recipient={recipientWallet}
-                signature={transactionSignature}
-              />
+          {/* Status Modal */}
+          {showStatusModal && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-card rounded-xl shadow-2xl border max-w-2xl w-full mx-4">
+                <TransactionStatus
+                  status={transactionStatus}
+                  amount={amount}
+                  recipient={recipientWallet}
+                  signature={transactionSignature}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Success Notification */}
+          {showNotification && (
+            <div className="fixed top-4 right-4 z-50">
+              <div className="bg-green-500 text-white rounded-lg shadow-lg p-4 max-w-sm">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-6 h-6" />
+                  <div>
+                    <h3 className="font-semibold">Transaction Complete!</h3>
+                    <p className="text-sm opacity-90">
+                      Your private transaction was successful
+                    </p>
+                    {transactionSignature && (
+                      <a
+                        href={`https://solscan.io/tx/${transactionSignature}?cluster=devnet`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm underline hover:no-underline mt-2"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        View on Solscan
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
           <div className="text-center mt-8 text-sm text-muted-foreground">
             <p>Powered by Solana · SP1 zkVM · Cloak Protocol</p>
             <div className="flex justify-center gap-4 mt-2">
-              <Link href="/privacy-demo" className="hover:text-foreground transition-colors font-semibold text-primary">
+              <Link
+                href="/privacy-demo"
+                className="hover:text-foreground transition-colors font-semibold text-primary"
+              >
                 🛡️ See Privacy in Action
               </Link>
-              <Link href="/admin" className="hover:text-foreground transition-colors">
+              <Link
+                href="/admin"
+                className="hover:text-foreground transition-colors"
+              >
                 Admin
               </Link>
             </div>
@@ -571,7 +688,9 @@ function createDepositInstruction(params: {
   const amountBytes = new Uint8Array(8);
   new DataView(amountBytes.buffer).setBigUint64(0, BigInt(params.amount), true);
 
-  const data = new Uint8Array(1 + amountBytes.length + params.commitment.length);
+  const data = new Uint8Array(
+    1 + amountBytes.length + params.commitment.length
+  );
   data.set(discriminant, 0);
   data.set(amountBytes, 1);
   data.set(params.commitment, 1 + amountBytes.length);
@@ -602,7 +721,12 @@ function blake3HashMany(chunks: Uint8Array[]): Uint8Array {
 async function submitWithdrawViaRelay(
   params: {
     proof: string;
-    publicInputs: { root: string; nf: string; outputs_hash: string; amount: number };
+    publicInputs: {
+      root: string;
+      nf: string;
+      outputs_hash: string;
+      amount: number;
+    };
     recipient: string;
     recipientAmountLamports: number;
     feeBps: number;
@@ -616,7 +740,9 @@ async function submitWithdrawViaRelay(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      outputs: [{ recipient: params.recipient, amount: params.recipientAmountLamports }],
+      outputs: [
+        { recipient: params.recipient, amount: params.recipientAmountLamports },
+      ],
       policy: { fee_bps: params.feeBps },
       public_inputs: {
         root: params.publicInputs.root,
@@ -676,7 +802,8 @@ async function submitWithdrawViaRelay(
 
 function hexToBytes(hex: string): Uint8Array {
   const cleanHex = hex.startsWith("0x") ? hex.slice(2) : hex;
-  if (cleanHex.length % 2 !== 0) throw new Error("Hex string must have an even length");
+  if (cleanHex.length % 2 !== 0)
+    throw new Error("Hex string must have an even length");
   const bytes = new Uint8Array(cleanHex.length / 2);
   for (let i = 0; i < cleanHex.length; i += 2) {
     bytes[i / 2] = parseInt(cleanHex.substring(i, i + 2), 16);
@@ -691,7 +818,9 @@ function sleep(ms: number) {
 async function waitForRootOnChain(expectedRoot: string): Promise<void> {
   const ROOTS_RING_ADDRESS = process.env.NEXT_PUBLIC_ROOTS_RING_ADDRESS;
   if (!ROOTS_RING_ADDRESS) {
-    console.warn("⚠️ ROOTS_RING_ADDRESS not configured, skipping on-chain root verification");
+    console.warn(
+      "⚠️ ROOTS_RING_ADDRESS not configured, skipping on-chain root verification"
+    );
     await sleep(20000); // Fallback to 20 second wait
     return;
   }
@@ -706,7 +835,9 @@ async function waitForRootOnChain(expectedRoot: string): Promise<void> {
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      console.log(`🔍 Checking on-chain roots (attempt ${attempt}/${maxAttempts})...`);
+      console.log(
+        `🔍 Checking on-chain roots (attempt ${attempt}/${maxAttempts})...`
+      );
 
       const rootsRingPubkey = new PublicKey(ROOTS_RING_ADDRESS);
       const accountInfo = await connection.getAccountInfo(rootsRingPubkey);
@@ -743,21 +874,24 @@ async function waitForRootOnChain(expectedRoot: string): Promise<void> {
         ? expectedRoot.slice(2)
         : expectedRoot;
 
-      const foundRoot = roots.some(root => root === expectedRootClean);
+      const foundRoot = roots.some((root) => root === expectedRootClean);
 
       if (foundRoot) {
         console.log("✅ Root found on-chain!");
         return;
       }
 
-      console.log(`⏳ Root not yet on-chain (attempt ${attempt}/${maxAttempts})`);
+      console.log(
+        `⏳ Root not yet on-chain (attempt ${attempt}/${maxAttempts})`
+      );
       await sleep(delayMs);
-
     } catch (error) {
       console.warn(`⚠️ Error checking roots ring (attempt ${attempt}):`, error);
       await sleep(delayMs);
     }
   }
 
-  console.warn("⚠️ Root verification timeout - proceeding anyway (relay will retry if needed)");
+  console.warn(
+    "⚠️ Root verification timeout - proceeding anyway (relay will retry if needed)"
+  );
 }
