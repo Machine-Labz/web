@@ -1,7 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { CheckCircle, Clock, Loader2, Shield, Wallet } from "lucide-react";
+import {
+  CheckCircle,
+  Clock,
+  Loader2,
+  Shield,
+  Wallet,
+  Copy,
+  ExternalLink,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export type TransactionStatus =
@@ -114,6 +122,15 @@ export function TransactionStatus({
 }: TransactionStatusProps) {
   const config = statusConfig[status];
   const Icon = config.icon;
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      // You could add a toast notification here if needed
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+    }
+  };
 
   // Animation states based on status
   const getAnimationState = () => {
@@ -234,7 +251,7 @@ export function TransactionStatus({
               </p>
               {config.estimatedTime && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  ⏱️ {config.estimatedTime}
+                  {config.estimatedTime}
                 </p>
               )}
             </div>
@@ -266,33 +283,21 @@ export function TransactionStatus({
                 animate={{ opacity: animationState.showLine ? 1 : 0.3 }}
                 transition={{ duration: 0.5 }}
               >
-                {/* Moving dot */}
+                {/* Moving dot - only show during first stage */}
                 <motion.div
                   className="absolute w-2 h-2 bg-primary rounded-full -top-0.5"
                   animate={{
                     x:
                       animationState.ballPosition === "moving"
                         ? [0, 200, 0]
-                        : animationState.ballPosition === "zone"
-                        ? 200
-                        : animationState.ballPosition === "moving_to_dest"
-                        ? [200, 400, 200]
-                        : animationState.ballPosition === "destination"
-                        ? 400
                         : 0,
+                    opacity: animationState.ballPosition === "moving" ? 1 : 0,
                   }}
                   transition={{
                     duration:
-                      animationState.ballPosition === "moving"
-                        ? 3
-                        : animationState.ballPosition === "moving_to_dest"
-                        ? 3
-                        : 0.3,
+                      animationState.ballPosition === "moving" ? 3 : 0.3,
                     repeat:
-                      animationState.ballPosition === "moving" ||
-                      animationState.ballPosition === "moving_to_dest"
-                        ? Infinity
-                        : 0,
+                      animationState.ballPosition === "moving" ? Infinity : 0,
                     ease: "easeInOut",
                   }}
                 />
@@ -307,23 +312,26 @@ export function TransactionStatus({
                 }}
                 transition={{ duration: 0.5 }}
               >
-                <motion.div
-                  className="w-12 h-12 rounded-full border-2 border-dashed border-primary/50 flex items-center justify-center"
-                  animate={
-                    status === "generating_proof"
-                      ? {
-                          rotate: 360,
-                        }
-                      : {}
-                  }
-                  transition={{
-                    duration: 2,
-                    repeat: status === "generating_proof" ? Infinity : 0,
-                    ease: "linear",
-                  }}
-                >
+                <div className="relative w-12 h-12 flex items-center justify-center">
+                  {/* Rotating border - only rotates during generating_proof */}
+                  <motion.div
+                    className="absolute inset-0 rounded-full border-2 border-dashed border-primary/50"
+                    animate={
+                      status === "generating_proof"
+                        ? {
+                            rotate: 360,
+                          }
+                        : {}
+                    }
+                    transition={{
+                      duration: 2,
+                      repeat: status === "generating_proof" ? Infinity : 0,
+                      ease: "linear",
+                    }}
+                  />
+                  {/* Static icon */}
                   <Shield className="w-6 h-6 text-primary" />
-                </motion.div>
+                </div>
                 <span className="text-xs text-muted-foreground">
                   Privacy Zone
                 </span>
@@ -340,7 +348,7 @@ export function TransactionStatus({
                 }}
                 transition={{ duration: 0.5 }}
               >
-                {/* Moving dot */}
+                {/* New moving dot for third stage - goes from middle to end and back */}
                 <motion.div
                   className="absolute w-2 h-2 bg-primary rounded-full -top-0.5"
                   animate={{
@@ -349,6 +357,11 @@ export function TransactionStatus({
                         ? [0, 200, 0]
                         : animationState.ballPosition === "destination"
                         ? 200
+                        : 0,
+                    opacity:
+                      animationState.ballPosition === "moving_to_dest" ||
+                      animationState.ballPosition === "destination"
+                        ? 1
                         : 0,
                   }}
                   transition={{
@@ -391,18 +404,46 @@ export function TransactionStatus({
               <span className="text-muted-foreground">Amount:</span>
               <span className="font-medium">{amount} SOL</span>
             </div>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-sm items-center">
               <span className="text-muted-foreground">Recipient:</span>
-              <span className="font-mono text-xs">
-                {recipient.slice(0, 8)}...{recipient.slice(-8)}
-              </span>
+              <div className="flex items-center gap-2">
+                <a
+                  href={`https://solscan.io/account/${recipient}?cluster=devnet`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-xs text-primary hover:underline"
+                >
+                  {recipient.slice(0, 8)}...{recipient.slice(-8)}
+                </a>
+                <button
+                  onClick={() => copyToClipboard(recipient)}
+                  className="p-1 hover:bg-muted rounded transition-colors"
+                  title="Copy full address"
+                >
+                  <Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                </button>
+              </div>
             </div>
             {signature && (
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm items-center">
                 <span className="text-muted-foreground">Signature:</span>
-                <span className="font-mono text-xs">
-                  {signature.slice(0, 8)}...{signature.slice(-8)}
-                </span>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={`https://solscan.io/tx/${signature}?cluster=devnet`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-xs text-primary hover:underline"
+                  >
+                    {signature.slice(0, 8)}...{signature.slice(-8)}
+                  </a>
+                  <button
+                    onClick={() => copyToClipboard(signature)}
+                    className="p-1 hover:bg-muted rounded transition-colors"
+                    title="Copy full signature"
+                  >
+                    <Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                  </button>
+                </div>
               </div>
             )}
           </div>

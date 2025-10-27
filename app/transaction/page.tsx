@@ -883,7 +883,7 @@ export default function TransactionPage() {
                       setTransactionStatus("idle");
                       setTransactionSignature("");
                     }}
-                    className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-muted transition-colors"
+                    className="absolute top-2 right-2 z-10 p-2 rounded-full hover:bg-muted transition-colors"
                     aria-label="Close modal"
                   >
                     <X className="w-5 h-5 text-muted-foreground hover:text-foreground" />
