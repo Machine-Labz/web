@@ -192,7 +192,6 @@ export default function TransactionPage() {
   const [transactionStatus, setTransactionStatus] = useState<Status>("idle");
   const [transactionSignature, setTransactionSignature] = useState<string>("");
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [showNotification, setShowNotification] = useState(false);
 
   // Amount percentage functions
   const handleAmountPercentage = (percentage: number) => {
@@ -894,36 +893,6 @@ export default function TransactionPage() {
                     recipient={recipientWallet}
                     signature={transactionSignature}
                   />
-                </div>
-              </div>
-            )}
-
-            {/* Success Notification */}
-            {showNotification && (
-              <div className="fixed top-4 right-4 z-50">
-                <div className="bg-green-500 text-white rounded-lg shadow-lg p-4 max-w-sm">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle className="w-6 h-6" />
-                    <div>
-                      <h3 className="font-semibold">Transaction Complete!</h3>
-                      <p className="text-sm opacity-90">
-                        Your private transaction was successful
-                      </p>
-                      {transactionSignature && (
-                        <a
-                          href={`https://solscan.io/tx/${transactionSignature}?cluster=devnet&rpcUrl=${encodeURIComponent(
-                            SOLANA_RPC_URL
-                          )}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-sm underline hover:no-underline mt-2"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                          View on Solscan
-                        </a>
-                      )}
-                    </div>
-                  </div>
                 </div>
               </div>
             )}
