@@ -11,6 +11,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
 
 export type TransactionStatus =
   | "idle"
@@ -122,11 +123,23 @@ export function TransactionStatus({
 }: TransactionStatusProps) {
   const config = statusConfig[status];
   const Icon = config.icon;
+  const [copiedItem, setCopiedItem] = useState<string | null>(null);
 
-  const copyToClipboard = async (text: string) => {
+  // Detect cluster based on RPC URL
+  const getCluster = () => {
+    const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "";
+    if (rpcUrl.includes("devnet")) return "devnet";
+    if (rpcUrl.includes("testnet")) return "testnet";
+    if (rpcUrl.includes("mainnet") || rpcUrl.includes("api.mainnet"))
+      return "mainnet";
+    return "devnet"; // default
+  };
+
+  const copyToClipboard = async (text: string, itemType: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      // You could add a toast notification here if needed
+      setCopiedItem(itemType);
+      setTimeout(() => setCopiedItem(null), 2000);
     } catch (err) {
       console.error("Failed to copy text: ", err);
     }
@@ -408,7 +421,7 @@ export function TransactionStatus({
               <span className="text-muted-foreground">Recipient:</span>
               <div className="flex items-center gap-2">
                 <a
-                  href={`https://solscan.io/account/${recipient}?cluster=devnet`}
+                  href={`https://solscan.io/account/${recipient}?cluster=${getCluster()}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-mono text-xs text-primary hover:underline"
@@ -416,11 +429,15 @@ export function TransactionStatus({
                   {recipient.slice(0, 8)}...{recipient.slice(-8)}
                 </a>
                 <button
-                  onClick={() => copyToClipboard(recipient)}
+                  onClick={() => copyToClipboard(recipient, "recipient")}
                   className="p-1 hover:bg-muted rounded transition-colors"
                   title="Copy full address"
                 >
-                  <Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                  {copiedItem === "recipient" ? (
+                    <CheckCircle className="w-3 h-3 text-green-500" />
+                  ) : (
+                    <Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                  )}
                 </button>
               </div>
             </div>
@@ -429,7 +446,7 @@ export function TransactionStatus({
                 <span className="text-muted-foreground">Signature:</span>
                 <div className="flex items-center gap-2">
                   <a
-                    href={`https://solscan.io/tx/${signature}?cluster=devnet`}
+                    href={`https://solscan.io/tx/${signature}?cluster=${getCluster()}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-mono text-xs text-primary hover:underline"
@@ -437,15 +454,47 @@ export function TransactionStatus({
                     {signature.slice(0, 8)}...{signature.slice(-8)}
                   </a>
                   <button
-                    onClick={() => copyToClipboard(signature)}
+                    onClick={() => copyToClipboard(signature, "signature")}
                     className="p-1 hover:bg-muted rounded transition-colors"
                     title="Copy full signature"
                   >
-                    <Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                    {copiedItem === "signature" ? (
+                      <CheckCircle className="w-3 h-3 text-green-500" />
+                    ) : (
+                      <Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                    )}
                   </button>
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* View Transaction Link - Only show when transaction is complete */}
+        {status === "sent" && signature && (
+          <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                <div>
+                  <h4 className="font-semibold text-green-800 dark:text-green-200">
+                    Transaction Complete!
+                  </h4>
+                  <p className="text-sm text-green-600 dark:text-green-400">
+                    Your private transaction was successful
+                  </p>
+                </div>
+              </div>
+              <a
+                href={`https://solscan.io/tx/${signature}?cluster=${getCluster()}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium"
+              >
+                <ExternalLink className="w-4 h-4" />
+                View on Solscan
+              </a>
+            </div>
           </div>
         )}
 
