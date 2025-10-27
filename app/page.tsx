@@ -1152,16 +1152,13 @@ export default function CloakLandingPage() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                  <Button size="lg" className="rounded-full h-12 px-8">
-                    Get Started with SDK
-                    <ArrowRight className="ml-2 size-4" />
-                  </Button>
                   <Button
                     size="lg"
-                    variant="outline"
-                    className="rounded-full h-12 px-8"
+                    disabled
+                    className="rounded-full h-12 px-8 bg-muted text-muted-foreground cursor-not-allowed"
                   >
-                    View on GitHub
+                    <Lock className="mr-2 size-4" />
+                    Coming Soon
                   </Button>
                 </div>
               </motion.div>
@@ -1344,6 +1341,15 @@ export default function CloakLandingPage() {
                   <Image
                     src="https://cdn.prod.website-files.com/670670901c57408478ad4a9f/67121f25b01a10c4e680cc87_logo%20-%20source.svg"
                     alt="Source Logo"
+                    width={100}
+                    height={50}
+                    className="opacity-60 hover:opacity-100 transition-opacity duration-300"
+                  />
+                </div>
+                <div className="flex items-center justify-center">
+                  <Image
+                    src="/stbrlogo.png"
+                    alt="STBR Logo"
                     width={100}
                     height={50}
                     className="opacity-60 hover:opacity-100 transition-opacity duration-300"

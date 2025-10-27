@@ -928,12 +928,12 @@ export default function TransactionPage() {
                   <Shield className="w-4 h-4" />
                   See Privacy in Action
                 </Link>
-                <Link
+                {/* <Link
                   href="/admin"
                   className="hover:text-foreground transition-colors"
                 >
                   Admin
-                </Link>
+                </Link> */}
               </div>
             </div>
           </div>

@@ -10,6 +10,10 @@ import {
   Search,
   Filter,
   ArrowUpDown,
+  Copy,
+  ExternalLink,
+  CheckCircle,
+  Loader,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,10 +57,31 @@ export default function MinersPage() {
   const [activeSlotThreshold, setActiveSlotThreshold] = useState<number | null>(
     null
   );
+  const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterOption, setFilterOption] = useState<FilterOption>("all");
   const [sortOption, setSortOption] = useState<SortOption>("activity");
+
+  // Detect cluster based on RPC URL
+  const getCluster = () => {
+    const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "";
+    if (rpcUrl.includes("devnet")) return "devnet";
+    if (rpcUrl.includes("testnet")) return "testnet";
+    if (rpcUrl.includes("mainnet") || rpcUrl.includes("api.mainnet"))
+      return "mainnet";
+    return "devnet"; // default
+  };
+
+  const copyToClipboard = async (text: string, address: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedAddress(address);
+      setTimeout(() => setCopiedAddress(null), 2000);
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+    }
+  };
 
   useEffect(() => {
     const fetchMiners = async () => {
@@ -171,7 +196,7 @@ export default function MinersPage() {
 
           {loading ? (
             <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
-              <Activity className="h-12 w-12 animate-spin" />
+              <Loader className="h-12 w-12 animate-spin" />
               <p>Loading miners...</p>
             </div>
           ) : error ? (
@@ -346,13 +371,44 @@ export default function MinersPage() {
                         <CardHeader className="pb-3">
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1 min-w-0">
-                              <p
-                                className="font-mono text-xs truncate"
-                                title={miner.authority}
-                              >
-                                {miner.authority.slice(0, 8)}...
-                                {miner.authority.slice(-6)}
-                              </p>
+                              <div className="flex items-center gap-2">
+                                <p
+                                  className="font-mono text-xs truncate"
+                                  title={miner.authority}
+                                >
+                                  {miner.authority.slice(0, 8)}...
+                                  {miner.authority.slice(-6)}
+                                </p>
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() =>
+                                      copyToClipboard(
+                                        miner.authority,
+                                        miner.authority
+                                      )
+                                    }
+                                    className="p-1 hover:bg-muted rounded transition-colors"
+                                    title="Copy full address"
+                                  >
+                                    {copiedAddress === miner.authority ? (
+                                      <CheckCircle className="w-3 h-3 text-green-500" />
+                                    ) : (
+                                      <Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                                    )}
+                                  </button>
+                                  <a
+                                    href={`https://solscan.io/account/${
+                                      miner.authority
+                                    }?cluster=${getCluster()}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-1 hover:bg-muted rounded transition-colors"
+                                    title="View on Solscan"
+                                  >
+                                    <ExternalLink className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                                  </a>
+                                </div>
+                              </div>
                             </div>
                             {miner.isActive ? (
                               <Badge className="bg-green-500 text-white shrink-0">
