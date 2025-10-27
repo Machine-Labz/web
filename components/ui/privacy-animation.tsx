@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Wallet, Shield, Stamp } from "lucide-react";
+import { Wallet, Shield } from "lucide-react";
 
 /**
  * CloakPrivacyAnimation
@@ -9,7 +9,6 @@ import { Wallet, Shield, Stamp } from "lucide-react";
  * - Fragmentation into "notes" within the zone (shuffling)
  * - Merkle root pulse + "ZK Proof" seal
  * - Exit with "bundle" effect (beam)
- * - Receipt NFT at the end
  * - Smooth infinite loop (~7s)
  */
 export default function CloakPrivacyAnimation(props?: {
@@ -375,47 +374,6 @@ export default function CloakPrivacyAnimation(props?: {
               ease: "easeIn",
             }}
           />
-
-          {/* Receipt NFT (appears at the end, fades out) */}
-          <motion.g
-            initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
-            animate={{
-              opacity: [0, 1, 1, 0],
-              scale: [0.9, 1, 1, 0.98],
-              rotate: [-2, 0, 0, -2],
-            }}
-            transition={{
-              times: [nt(tReceipt), nt(tReceipt + 0.2), nt(fadeOut - 0.1), 1],
-              duration: T,
-              repeat: Infinity,
-            }}
-          >
-            <rect
-              x="830"
-              y="76"
-              width="84"
-              height="88"
-              rx="8"
-              ry="8"
-              fill="transparent"
-              stroke="hsl(var(--primary))"
-              strokeWidth="1.5"
-              opacity="0.7"
-            />
-            <foreignObject x="830" y="76" width="84" height="88">
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="flex flex-col items-center justify-center gap-2 text-primary">
-                  <Stamp className="w-5 h-5" />
-                  <span className="text-[10px] leading-none font-medium">
-                    Receipt NFT
-                  </span>
-                  <span className="text-[9px] leading-none opacity-70">
-                    att#e3a1…
-                  </span>
-                </div>
-              </div>
-            </foreignObject>
-          </motion.g>
         </svg>
       </div>
     </div>
