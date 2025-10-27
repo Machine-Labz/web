@@ -289,7 +289,7 @@ export function TransactionStatus({
                   animate={{
                     x:
                       animationState.ballPosition === "moving"
-                        ? [0, 200, 0]
+                        ? [0, 133, 0]
                         : 0,
                     opacity: animationState.ballPosition === "moving" ? 1 : 0,
                   }}
