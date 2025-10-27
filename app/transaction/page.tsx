@@ -650,13 +650,13 @@ export default function TransactionPage() {
             </div>
 
             <Card className="w-full">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+              {/* <CardHeader>
+                <CardTitle className="flex items-center justify-center gap-2">
                   <Shield className="h-5 w-5 text-primary" />
                   Private Transaction
                 </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
+              </CardHeader> */}
+              <CardContent className="space-y-6 mt-4">
                 <div className="space-y-2">
                   <Label>Select Token</Label>
                   <div className="grid grid-cols-2 gap-3">
@@ -838,6 +838,27 @@ export default function TransactionPage() {
                       <span>Multiple recipients coming soon</span>
                     </div>
                   </div>
+                </div>
+
+                {/* Documentation and Miners Links */}
+                <div className="flex justify-center gap-4 py-4 border-t border-border/50">
+                  <Link
+                    href="/miners"
+                    className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Shield className="w-4 h-4" />
+                    View Miners
+                  </Link>
+                  <span className="text-muted-foreground">•</span>
+                  <a
+                    href="https://docs.cloakprotocol.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Documentation
+                  </a>
                 </div>
 
                 <Button

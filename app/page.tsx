@@ -1,5 +1,8 @@
 "use client";
 
+// Configuration - Set to true when dapp is ready for public use
+const DAPP_AVAILABLE = false;
+
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -308,9 +311,9 @@ export default function CloakLandingPage() {
               </Badge>
 
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-foreground font-space-grotesk">
-                {isLaunched
+                {DAPP_AVAILABLE
                   ? "Send SOL with Complete Privacy in Seconds"
-                  : "Coming Soon - Private SOL Transfers"}
+                  : "Private Transfers on Solana"}
               </h1>
 
               <p className="text-lg md:text-xl text-muted-foreground mb-4 max-w-3xl mx-auto text-balance">
@@ -318,11 +321,11 @@ export default function CloakLandingPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <motion.div
-                  whileHover={{ scale: isLaunched ? 1.05 : 1 }}
-                  whileTap={{ scale: isLaunched ? 0.95 : 1 }}
+                  whileHover={{ scale: DAPP_AVAILABLE ? 1.05 : 1 }}
+                  whileTap={{ scale: DAPP_AVAILABLE ? 0.95 : 1 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {isLaunched ? (
+                  {DAPP_AVAILABLE ? (
                     <Link href="/transaction">
                       <Button
                         size="lg"
@@ -357,13 +360,13 @@ export default function CloakLandingPage() {
                   whileTap={{ scale: 0.95 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Button
+                  {/* <Button
                     size="lg"
                     variant="outline"
                     className="rounded-full h-12 px-8 text-base border-primary/20 hover:bg-primary/5 bg-transparent text-foreground"
                   >
                     Learn More
-                  </Button>
+                  </Button> */}
                 </motion.div>
               </div>
 
@@ -1378,25 +1381,36 @@ export default function CloakLandingPage() {
                   whileTap={{ scale: 0.95 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Link href="/transaction">
+                  {DAPP_AVAILABLE ? (
+                    <Link href="/transaction">
+                      <Button
+                        size="lg"
+                        variant="default"
+                        className="rounded-full h-12 px-8 text-base bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
+                        Send Privately
+                        <motion.div
+                          animate={{ x: [0, 4, 0] }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                          }}
+                        >
+                          <ArrowRight className="ml-2 size-4" />
+                        </motion.div>
+                      </Button>
+                    </Link>
+                  ) : (
                     <Button
                       size="lg"
-                      variant="default"
-                      className="rounded-full h-12 px-8 text-base bg-primary text-primary-foreground hover:bg-primary/90"
+                      disabled
+                      className="rounded-full h-12 px-8 text-base bg-muted text-muted-foreground cursor-not-allowed"
                     >
-                      Send Privately
-                      <motion.div
-                        animate={{ x: [0, 4, 0] }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                      >
-                        <ArrowRight className="ml-2 size-4" />
-                      </motion.div>
+                      <Lock className="mr-2 size-4" />
+                      Coming Soon
                     </Button>
-                  </Link>
+                  )}
                 </motion.div>
                 {/* <Button
                   size="lg"

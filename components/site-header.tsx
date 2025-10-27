@@ -1,8 +1,11 @@
 "use client";
 
+// Configuration - Set to true when dapp is ready for public use
+const DAPP_AVAILABLE = false;
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Menu, Moon, Sun, X } from "lucide-react";
+import { ChevronRight, Menu, Moon, Sun, X, Lock } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import SvgIcon from "@/components/ui/logo";
@@ -12,7 +15,7 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 const navItems = [
   { label: "Features", href: "/#features" },
   { label: "How It Works", href: "/#how-it-works" },
-  { label: "Security", href: "/#security" },  
+  { label: "Security", href: "/#security" },
   {
     label: "Documentation",
     href: "https://cloak-eqpl.vercel.app/",
@@ -109,12 +112,22 @@ export function SiteHeader({ showWalletButton = false }: SiteHeaderProps) {
             </ClientOnly>
           )}
 
-          <Link href="/transaction">
-            <Button className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
-              Send Privately
-              <ChevronRight className="ml-1 size-4" />
+          {DAPP_AVAILABLE ? (
+            <Link href="/transaction">
+              <Button className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
+                Send Privately
+                <ChevronRight className="ml-1 size-4" />
+              </Button>
+            </Link>
+          ) : (
+            <Button
+              disabled
+              className="rounded-full bg-muted text-muted-foreground cursor-not-allowed"
+            >
+              <Lock className="mr-2 size-4" />
+              Coming Soon
             </Button>
-          </Link>
+          )}
         </div>
 
         <div className="flex items-center gap-4 md:hidden">
@@ -182,12 +195,25 @@ export function SiteHeader({ showWalletButton = false }: SiteHeaderProps) {
               </ClientOnly>
             )}
 
-            <Link href="/transaction" onClick={() => setMobileMenuOpen(false)}>
-              <Button className="w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
-                Send Privately
-                <ChevronRight className="ml-1 size-4" />
+            {DAPP_AVAILABLE ? (
+              <Link
+                href="/transaction"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Button className="w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
+                  Send Privately
+                  <ChevronRight className="ml-1 size-4" />
+                </Button>
+              </Link>
+            ) : (
+              <Button
+                disabled
+                className="w-full rounded-full bg-muted text-muted-foreground cursor-not-allowed"
+              >
+                <Lock className="mr-2 size-4" />
+                Coming Soon
               </Button>
-            </Link>
+            )}
           </div>
         </div>
       )}
