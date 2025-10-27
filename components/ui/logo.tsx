@@ -69,7 +69,7 @@ const SvgIcon = ({ className, ...props }: React.SVGProps<SVGSVGElement>) => {
         width={32}
         height={32}
         className={className}
-        {...props}
+        {...(props as any)}
       />
     );
   }

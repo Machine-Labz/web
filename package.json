@@ -6,9 +6,20 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "build:mobile": "next build && npx cap sync",
+    "android": "npx cap run android",
+    "android:dev": "npx cap run android --livereload --external",
+    "android:build": "npm run build:mobile && npx cap build android",
+    "android:open": "npx cap open android"
   },
   "dependencies": {
+    "@capacitor/android": "^7.4.4",
+    "@capacitor/cli": "^7.4.4",
+    "@capacitor/core": "^7.4.4",
+    "@capacitor/keyboard": "^7.0.3",
+    "@capacitor/splash-screen": "^7.0.3",
+    "@capacitor/status-bar": "^7.0.3",
     "@emotion/is-prop-valid": "latest",
     "@hookform/resolvers": "^3.9.1",
     "@noble/hashes": "^2.0.1",
