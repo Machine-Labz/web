@@ -170,8 +170,8 @@ export default function CloakLandingPage() {
               max-h-[300vw]
               "
             style={{
-              minHeight: '100dvh',
-              width: '100vw',
+              minHeight: "100dvh",
+              width: "100vw",
             }}
           >
             <div
@@ -207,7 +207,9 @@ export default function CloakLandingPage() {
                   key={`v-${i}`}
                   className="absolute top-0 w-px h-full bg-gradient-to-b from-transparent via-primary to-transparent"
                   style={{
-                    left: `calc(${12.5 + i * 12.5}% * (min(100vw,100dvh)/100vw))`,
+                    left: `calc(${
+                      12.5 + i * 12.5
+                    }% * (min(100vw,100dvh)/100vw))`,
                   }}
                   animate={{
                     opacity: [0, 0.6, 0],
@@ -291,7 +293,9 @@ export default function CloakLandingPage() {
                   className="absolute w-1 h-1 bg-primary/60 rounded-full"
                   style={{
                     left: `calc(${10 + i * 12}% * (min(100vw,100dvh)/100vw))`,
-                    top: `calc(${20 + (i % 4) * 20}% * (min(100vw,100dvh)/100vw))`,
+                    top: `calc(${
+                      20 + (i % 4) * 20
+                    }% * (min(100vw,100dvh)/100vw))`,
                   }}
                   animate={{
                     y: [-30, 30, -30],
@@ -340,7 +344,10 @@ export default function CloakLandingPage() {
                   className="w-full sm:w-auto"
                 >
                   {DAPP_AVAILABLE ? (
-                    <Link href="/transaction" className="block w-full sm:w-auto">
+                    <Link
+                      href="/transaction"
+                      className="block w-full sm:w-auto"
+                    >
                       <Button
                         size="lg"
                         className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -435,25 +442,33 @@ export default function CloakLandingPage() {
                     <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary">
                       {timeLeft.days.toString().padStart(2, "0")}
                     </div>
-                    <div className="text-[10px] sm:text-xs text-muted-foreground">Days</div>
+                    <div className="text-[10px] sm:text-xs text-muted-foreground">
+                      Days
+                    </div>
                   </div>
                   <div className="text-center">
                     <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary">
                       {timeLeft.hours.toString().padStart(2, "0")}
                     </div>
-                    <div className="text-[10px] sm:text-xs text-muted-foreground">Hours</div>
+                    <div className="text-[10px] sm:text-xs text-muted-foreground">
+                      Hours
+                    </div>
                   </div>
                   <div className="text-center">
                     <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary">
                       {timeLeft.minutes.toString().padStart(2, "0")}
                     </div>
-                    <div className="text-[10px] sm:text-xs text-muted-foreground">Min</div>
+                    <div className="text-[10px] sm:text-xs text-muted-foreground">
+                      Min
+                    </div>
                   </div>
                   <div className="text-center">
                     <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary">
                       {timeLeft.seconds.toString().padStart(2, "0")}
                     </div>
-                    <div className="text-[10px] sm:text-xs text-muted-foreground">Sec</div>
+                    <div className="text-[10px] sm:text-xs text-muted-foreground">
+                      Sec
+                    </div>
                   </div>
                 </div>
                 <p className="text-center text-[10px] sm:text-xs text-muted-foreground mt-2 px-2">
@@ -626,7 +641,10 @@ export default function CloakLandingPage() {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="w-full py-12 sm:py-16 md:py-24 lg:py-32">
+        <section
+          id="features"
+          className="w-full py-12 sm:py-16 md:py-24 lg:py-32"
+        >
           <div className="container px-4 md:px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -797,7 +815,10 @@ export default function CloakLandingPage() {
         </section>
 
         {/* Security Section */}
-        <section id="security" className="w-full py-12 sm:py-16 md:py-24 lg:py-32">
+        <section
+          id="security"
+          className="w-full py-12 sm:py-16 md:py-24 lg:py-32"
+        >
           <div className="container px-4 md:px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -1219,114 +1240,118 @@ export default function CloakLandingPage() {
                     <div className="p-3 sm:p-4 md:p-6 min-w-max">
                       <pre className="text-[10px] sm:text-xs md:text-sm text-gray-100 font-mono leading-relaxed">
                         <code className="block whitespace-pre">
-                        <span className="text-gray-500">
-                          // Jupiter DEX Integration
-                        </span>
-                        <br />
-                        <span className="text-blue-400">use</span>{" "}
-                        <span className="text-yellow-300">jupiter_swap</span>::
-                        <span className="text-green-400">JupiterClient</span>;
-                        <br />
-                        <span className="text-blue-400">use</span>{" "}
-                        <span className="text-yellow-300">cloak_sdk</span>::
-                        <span className="text-green-400">CloakRoute</span>;
-                        <br />
-                        <br />
-                        <span className="text-blue-400">async</span>{" "}
-                        <span className="text-blue-400">fn</span>{" "}
-                        <span className="text-yellow-300">
-                          execute_private_swap
-                        </span>
-                        (
-                        <br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;
-                        <span className="text-yellow-300">
-                          input_mint
-                        </span>: <span className="text-green-400">Pubkey</span>,
-                        <br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;
-                        <span className="text-yellow-300">
-                          output_mint
-                        </span>: <span className="text-green-400">Pubkey</span>,
-                        <br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;
-                        <span className="text-yellow-300">amount</span>:{" "}
-                        <span className="text-blue-400">u64</span>,<br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;
-                        <span className="text-yellow-300">user</span>:{" "}
-                        <span className="text-green-400">Pubkey</span>,<br />){" "}
-                        <span className="text-blue-400">-&gt;</span>{" "}
-                        <span className="text-green-400">Result</span>&lt;
-                        <span className="text-green-400">String</span>,{" "}
-                        <span className="text-red-400">Error</span>&gt;{" "}
-                        <span className="text-gray-500">{`{`}</span>
-                        <br />
-                        <br />
-                        &nbsp;&nbsp;
-                        <span className="text-gray-500">
-                          // 1. Get Jupiter quote
-                        </span>
-                        <br />
-                        &nbsp;&nbsp;<span className="text-blue-400">
-                          let
-                        </span>{" "}
-                        <span className="text-yellow-300">quote</span> ={" "}
-                        <span className="text-yellow-300">JupiterClient</span>::
-                        <span className="text-yellow-300">new</span>()
-                        <br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;.
-                        <span className="text-green-400">get_quote</span>(
-                        <span className="text-yellow-300">input_mint</span>,{" "}
-                        <span className="text-yellow-300">output_mint</span>,{" "}
-                        <span className="text-yellow-300">amount</span>)<br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;.
-                        <span className="text-blue-400">await</span>?;
-                        <br />
-                        <br />
-                        &nbsp;&nbsp;
-                        <span className="text-gray-500">
-                          // 2. Create private route
-                        </span>
-                        <br />
-                        &nbsp;&nbsp;<span className="text-blue-400">
-                          let
-                        </span>{" "}
-                        <span className="text-yellow-300">cloak_route</span> ={" "}
-                        <span className="text-green-400">CloakRoute</span>::
-                        <span className="text-yellow-300">new</span>()
-                        <br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;.
-                        <span className="text-green-400">
-                          with_jupiter_quote
-                        </span>
-                        (<span className="text-yellow-300">quote</span>)<br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;.
-                        <span className="text-green-400">enable_privacy</span>(
-                        <span className="text-orange-400">true</span>);
-                        <br />
-                        <br />
-                        &nbsp;&nbsp;
-                        <span className="text-gray-500">
-                          // 3. Execute private swap
-                        </span>
-                        <br />
-                        &nbsp;&nbsp;<span className="text-blue-400">
-                          let
-                        </span>{" "}
-                        <span className="text-yellow-300">signature</span> ={" "}
-                        <span className="text-yellow-300">cloak_route</span>
-                        <br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;.
-                        <span className="text-green-400">execute_swap</span>(
-                        <span className="text-yellow-300">user</span>)<br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;.
-                        <span className="text-blue-400">await</span>?;
-                        <br />
-                        <br />
-                        &nbsp;&nbsp;<span className="text-green-400">Ok</span>(
-                        <span className="text-yellow-300">signature</span>)
-                        <br />
-                        <span className="text-gray-500">{`}`}</span>
+                          <span className="text-gray-500">
+                            // Jupiter DEX Integration
+                          </span>
+                          <br />
+                          <span className="text-blue-400">use</span>{" "}
+                          <span className="text-yellow-300">jupiter_swap</span>
+                          ::
+                          <span className="text-green-400">JupiterClient</span>;
+                          <br />
+                          <span className="text-blue-400">use</span>{" "}
+                          <span className="text-yellow-300">cloak_sdk</span>::
+                          <span className="text-green-400">CloakRoute</span>;
+                          <br />
+                          <br />
+                          <span className="text-blue-400">async</span>{" "}
+                          <span className="text-blue-400">fn</span>{" "}
+                          <span className="text-yellow-300">
+                            execute_private_swap
+                          </span>
+                          (
+                          <br />
+                          &nbsp;&nbsp;&nbsp;&nbsp;
+                          <span className="text-yellow-300">
+                            input_mint
+                          </span>:{" "}
+                          <span className="text-green-400">Pubkey</span>,
+                          <br />
+                          &nbsp;&nbsp;&nbsp;&nbsp;
+                          <span className="text-yellow-300">
+                            output_mint
+                          </span>:{" "}
+                          <span className="text-green-400">Pubkey</span>,
+                          <br />
+                          &nbsp;&nbsp;&nbsp;&nbsp;
+                          <span className="text-yellow-300">amount</span>:{" "}
+                          <span className="text-blue-400">u64</span>,<br />
+                          &nbsp;&nbsp;&nbsp;&nbsp;
+                          <span className="text-yellow-300">user</span>:{" "}
+                          <span className="text-green-400">Pubkey</span>,<br />){" "}
+                          <span className="text-blue-400">-&gt;</span>{" "}
+                          <span className="text-green-400">Result</span>&lt;
+                          <span className="text-green-400">String</span>,{" "}
+                          <span className="text-red-400">Error</span>&gt;{" "}
+                          <span className="text-gray-500">{`{`}</span>
+                          <br />
+                          <br />
+                          &nbsp;&nbsp;
+                          <span className="text-gray-500">
+                            // 1. Get Jupiter quote
+                          </span>
+                          <br />
+                          &nbsp;&nbsp;<span className="text-blue-400">
+                            let
+                          </span>{" "}
+                          <span className="text-yellow-300">quote</span> ={" "}
+                          <span className="text-yellow-300">JupiterClient</span>
+                          ::
+                          <span className="text-yellow-300">new</span>()
+                          <br />
+                          &nbsp;&nbsp;&nbsp;&nbsp;.
+                          <span className="text-green-400">get_quote</span>(
+                          <span className="text-yellow-300">input_mint</span>,{" "}
+                          <span className="text-yellow-300">output_mint</span>,{" "}
+                          <span className="text-yellow-300">amount</span>)<br />
+                          &nbsp;&nbsp;&nbsp;&nbsp;.
+                          <span className="text-blue-400">await</span>?;
+                          <br />
+                          <br />
+                          &nbsp;&nbsp;
+                          <span className="text-gray-500">
+                            // 2. Create private route
+                          </span>
+                          <br />
+                          &nbsp;&nbsp;<span className="text-blue-400">
+                            let
+                          </span>{" "}
+                          <span className="text-yellow-300">cloak_route</span> ={" "}
+                          <span className="text-green-400">CloakRoute</span>::
+                          <span className="text-yellow-300">new</span>()
+                          <br />
+                          &nbsp;&nbsp;&nbsp;&nbsp;.
+                          <span className="text-green-400">
+                            with_jupiter_quote
+                          </span>
+                          (<span className="text-yellow-300">quote</span>)<br />
+                          &nbsp;&nbsp;&nbsp;&nbsp;.
+                          <span className="text-green-400">enable_privacy</span>
+                          (<span className="text-orange-400">true</span>);
+                          <br />
+                          <br />
+                          &nbsp;&nbsp;
+                          <span className="text-gray-500">
+                            // 3. Execute private swap
+                          </span>
+                          <br />
+                          &nbsp;&nbsp;<span className="text-blue-400">
+                            let
+                          </span>{" "}
+                          <span className="text-yellow-300">signature</span> ={" "}
+                          <span className="text-yellow-300">cloak_route</span>
+                          <br />
+                          &nbsp;&nbsp;&nbsp;&nbsp;.
+                          <span className="text-green-400">execute_swap</span>(
+                          <span className="text-yellow-300">user</span>)<br />
+                          &nbsp;&nbsp;&nbsp;&nbsp;.
+                          <span className="text-blue-400">await</span>?;
+                          <br />
+                          <br />
+                          &nbsp;&nbsp;<span className="text-green-400">Ok</span>
+                          (<span className="text-yellow-300">signature</span>)
+                          <br />
+                          <span className="text-gray-500">{`}`}</span>
                         </code>
                       </pre>
                     </div>
@@ -1451,7 +1476,10 @@ export default function CloakLandingPage() {
         </section>
 
         {/* FAQ Section */}
-        <section id="faq" className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-muted/30">
+        <section
+          id="faq"
+          className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-muted/30"
+        >
           <div className="container px-4 md:px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
