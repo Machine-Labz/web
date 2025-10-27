@@ -16,6 +16,7 @@ import {
   ExternalLink,
   X,
 } from "lucide-react";
+import { PageLayout } from "@/components/mobile-layout";
 
 // Token Logo SVGs
 const SOLIcon = () => (
@@ -635,310 +636,315 @@ export default function TransactionPage() {
 
   return (
     <WalletGuard>
-      <div className="min-h-screen bg-background flex flex-col">
-        <DappHeader />
+      <PageLayout>
+        <div className="min-h-screen bg-background flex flex-col">
+          <DappHeader />
 
-        <main className="flex-1 flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold font-space-grotesk text-foreground mb-2">
-                Send Tokens Privately
-              </h1>
-              <p className="text-muted-foreground">
-                Send tokens with complete privacy using zero-knowledge proofs
-              </p>
-            </div>
+          <main className="flex-1 flex items-center justify-center p-4">
+            <div className="w-full max-w-2xl">
+              <div className="text-center mb-8">
+                <h1 className="text-3xl font-bold font-space-grotesk text-foreground mb-2">
+                  Send Tokens Privately
+                </h1>
+                <p className="text-muted-foreground">
+                  Send tokens with complete privacy using zero-knowledge proofs
+                </p>
+              </div>
 
-            <Card className="w-full">
-              {/* <CardHeader>
+              <Card className="w-full">
+                {/* <CardHeader>
                 <CardTitle className="flex items-center justify-center gap-2">
                   <Shield className="h-5 w-5 text-primary" />
                   Private Transaction
                 </CardTitle>
               </CardHeader> */}
-              <CardContent className="space-y-6 mt-4">
-                <div className="space-y-2">
-                  <Label>Select Token</Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* SOL */}
-                    <button
-                      type="button"
-                      onClick={() => setSelectedToken("SOL")}
-                      className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all hover:border-primary/50 ${
-                        selectedToken === "SOL"
-                          ? "border-primary bg-primary/5"
-                          : "border-border bg-background hover:bg-muted/50"
-                      }`}
-                    >
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-background">
-                        <SOLIcon />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="font-semibold text-foreground">SOL</p>
-                        <p className="text-xs text-muted-foreground">Solana</p>
-                      </div>
-                      {selectedToken === "SOL" && (
-                        <CheckCircle className="w-5 h-5 text-primary" />
-                      )}
-                    </button>
+                <CardContent className="space-y-6 mt-4">
+                  <div className="space-y-2">
+                    <Label>Select Token</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* SOL */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedToken("SOL")}
+                        className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all hover:border-primary/50 ${
+                          selectedToken === "SOL"
+                            ? "border-primary bg-primary/5"
+                            : "border-border bg-background hover:bg-muted/50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-background">
+                          <SOLIcon />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <p className="font-semibold text-foreground">SOL</p>
+                          <p className="text-xs text-muted-foreground">
+                            Solana
+                          </p>
+                        </div>
+                        {selectedToken === "SOL" && (
+                          <CheckCircle className="w-5 h-5 text-primary" />
+                        )}
+                      </button>
 
-                    {/* USDC */}
-                    <button
-                      type="button"
-                      onClick={() => {}}
-                      disabled
-                      className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-background opacity-50 cursor-not-allowed"
-                    >
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-background">
-                        <USDCIcon />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="font-semibold text-foreground">USDC</p>
-                        <p className="text-xs text-muted-foreground">
-                          Coming Soon
-                        </p>
-                      </div>
-                      <Lock className="w-5 h-5 text-muted-foreground" />
-                    </button>
+                      {/* USDC */}
+                      <button
+                        type="button"
+                        onClick={() => {}}
+                        disabled
+                        className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-background opacity-50 cursor-not-allowed"
+                      >
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-background">
+                          <USDCIcon />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <p className="font-semibold text-foreground">USDC</p>
+                          <p className="text-xs text-muted-foreground">
+                            Coming Soon
+                          </p>
+                        </div>
+                        <Lock className="w-5 h-5 text-muted-foreground" />
+                      </button>
 
-                    {/* ORE */}
-                    <button
-                      type="button"
-                      onClick={() => {}}
-                      disabled
-                      className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-background opacity-50 cursor-not-allowed"
-                    >
-                      <div className="flex items-center justify-center w-10 h-10">
-                        <OREIcon />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="font-semibold text-foreground">ORE</p>
-                        <p className="text-xs text-muted-foreground">
-                          Coming Soon
-                        </p>
-                      </div>
-                      <Lock className="w-5 h-5 text-muted-foreground" />
-                    </button>
+                      {/* ORE */}
+                      <button
+                        type="button"
+                        onClick={() => {}}
+                        disabled
+                        className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-background opacity-50 cursor-not-allowed"
+                      >
+                        <div className="flex items-center justify-center w-10 h-10">
+                          <OREIcon />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <p className="font-semibold text-foreground">ORE</p>
+                          <p className="text-xs text-muted-foreground">
+                            Coming Soon
+                          </p>
+                        </div>
+                        <Lock className="w-5 h-5 text-muted-foreground" />
+                      </button>
 
-                    {/* ZCASH */}
-                    <button
-                      type="button"
-                      onClick={() => {}}
-                      disabled
-                      className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-background opacity-50 cursor-not-allowed"
-                    >
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-background">
-                        <ZCashIcon />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="font-semibold text-foreground">ZCash</p>
-                        <p className="text-xs text-muted-foreground">
-                          Coming Soon
-                        </p>
-                      </div>
-                      <Lock className="w-5 h-5 text-muted-foreground" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Amount</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    placeholder="0.0"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="text-lg"
-                  />
-
-                  {/* Amount percentage buttons */}
-                  <div className="flex gap-2 mt-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleAmountPercentage(25)}
-                      disabled={!connected || balance === null}
-                      className="flex-1 h-8 text-xs font-medium"
-                    >
-                      +25%
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleAmountPercentage(50)}
-                      disabled={!connected || balance === null}
-                      className="flex-1 h-8 text-xs font-medium"
-                    >
-                      +50%
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleAmountPercentage(100)}
-                      disabled={!connected || balance === null}
-                      className="flex-1 h-8 text-xs font-medium"
-                    >
-                      Max
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleResetAmount}
-                      disabled={!amount}
-                      className="flex-1 h-8 text-xs font-medium"
-                    >
-                      Reset
-                    </Button>
-                  </div>
-
-                  <p className="text-sm text-muted-foreground">
-                    Available:{" "}
-                    {connected && balance !== null
-                      ? `${formatAmount(balance)} SOL`
-                      : connected
-                      ? "Loading..."
-                      : "Connect wallet to see balance"}
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label>Recipients</Label>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled
-                      className="opacity-50 cursor-not-allowed"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Recipient
-                      <Lock className="h-3 w-3 ml-2" />
-                    </Button>
+                      {/* ZCASH */}
+                      <button
+                        type="button"
+                        onClick={() => {}}
+                        disabled
+                        className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-background opacity-50 cursor-not-allowed"
+                      >
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-background">
+                          <ZCashIcon />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <p className="font-semibold text-foreground">ZCash</p>
+                          <p className="text-xs text-muted-foreground">
+                            Coming Soon
+                          </p>
+                        </div>
+                        <Lock className="w-5 h-5 text-muted-foreground" />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="recipient">Recipient 1</Label>
+                    <Label htmlFor="amount">Amount</Label>
                     <Input
-                      id="recipient"
-                      placeholder="Enter recipient's wallet address"
-                      value={recipientWallet}
-                      onChange={(e) => setRecipientWallet(e.target.value)}
+                      id="amount"
+                      type="number"
+                      placeholder="0.0"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
                       className="text-lg"
                     />
-                  </div>
 
-                  <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <Lock className="h-3 w-3" />
-                      <span>Multiple recipients coming soon</span>
+                    {/* Amount percentage buttons */}
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAmountPercentage(25)}
+                        disabled={!connected || balance === null}
+                        className="flex-1 h-8 text-xs font-medium"
+                      >
+                        +25%
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAmountPercentage(50)}
+                        disabled={!connected || balance === null}
+                        className="flex-1 h-8 text-xs font-medium"
+                      >
+                        +50%
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAmountPercentage(100)}
+                        disabled={!connected || balance === null}
+                        className="flex-1 h-8 text-xs font-medium"
+                      >
+                        Max
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleResetAmount}
+                        disabled={!amount}
+                        className="flex-1 h-8 text-xs font-medium"
+                      >
+                        Reset
+                      </Button>
                     </div>
-                  </div>
-                </div>
 
-                {/* Documentation and Miners Links */}
-                <div className="flex justify-center gap-4 py-4 border-t border-border/50">
-                  <Link
-                    href="/miners"
-                    className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Shield className="w-4 h-4" />
-                    View Miners
-                  </Link>
-                  <span className="text-muted-foreground">•</span>
-                  <a
-                    href="https://docs.cloakprotocol.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Documentation
-                  </a>
-                </div>
-
-                <Button
-                  onClick={handleSendTokens}
-                  disabled={
-                    !connected || !amount || !recipientWallet || isLoading
-                  }
-                  className="w-full h-12 text-lg"
-                  size="lg"
-                >
-                  {isLoading ? (
-                    "Processing..."
-                  ) : (
-                    <>
-                      <Send className="h-5 w-5 mr-2" />
-                      Send Privately
-                    </>
-                  )}
-                </Button>
-
-                {!connected && (
-                  <div className="text-center p-4 bg-muted/50 rounded-lg">
-                    <Wallet className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">
-                      Connect your wallet to start sending private transactions
+                      Available:{" "}
+                      {connected && balance !== null
+                        ? `${formatAmount(balance)} SOL`
+                        : connected
+                        ? "Loading..."
+                        : "Connect wallet to see balance"}
                     </p>
                   </div>
-                )}
-              </CardContent>
-            </Card>
 
-            {/* Status Modal */}
-            {showStatusModal && (
-              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-                <div className="bg-card rounded-xl shadow-2xl border max-w-2xl w-full mx-4 relative">
-                  <button
-                    onClick={() => {
-                      setShowStatusModal(false);
-                      // Reset form when closing modal
-                      setAmount("");
-                      setRecipientWallet("");
-                      setTransactionStatus("idle");
-                      setTransactionSignature("");
-                    }}
-                    className="absolute top-2 right-2 z-10 p-2 rounded-full hover:bg-muted transition-colors"
-                    aria-label="Close modal"
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label>Recipients</Label>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled
+                        className="opacity-50 cursor-not-allowed"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Recipient
+                        <Lock className="h-3 w-3 ml-2" />
+                      </Button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="recipient">Recipient 1</Label>
+                      <Input
+                        id="recipient"
+                        placeholder="Enter recipient's wallet address"
+                        value={recipientWallet}
+                        onChange={(e) => setRecipientWallet(e.target.value)}
+                        className="text-lg"
+                      />
+                    </div>
+
+                    <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Lock className="h-3 w-3" />
+                        <span>Multiple recipients coming soon</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Documentation and Miners Links */}
+                  <div className="flex justify-center gap-4 py-4 border-t border-border/50">
+                    <Link
+                      href="/miners"
+                      className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Shield className="w-4 h-4" />
+                      View Miners
+                    </Link>
+                    <span className="text-muted-foreground">•</span>
+                    <a
+                      href="https://docs.cloakprotocol.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Documentation
+                    </a>
+                  </div>
+
+                  <Button
+                    onClick={handleSendTokens}
+                    disabled={
+                      !connected || !amount || !recipientWallet || isLoading
+                    }
+                    className="w-full h-12 text-lg"
+                    size="lg"
                   >
-                    <X className="w-5 h-5 text-muted-foreground hover:text-foreground" />
-                  </button>
-                  <TransactionStatus
-                    status={transactionStatus}
-                    amount={amount}
-                    recipient={recipientWallet}
-                    signature={transactionSignature}
-                  />
-                </div>
-              </div>
-            )}
+                    {isLoading ? (
+                      "Processing..."
+                    ) : (
+                      <>
+                        <Send className="h-5 w-5 mr-2" />
+                        Send Privately
+                      </>
+                    )}
+                  </Button>
 
-            <div className="text-center mt-8 text-sm text-muted-foreground">
-              <p>Powered by Solana · SP1 zkVM · Cloak Protocol</p>
-              <div className="flex justify-center gap-4 mt-2">
-                <Link
-                  href="/privacy-demo"
-                  className="hover:text-foreground transition-colors font-semibold text-primary inline-flex items-center gap-2"
-                >
-                  <Shield className="w-4 h-4" />
-                  See Privacy in Action
-                </Link>
-                {/* <Link
+                  {!connected && (
+                    <div className="text-center p-4 bg-muted/50 rounded-lg">
+                      <Wallet className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">
+                        Connect your wallet to start sending private
+                        transactions
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Status Modal */}
+              {showStatusModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                  <div className="bg-card rounded-xl shadow-2xl border max-w-2xl w-full mx-4 relative">
+                    <button
+                      onClick={() => {
+                        setShowStatusModal(false);
+                        // Reset form when closing modal
+                        setAmount("");
+                        setRecipientWallet("");
+                        setTransactionStatus("idle");
+                        setTransactionSignature("");
+                      }}
+                      className="absolute top-2 right-2 z-10 p-2 rounded-full hover:bg-muted transition-colors"
+                      aria-label="Close modal"
+                    >
+                      <X className="w-5 h-5 text-muted-foreground hover:text-foreground" />
+                    </button>
+                    <TransactionStatus
+                      status={transactionStatus}
+                      amount={amount}
+                      recipient={recipientWallet}
+                      signature={transactionSignature}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="text-center mt-8 text-sm text-muted-foreground">
+                <p>Powered by Solana · SP1 zkVM · Cloak Protocol</p>
+                <div className="flex justify-center gap-4 mt-2">
+                  <Link
+                    href="/privacy-demo"
+                    className="hover:text-foreground transition-colors font-semibold text-primary inline-flex items-center gap-2"
+                  >
+                    <Shield className="w-4 h-4" />
+                    See Privacy in Action
+                  </Link>
+                  {/* <Link
                   href="/admin"
                   className="hover:text-foreground transition-colors"
                 >
                   Admin
                 </Link> */}
+                </div>
               </div>
             </div>
-          </div>
-        </main>
-      </div>
+          </main>
+        </div>
+      </PageLayout>
     </WalletGuard>
   );
 }
