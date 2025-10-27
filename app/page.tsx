@@ -1,7 +1,7 @@
 "use client";
 
 // Configuration - Set to true when dapp is ready for public use
-const DAPP_AVAILABLE = false;
+const DAPP_AVAILABLE = true;
 
 import Link from "next/link";
 import Image from "next/image";
