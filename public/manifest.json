@@ -1,0 +1,37 @@
+{
+  "name": "Cloak - Private SOL Transfers",
+  "short_name": "Cloak",
+  "description": "Send SOL with guaranteed privacy using zero-knowledge proofs on Solana",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["finance", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Send Privately",
+      "short_name": "Send",
+      "description": "Start a private transaction",
+      "url": "/transaction",
+      "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}
+
