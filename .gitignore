@@ -3,6 +3,9 @@ node_modules
 out
 .env
 .env.local
+
+# TWA Android build output
+/cloak-twa
 .pnpm
 .pnp.js
 .vercel
