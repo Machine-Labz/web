@@ -5,7 +5,6 @@ import { Space_Grotesk, DM_Sans } from "next/font/google";
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import { WalletContextProvider } from "@/components/wallet-provider";
-import { MobileWalletProvider } from "@/components/mobile-wallet-provider";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -47,7 +46,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <WalletContextProvider>
-            <MobileWalletProvider>{children}</MobileWalletProvider>
+            {children}
           </WalletContextProvider>
         </ThemeProvider>
       </body>
