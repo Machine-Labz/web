@@ -8,6 +8,10 @@
   "theme_color": "#6366f1",
   "orientation": "portrait-primary",
   "scope": "/",
+  "prefer_related_applications": false,
+  "id": "/",
+  "dir": "ltr",
+  "lang": "en",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
@@ -30,6 +34,13 @@
       "short_name": "Send",
       "description": "Start a private transaction",
       "url": "/transaction",
+      "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Miners",
+      "short_name": "Miners",
+      "description": "View Cloak miners",
+      "url": "/miners",
       "icons": [{ "src": "/android-chrome-192x192.png", "sizes": "192x192" }]
     }
   ]
