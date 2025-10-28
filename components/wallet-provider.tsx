@@ -1,6 +1,6 @@
 "use client";
 
-import React, { FC, ReactNode, useMemo } from "react";
+import React, { FC, ReactNode, useMemo, useEffect } from "react";
 import {
   ConnectionProvider,
   WalletProvider,
@@ -14,6 +14,12 @@ import {
   LedgerWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl } from "@solana/web3.js";
+import {
+  createDefaultAuthorizationCache,
+  createDefaultChainSelector,
+  createDefaultWalletNotFoundHandler,
+  registerMwa,
+} from "@solana-mobile/wallet-standard-mobile";
 
 // Default styles that can be overridden by your app
 require("@solana/wallet-adapter-react-ui/styles.css");
@@ -33,6 +39,21 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({
   // useMemo(() => 
   // clusterApiUrl(network), [network]
   // );
+
+  // Register Mobile Wallet Adapter for Android users
+  useEffect(() => {
+    registerMwa({
+      appIdentity: {
+        name: "Cloak",
+        uri: "https://cloaklabz.xyz",
+        icon: "/android-chrome-192x192.png",
+      },
+      authorizationCache: createDefaultAuthorizationCache(),
+      chains: ["solana:mainnet", "solana:devnet"],
+      chainSelector: createDefaultChainSelector(),
+      onWalletNotFound: createDefaultWalletNotFoundHandler(),
+    });
+  }, []);
 
   const wallets = useMemo(
     () => [

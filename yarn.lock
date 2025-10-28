@@ -1348,7 +1348,7 @@
 
 "@solana-mobile/wallet-standard-mobile@^0.4.3":
   version "0.4.3"
-  resolved "https://registry.npmjs.org/@solana-mobile/wallet-standard-mobile/-/wallet-standard-mobile-0.4.3.tgz"
+  resolved "https://registry.yarnpkg.com/@solana-mobile/wallet-standard-mobile/-/wallet-standard-mobile-0.4.3.tgz#ce9918132c8d284f5711a09cadd61684fe21dafc"
   integrity sha512-LLMQs/KgRZpftIhwOLCM2VZLMdA2vIghJjKsYUIiy1FBJS9GEkGDLJdbujb92lfAdmYwbyTuolIRik7JMPH3Kg==
   dependencies:
     "@solana-mobile/mobile-wallet-adapter-protocol" "^2.2.5"

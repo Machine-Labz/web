@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   description:
     "Send SOL with guaranteed privacy. Break the link between deposits and withdrawals using zero-knowledge proofs on Solana.",
   icons: {
-    icon: "/favicon.svg",
+    icon: "/android-chrome-192x192.png",
     apple: "/android-chrome-192x192.png",
   },
   manifest: "/manifest.json",
