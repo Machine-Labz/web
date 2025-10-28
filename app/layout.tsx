@@ -2,7 +2,7 @@ import type React from "react";
 import "@/app/globals.css";
 import "@/styles/wallet-adapter.css";
 import { Space_Grotesk, DM_Sans } from "next/font/google";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import { WalletContextProvider } from "@/components/wallet-provider";
 
@@ -27,12 +27,15 @@ export const metadata: Metadata = {
     apple: "/android-chrome-192x192.png",
   },
   manifest: "/manifest.json",
-  themeColor: "#6366f1",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Cloak",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#6366f1",
 };
 
 export default function RootLayout({
