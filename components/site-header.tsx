@@ -26,6 +26,11 @@ const navItems = [
     href: "/miners",
     external: false,
   },
+  {
+    label: "Mobile Test",
+    href: "/mobile-wallet-test",
+    external: false,
+  },
   { label: "FAQ", href: "/#faq" },
 ];
 

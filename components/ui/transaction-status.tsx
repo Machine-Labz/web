@@ -10,13 +10,10 @@ import {
   Copy,
   ExternalLink,
   Brain,
-  Hammer,
   Server,
   Lock,
   Circle,
-  PickaxeIcon,
-  Pickaxe,
-  LucidePickaxe,
+  Hammer,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
@@ -84,7 +81,7 @@ const AnimatedPickaxe = () => (
       ease: "easeInOut",
     }}
   >
-    <LucidePickaxe className="w-6 h-6" />
+    <Hammer className="w-6 h-6" />
   </motion.div>
 );
 
@@ -335,15 +332,13 @@ export function TransactionStatus({
       <div className="bg-card border border-border rounded-lg p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div>
-            <div className="flex items-center gap-2">
             <div className={`${config.textColor}`}>
               {renderIcon()}
             </div>
+            <div>
               <h3 className={`font-semibold ${config.textColor}`}>
                 {config.label}
               </h3>
-            </div>
               <p className="text-sm text-muted-foreground">
                 {config.description}
               </p>
