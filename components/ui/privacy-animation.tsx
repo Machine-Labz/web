@@ -9,7 +9,7 @@ import { Wallet, Shield, Stamp } from "lucide-react";
  * - Fragmentation into "notes" within the zone (shuffling)
  * - Merkle root pulse + "ZK Proof" seal
  * - Exit with "bundle" effect (beam)
- * - Receipt NFT at the end
+ * - Verification seal at the end
  * - Smooth infinite loop (~7s)
  */
 export default function CloakPrivacyAnimation(props?: {
@@ -23,7 +23,7 @@ export default function CloakPrivacyAnimation(props?: {
   const tRoot = 2.5; // Merkle pulse + ZK
   const tOut = 3.1; // zone→destination line
   const tBundle = 3.8; // fast beam (bundle)
-  const tReceipt = 4.6; // receipt NFT
+  const tVerified = 4.6; // verification seal
   const fadeOut = 6.4; // general fade before reset
 
   // helpers to normalize times (0..1)
@@ -73,12 +73,12 @@ export default function CloakPrivacyAnimation(props?: {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: [0, 1, 1, 0], y: [-10, 0, 0, -10] }}
               transition={{
-                times: [0, nt(tOut), nt(tReceipt), nt(fadeOut)],
+                times: [0, nt(tOut), nt(tVerified), nt(fadeOut)],
                 duration: T,
                 repeat: Infinity,
               }}
             >
-              Anonymous delivery
+              Verified delivery
             </motion.div>
           </div>
         </div>
@@ -124,7 +124,7 @@ export default function CloakPrivacyAnimation(props?: {
             initial={{ opacity: 0 }}
             animate={{ opacity: [0, 1, 1, 1, 0] }}
             transition={{
-              times: [0, nt(0.2), nt(tReceipt), nt(fadeOut), 1],
+              times: [0, nt(0.2), nt(tVerified), nt(fadeOut), 1],
               duration: T,
               repeat: Infinity,
             }}
@@ -148,7 +148,7 @@ export default function CloakPrivacyAnimation(props?: {
             initial={{ opacity: 0 }}
             animate={{ opacity: [0, 1, 1, 1, 0] }}
             transition={{
-              times: [0, nt(0.4), nt(tReceipt), nt(fadeOut), 1],
+              times: [0, nt(0.4), nt(tVerified), nt(fadeOut), 1],
               duration: T,
               repeat: Infinity,
             }}
@@ -172,7 +172,7 @@ export default function CloakPrivacyAnimation(props?: {
             initial={{ opacity: 0 }}
             animate={{ opacity: [0, 1, 1, 1, 0] }}
             transition={{
-              times: [0, nt(0.4), nt(tReceipt), nt(fadeOut), 1],
+              times: [0, nt(0.4), nt(tVerified), nt(fadeOut), 1],
               duration: T,
               repeat: Infinity,
             }}
@@ -215,7 +215,7 @@ export default function CloakPrivacyAnimation(props?: {
               opacity: [0, 1, 1, 1, 0],
             }}
             transition={{
-              times: [nt(tIn), nt(tIn + 1), nt(tReceipt), nt(fadeOut), 1],
+              times: [nt(tIn), nt(tIn + 1), nt(tVerified), nt(fadeOut), 1],
               duration: T,
               ease: "easeInOut",
               repeat: Infinity,
@@ -348,7 +348,7 @@ export default function CloakPrivacyAnimation(props?: {
             initial={{ pathLength: 0, opacity: 0 }}
             animate={{ pathLength: [0, 1, 1, 1, 0], opacity: [0, 1, 1, 1, 0] }}
             transition={{
-              times: [nt(tOut), nt(tOut + 1.2), nt(tReceipt), nt(fadeOut), 1],
+              times: [nt(tOut), nt(tOut + 1.2), nt(tVerified), nt(fadeOut), 1],
               duration: T,
               ease: "easeInOut",
               repeat: Infinity,
@@ -376,7 +376,7 @@ export default function CloakPrivacyAnimation(props?: {
             }}
           />
 
-          {/* Receipt NFT (appears at the end, fades out) */}
+          {/* Verification seal (nullifier + proof verified) */}
           <motion.g
             initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
             animate={{
@@ -385,7 +385,7 @@ export default function CloakPrivacyAnimation(props?: {
               rotate: [-2, 0, 0, -2],
             }}
             transition={{
-              times: [nt(tReceipt), nt(tReceipt + 0.2), nt(fadeOut - 0.1), 1],
+              times: [nt(tVerified), nt(tVerified + 0.2), nt(fadeOut - 0.1), 1],
               duration: T,
               repeat: Infinity,
             }}
@@ -407,10 +407,10 @@ export default function CloakPrivacyAnimation(props?: {
                 <div className="flex flex-col items-center justify-center gap-2 text-primary">
                   <Stamp className="w-5 h-5" />
                   <span className="text-[10px] leading-none font-medium">
-                    Receipt NFT
+                    Verified
                   </span>
                   <span className="text-[9px] leading-none opacity-70">
-                    att#e3a1…
+                    nf#a7c3…
                   </span>
                 </div>
               </div>

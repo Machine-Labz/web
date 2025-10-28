@@ -14,6 +14,10 @@ const readBigUInt64LE = (buffer: Buffer, offset: number): number => {
   return Number(buffer.readBigUInt64LE(offset));
 };
 
+const readUInt16LE = (buffer: Buffer, offset: number): number => {
+  return buffer.readUInt16LE(offset);
+};
+
 const getProgramId = (): PublicKey => {
   const candidates = [
     process.env.NEXT_PUBLIC_SCRAMBLE_REGISTRY_PROGRAM_ID,
@@ -76,6 +80,9 @@ interface MinerWithActivity extends MinerAccountData {
   lastActivitySlot: number | null;
   isActive: boolean;
   slotsSinceActivity: number | null;
+  activeClaimsCount: number;
+  totalClaimsMined: number;
+  utilizationRate: number;
 }
 
 export async function GET() {
@@ -111,8 +118,13 @@ export async function GET() {
         lastActivitySlot: null,
         isActive: false,
         slotsSinceActivity: null,
+        activeClaimsCount: 0,
+        totalClaimsMined: 0,
+        utilizationRate: 0,
       };
     }
+
+    const currentSlot = await connection.getSlot('confirmed');
 
     for (const account of claimAccounts) {
       const data = account.account.data;
@@ -123,28 +135,54 @@ export async function GET() {
       }
 
       const minedAtSlot = readBigUInt64LE(data, 152);
-      const existingSlot = miners[minerAuthority].lastActivitySlot;
+      const revealedAtSlot = readBigUInt64LE(data, 160);
+      const expireAtSlot = readBigUInt64LE(data, 172);
+      const consumedCount = readUInt16LE(data, 168);
+      const maxConsumes = readUInt16LE(data, 170);
+      const status = data[180]; // ClaimStatus enum at offset 180
 
+      // Increment total claims mined
+      miners[minerAuthority].totalClaimsMined++;
+
+      // Update most recent activity
+      const existingSlot = miners[minerAuthority].lastActivitySlot;
       if (existingSlot === null || minedAtSlot > existingSlot) {
         miners[minerAuthority].lastActivitySlot = minedAtSlot;
       }
-    }
 
-    const currentSlot = await connection.getSlot('confirmed');
+      // Check if claim is active (not expired and not fully consumed)
+      const isNotExpired = currentSlot <= expireAtSlot;
+      const isNotFullyConsumed = consumedCount < maxConsumes;
+      const isRevealed = status >= 1; // Status::Revealed = 1
+
+      if (isNotExpired && isNotFullyConsumed && isRevealed) {
+        miners[minerAuthority].activeClaimsCount++;
+      }
+    }
 
     const minersArray = Object.values(miners).map((miner) => {
       const lastActivitySlot = miner.lastActivitySlot;
       const slotsSinceActivity =
         lastActivitySlot !== null ? Math.max(currentSlot - lastActivitySlot, 0) : null;
 
+      // Calculate utilization rate
+      const utilizationRate =
+        miner.totalMined > 0 ? (miner.totalConsumed / miner.totalMined) * 100 : 0;
+
+      // A miner is considered "active" if they have recent activity OR have active claims
+      const hasRecentActivity =
+        lastActivitySlot !== null
+          ? currentSlot - lastActivitySlot < activeSlotThreshold
+          : false;
+
       return {
         ...miner,
         lastActivitySlot,
         slotsSinceActivity,
-        isActive:
-          lastActivitySlot !== null
-            ? currentSlot - lastActivitySlot < activeSlotThreshold
-            : false,
+        activeClaimsCount: miner.activeClaimsCount,
+        totalClaimsMined: miner.totalClaimsMined,
+        utilizationRate,
+        isActive: hasRecentActivity || miner.activeClaimsCount > 0,
       };
     });
 

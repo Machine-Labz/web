@@ -21,8 +21,7 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   title: "Cloak - Private SOL Transfers on Solana",
   description:
-    "Send and receive SOL privately, fast, and reliably. Experience true privacy in your Solana transactions with configurable sends and auditable receipts.",
-  generator: "v0.app",
+    "Send SOL with guaranteed privacy. Break the link between deposits and withdrawals using zero-knowledge proofs on Solana.",
   icons: {
     icon: "/favicon.svg",
   },

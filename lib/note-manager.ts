@@ -10,6 +10,11 @@ export interface CloakNote {
   depositSignature?: string;
   depositSlot?: number;
   leafIndex?: number;
+  root?: string; // Merkle root at time of deposit (historical root)
+  merkleProof?: { // Merkle proof at time of deposit (path to historical root)
+    pathElements: string[];
+    pathIndices: number[];
+  };
   timestamp: number;
   network: "localnet" | "devnet" | "mainnet";
 }
@@ -163,8 +168,15 @@ export function calculateFee(amountLamports: number): number {
 }
 
 /**
+ * Amount remaining for recipient outputs after fees
+ */
+export function getDistributableAmount(amountLamports: number): number {
+  return amountLamports - calculateFee(amountLamports);
+}
+
+/**
  * Get recipient amount after fees
  */
 export function getRecipientAmount(amountLamports: number): number {
-  return amountLamports - calculateFee(amountLamports);
+  return getDistributableAmount(amountLamports);
 }

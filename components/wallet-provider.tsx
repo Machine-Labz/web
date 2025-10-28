@@ -38,8 +38,6 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({
     () => [
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter(),
-      new TorusWalletAdapter(),
-      new LedgerWalletAdapter(),
     ],
     []
   );

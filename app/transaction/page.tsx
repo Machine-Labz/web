@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,15 @@ import {
   CheckCircle,
   ExternalLink,
   X,
+  ShieldIcon,
+  ExternalLinkIcon,
+  CheckCircleIcon,
+  LockIcon,
+  SendIcon,
+  WalletIcon,
+  XIcon,
+  PlusIcon,
+  MinusIcon,
 } from "lucide-react";
 
 // Token Logo SVGs
@@ -161,6 +170,7 @@ import {
   updateNote,
   formatAmount,
   calculateFee,
+  getDistributableAmount,
   type CloakNote,
 } from "@/lib/note-manager";
 import {
@@ -180,18 +190,232 @@ import { useSP1Prover } from "@/hooks/use-sp1-prover";
 const RELAY_URL = process.env.NEXT_PUBLIC_RELAY_URL || "http://localhost:3002";
 const SOLANA_RPC_URL =
   process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com";
+const LAMPORTS_PER_SOL = 1_000_000_000;
 
 export default function TransactionPage() {
   const { connected, publicKey, sendTransaction } = useWallet();
   const { connection } = useConnection();
   const [selectedToken, setSelectedToken] = useState("SOL");
   const [amount, setAmount] = useState("");
-  const [recipientWallet, setRecipientWallet] = useState("");
+  const [outputs, setOutputs] = useState<Array<{ address: string; amount: string }>>([
+    { address: "", amount: "" },
+  ]);
+  const [lastOutputs, setLastOutputs] = useState<
+    Array<{ address: string; amountLamports: number }>
+  >([]);
   const [balance, setBalance] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [transactionStatus, setTransactionStatus] = useState<Status>("idle");
   const [transactionSignature, setTransactionSignature] = useState<string>("");
   const [showStatusModal, setShowStatusModal] = useState(false);
+
+  const parsedAmountLamports = parseSolToLamports(amount);
+  const amountLamports = parsedAmountLamports ?? 0;
+  // Distribution must account for fees: sum(outputs) + fee == amount
+  // So we distribute (amount - fee), and the on-chain program calculates the fee
+  const feeLamports = parsedAmountLamports !== null ? calculateFee(parsedAmountLamports) : 0;
+  const distributableLamports = parsedAmountLamports !== null ? parsedAmountLamports - feeLamports : 0;
+
+  const parsedOutputs = outputs.map((entry) => {
+    const address = entry.address.trim();
+    const amountLamportsValue =
+      entry.amount.trim() === "" ? null : parseSolToLamports(entry.amount);
+    const addressValid = address ? isValidSolanaAddress(address) : false;
+    const amountValid =
+      amountLamportsValue !== null &&
+      Number.isFinite(amountLamportsValue) &&
+      amountLamportsValue >= 0;
+    return {
+      address,
+      amountLamports: amountLamportsValue,
+      addressValid,
+      amountValid,
+    };
+  });
+
+  const totalAssignedLamports = parsedOutputs.reduce((sum, output) => {
+    return sum + (output.amountLamports ?? 0);
+  }, 0);
+
+  const remainingLamports = distributableLamports - totalAssignedLamports;
+  const allocationMismatch = Math.abs(remainingLamports) > 1;
+
+  const allAddressesProvided = parsedOutputs.every(
+    (output) => output.address.length > 0,
+  );
+  const allAddressesValid = parsedOutputs.every(
+    (output) => !output.address || output.addressValid,
+  );
+  const allAmountsProvided = parsedOutputs.every(
+    (output) => output.amountLamports !== null && output.amountLamports !== undefined,
+  );
+  const allAmountsPositive = parsedOutputs.every(
+    (output) => (output.amountLamports ?? 0) > 0,
+  );
+
+  // For single recipient, allocation mismatch doesn't apply - they get the full amount
+  const isSingleRecipient = parsedOutputs.length === 1;
+  const shouldCheckAllocation = !isSingleRecipient && allocationMismatch;
+
+  const outputsValid =
+    parsedAmountLamports !== null &&
+    parsedAmountLamports > 0 &&
+    distributableLamports > 0 &&
+    parsedOutputs.length > 0 &&
+    allAddressesProvided &&
+    allAddressesValid &&
+    allAmountsProvided &&
+    allAmountsPositive &&
+    !shouldCheckAllocation;
+
+  const remainingIsNegative = remainingLamports < 0;
+  const distributableSolDisplay = formatAmount(distributableLamports);
+  const assignedSolDisplay = formatAmount(totalAssignedLamports);
+  const remainingSolDisplay = formatAmount(Math.abs(remainingLamports));
+
+  useEffect(() => {
+    setOutputs((prev) => {
+      if (parsedAmountLamports === null || parsedAmountLamports <= 0) {
+        if (prev.every((entry) => entry.amount.trim() === "")) {
+          return prev;
+        }
+        return prev.map((entry) => ({ ...entry, amount: "" }));
+      }
+
+      // Auto-distribute when all amounts are empty, preserving addresses
+      if (prev.every((entry) => entry.amount.trim() === "")) {
+        // If only one recipient, they get the full amount
+        if (prev.length === 1) {
+          return prev.map((entry) => ({
+            ...entry,
+            amount: lamportsToSolInput(distributableLamports),
+          }));
+        }
+        
+        // Multiple recipients - distribute evenly
+        const amountPerRecipient = Math.floor(distributableLamports / prev.length);
+        const remainder = distributableLamports % prev.length;
+
+        let recipientIdx = 0;
+        return prev.map((entry) => {
+          // Last recipient gets any remainder
+          const isLast = recipientIdx === prev.length - 1;
+          const amount = amountPerRecipient + (isLast ? remainder : 0);
+          recipientIdx++;
+          return {
+            ...entry,
+            amount: lamportsToSolInput(amount),
+          };
+        });
+      }
+
+      return prev;
+    });
+  }, [parsedAmountLamports, distributableLamports]);
+
+  const updateOutputAddress = (index: number, value: string) => {
+    setOutputs((prev) =>
+      prev.map((entry, i) => (i === index ? { ...entry, address: value } : entry)),
+    );
+  };
+
+  const updateOutputAmount = (index: number, value: string) => {
+    // If only one recipient, don't allow manual edits - amount is auto-set
+    if (outputs.length === 1) {
+      return;
+    }
+
+    setOutputs((prev) => {
+      let updated = prev.map((entry, i) =>
+        i === index ? { ...entry, amount: value } : entry,
+      );
+
+      // Auto-redistribute remaining when user edits an amount
+      const changedAmount = parseSolToLamports(value) ?? 0;
+
+      if (changedAmount >= 0 && changedAmount <= distributableLamports) {
+        const otherRecipients = updated.filter((_, i) => i !== index);
+
+        if (otherRecipients.length > 0) {
+          // Calculate what's remaining after this recipient's amount
+          const remaining = Math.max(0, distributableLamports - changedAmount);
+
+          // Distribute evenly, with last recipient getting any remainder
+          const amountPerRecipient = Math.floor(remaining / otherRecipients.length);
+          const remainder = remaining % otherRecipients.length;
+
+          let recipientIdx = 0;
+          return updated.map((entry, i) => {
+            if (i !== index) {
+              // Last other recipient gets any remainder
+              const isLastOther = recipientIdx === otherRecipients.length - 1;
+              const amount = amountPerRecipient + (isLastOther ? remainder : 0);
+              recipientIdx++;
+              return { ...entry, amount: lamportsToSolInput(amount) };
+            }
+            return entry;
+          });
+        }
+      }
+
+      return updated;
+    });
+  };
+
+  const addRecipientRow = () => {
+    setOutputs((prev) => {
+      const newOutputs = [...prev, { address: "", amount: "" }];
+
+      // Re-distribute amounts evenly among all recipients, preserving addresses
+      if (distributableLamports > 0) {
+        const amountPerRecipient = Math.floor(distributableLamports / newOutputs.length);
+        const remainder = distributableLamports % newOutputs.length;
+
+        let recipientIdx = 0;
+        return newOutputs.map((entry) => {
+          // Last recipient gets any remainder
+          const isLast = recipientIdx === newOutputs.length - 1;
+          const amount = amountPerRecipient + (isLast ? remainder : 0);
+          recipientIdx++;
+          return {
+            ...entry,
+            amount: lamportsToSolInput(amount),
+          };
+        });
+      }
+
+      return newOutputs;
+    });
+  };
+
+  const removeRecipientRow = (index: number) => {
+    setOutputs((prev) => {
+      if (prev.length <= 1) {
+        return prev;
+      }
+      const filtered = prev.filter((_, i) => i !== index);
+
+      // Re-distribute amounts evenly among remaining recipients, preserving addresses
+      if (distributableLamports > 0) {
+        const amountPerRecipient = Math.floor(distributableLamports / filtered.length);
+        const remainder = distributableLamports % filtered.length;
+
+        let recipientIdx = 0;
+        return filtered.map((entry) => {
+          // Last recipient gets any remainder
+          const isLast = recipientIdx === filtered.length - 1;
+          const amount = amountPerRecipient + (isLast ? remainder : 0);
+          recipientIdx++;
+          return {
+            ...entry,
+            amount: lamportsToSolInput(amount),
+          };
+        });
+      }
+
+      return filtered;
+    });
+  };
 
   // Amount percentage functions
   const handleAmountPercentage = (percentage: number) => {
@@ -209,6 +433,25 @@ export default function TransactionPage() {
 
   const handleResetAmount = () => {
     setAmount("");
+    setOutputs((prev) => prev.map((entry) => ({ ...entry, amount: "" })));
+  };
+
+  const handleAmountKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      const current = parseSolToLamports(outputs[index].amount);
+      if (current !== null) {
+        const newAmount = current + 100_000_000; // Add 0.1 SOL (in lamports)
+        updateOutputAmount(index, lamportsToSolInput(newAmount));
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      const current = parseSolToLamports(outputs[index].amount);
+      if (current !== null && current > 0) {
+        const newAmount = Math.max(0, current - 100_000_000); // Subtract 0.1 SOL
+        updateOutputAmount(index, lamportsToSolInput(newAmount));
+      }
+    }
   };
 
   // Fetch balance when wallet is connected
@@ -252,67 +495,67 @@ export default function TransactionPage() {
       return;
     }
 
-    if (!amount || !recipientWallet) {
-      toast.error("Please fill in all fields");
+    if (!amount) {
+      toast.error("Please enter an amount");
       return;
     }
 
-    // Validate recipient wallet address
-    try {
-      new PublicKey(recipientWallet);
-    } catch {
-      toast.error("Invalid recipient wallet address");
+    if (parsedAmountLamports === null || parsedAmountLamports <= 0) {
+      toast.error("Enter a valid positive amount");
       return;
     }
+
+    if (!outputsValid) {
+      if (!outputs.length) {
+        toast.error("Add at least one recipient");
+      } else if (!allAddressesProvided) {
+        toast.error("Please enter an address for each recipient");
+      } else if (!allAddressesValid) {
+        toast.error("One or more recipient addresses are invalid");
+      } else if (!allAmountsProvided) {
+        toast.error("Enter an amount for each recipient");
+      } else if (!allAmountsPositive) {
+        toast.error("Recipient amounts must be greater than zero");
+        } else if (shouldCheckAllocation) {
+        toast.error(
+          remainingIsNegative
+            ? `Reduce allocations by ${remainingSolDisplay} SOL`
+            : `Allocate remaining ${remainingSolDisplay} SOL`,
+        );
+      }
+      return;
+    }
+
+    const preparedOutputs = parsedOutputs.map((output) => ({
+      address: output.address,
+      amountLamports: output.amountLamports ?? 0,
+    }));
 
     setIsLoading(true);
     setTransactionStatus("depositing");
     setShowStatusModal(true);
 
     try {
-      console.log("🚀 Starting private transaction flow");
-      console.log("Configuration:", {
-        amount: parseFloat(amount),
-        recipient: recipientWallet,
+      console.log("🚀 Starting private transaction flow", {
+        amount,
+        outputs: preparedOutputs,
         token: selectedToken,
-        connected: connected,
+        connected,
         publicKey: publicKey?.toBase58(),
       });
 
-      // Step 1: Generate note for deposit
-      console.log("🔐 Generating private note...");
-      const amountLamports = Math.floor(parseFloat(amount) * 1_000_000_000);
-      console.log("Amount conversion:", {
-        input: amount,
-        lamports: amountLamports,
-        sol: amountLamports / 1_000_000_000,
-      });
-
-      const note = generateNote(amountLamports, "localnet");
+      const note = generateNote(parsedAmountLamports, "localnet");
       saveNote(note);
-
-      console.log("Generated note:", {
-        commitment: note.commitment.slice(0, 16) + "...",
-        amount: note.amount,
-        amountFormatted: formatAmount(note.amount),
-        r: note.r.slice(0, 16) + "...",
-        sk_spend: note.sk_spend.slice(0, 16) + "...",
-      });
-
-      // Step 2: Perform deposit
-      setTransactionStatus("depositing");
 
       const POOL_ADDRESS = process.env.NEXT_PUBLIC_POOL_ADDRESS;
       const COMMITMENTS_ADDRESS = process.env.NEXT_PUBLIC_COMMITMENTS_ADDRESS;
       const PROGRAM_ID =
         process.env.NEXT_PUBLIC_PROGRAM_ID ||
         "c1oak6tetxYnNfvXKFkpn1d98FxtK7B68vBQLYQpWKp";
-      const INDEXER_URL =
-        process.env.NEXT_PUBLIC_INDEXER_URL || "http://localhost:3001";
 
       if (!POOL_ADDRESS || !COMMITMENTS_ADDRESS) {
         throw new Error(
-          "Missing program configuration. Please initialize accounts from admin page."
+          "Missing program configuration for pool or commitments- Contact support",
         );
       }
 
@@ -320,7 +563,6 @@ export default function TransactionPage() {
       const poolPubkey = new PublicKey(POOL_ADDRESS);
       const commitmentsPubkey = new PublicKey(COMMITMENTS_ADDRESS);
 
-      // Verify accounts exist
       const [poolAccount, commitmentsAccount] = await Promise.all([
         connection.getAccountInfo(poolPubkey),
         connection.getAccountInfo(commitmentsPubkey),
@@ -340,18 +582,9 @@ export default function TransactionPage() {
       const commitmentBytes = Buffer.from(note.commitment, "hex");
       if (commitmentBytes.length !== 32) {
         throw new Error(
-          `Invalid commitment length: ${commitmentBytes.length} bytes (expected 32)`
+          `Invalid commitment length: ${commitmentBytes.length} bytes (expected 32)`,
         );
       }
-
-      console.log("Creating deposit instruction with accounts:", {
-        programId: programId.toBase58(),
-        payer: publicKey.toBase58(),
-        pool: poolPubkey.toBase58(),
-        commitments: commitmentsPubkey.toBase58(),
-        amount: note.amount,
-        commitmentLength: commitmentBytes.length,
-      });
 
       const depositIx = createDepositInstruction({
         programId,
@@ -362,17 +595,6 @@ export default function TransactionPage() {
         commitment: commitmentBytes,
       });
 
-      console.log("Deposit instruction created:", {
-        programId: depositIx.programId.toBase58(),
-        keys: depositIx.keys.map((k, i) => ({
-          index: i,
-          pubkey: k.pubkey.toBase58(),
-          isSigner: k.isSigner,
-          isWritable: k.isWritable,
-        })),
-        dataLength: depositIx.data.length,
-      });
-
       const { blockhash, lastValidBlockHeight } =
         await connection.getLatestBlockhash();
       const depositTx = new Transaction({
@@ -381,75 +603,37 @@ export default function TransactionPage() {
         lastValidBlockHeight,
       }).add(computeUnitPriceIx, computeUnitLimitIx, depositIx);
 
-      // Simulate transaction first to catch errors early
-      console.log("🔍 Simulating transaction...");
-      try {
-        const simulation = await connection.simulateTransaction(depositTx);
-        console.log("Simulation result:", simulation);
-        console.log("Simulation logs:", simulation.value.logs);
-
-        if (simulation.value.err) {
-          const errorMsg = `Simulation failed: ${JSON.stringify(
-            simulation.value.err
-          )}`;
-          const logs = simulation.value.logs?.join("\n") || "No logs";
-          console.error("Simulation failed with logs:", logs);
-          throw new Error(`${errorMsg}\nLogs:\n${logs}`);
-        }
-      } catch (simError: any) {
-        console.error("Simulation error:", simError);
-        throw new Error(`Transaction simulation failed: ${simError.message}`);
+      const simulation = await connection.simulateTransaction(depositTx);
+      if (simulation.value.err) {
+        const logs = simulation.value.logs?.join("\n") || "No logs";
+        throw new Error(
+          `Transaction simulation failed: ${JSON.stringify(
+            simulation.value.err,
+          )}\nLogs:\n${logs}`,
+        );
       }
 
-      console.log("✅ Simulation passed! Sending transaction...");
-      toast.info("Please approve the transaction...");
+      const signature = await sendTransaction(depositTx, connection);
 
-      // Send deposit transaction
-      console.log("📤 Sending deposit transaction...");
-      const signature = await sendTransaction(depositTx, connection, {
-        skipPreflight: false,
-        preflightCommitment: "confirmed",
-        maxRetries: 3,
+      const confirmation = await connection.confirmTransaction({
+        signature,
+        blockhash,
+        lastValidBlockHeight,
       });
 
-      console.log("✅ Deposit transaction sent:", signature);
+      if (confirmation.value.err) {
+        throw new Error(
+          `Transaction confirmation failed: ${JSON.stringify(
+            confirmation.value.err,
+          )}`,
+        );
+      }
+
       setTransactionSignature(signature);
 
-      // Wait for confirmation
-      console.log("⏳ Waiting for confirmation...");
-      let confirmed = false;
-      let attempts = 0;
-      const maxAttempts = 30;
-
-      while (!confirmed && attempts < maxAttempts) {
-        const status = await connection.getSignatureStatus(signature);
-        if (
-          status?.value?.confirmationStatus === "confirmed" ||
-          status?.value?.confirmationStatus === "finalized"
-        ) {
-          confirmed = true;
-          break;
-        }
-        if (status?.value?.err) {
-          throw new Error(
-            `Transaction failed: ${JSON.stringify(status.value.err)}`
-          );
-        }
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        attempts++;
-      }
-
-      if (!confirmed) throw new Error("Transaction confirmation timeout");
-
-      // Get transaction details
-      const txDetails = await connection.getTransaction(signature, {
-        commitment: "confirmed",
-        maxSupportedTransactionVersion: 0,
-      });
-      const depositSlot = txDetails?.slot ?? 0;
-
-      // Submit to indexer
-      console.log("📡 Submitting to indexer...");
+      // Submit deposit to indexer
+      console.log("📡 Submitting deposit to indexer...");
+      const INDEXER_URL = process.env.NEXT_PUBLIC_INDEXER_URL || "http://localhost:3001";
       const encryptedOutput = btoa(
         JSON.stringify({
           amount: note.amount,
@@ -465,38 +649,58 @@ export default function TransactionPage() {
           leaf_commit: note.commitment,
           encrypted_output: encryptedOutput,
           tx_signature: signature,
-          slot: depositSlot,
+          slot: confirmation?.context?.slot || 0,
         }),
       });
 
       if (!depositResponse.ok) {
         const errorText = await depositResponse.text();
-        throw new Error(`Failed to register deposit: ${errorText}`);
+        console.error("❌ Indexer error:", errorText);
+        throw new Error(`Failed to register deposit with indexer: ${errorText}`);
       }
 
       const depositData = await depositResponse.json();
+      console.log("✅ Indexer response:", depositData);
       const leafIndex = depositData.leafIndex ?? depositData.leaf_index;
+      const historicalRoot = depositData.root;
+
+      // Fetch the Merkle proof for this leaf (needed for future withdrawals)
+      console.log("📡 Fetching Merkle proof for leaf index:", leafIndex);
+      const merkleProofResponse = await fetch(`${INDEXER_URL}/api/v1/merkle/proof/${leafIndex}`);
+      if (!merkleProofResponse.ok) {
+        throw new Error(`Failed to fetch Merkle proof: ${merkleProofResponse.statusText}`);
+      }
+      const merkleProofData = await merkleProofResponse.json();
+      const historicalMerkleProof = {
+        pathElements: merkleProofData.pathElements ?? merkleProofData.path_elements,
+        pathIndices: merkleProofData.pathIndices ?? merkleProofData.path_indices,
+      };
+      console.log("✅ Merkle proof fetched");
+
+      // Create updated note with root and proof
+      const updatedNote = {
+        ...note,
+        depositSignature: signature,
+        depositSlot: confirmation?.context?.slot,
+        leafIndex,
+        root: historicalRoot,
+        merkleProof: historicalMerkleProof,
+      };
 
       updateNote(note.commitment, {
         depositSignature: signature,
-        depositSlot,
+        depositSlot: confirmation?.context?.slot,
         leafIndex,
+        root: historicalRoot,
+        merkleProof: historicalMerkleProof,
       });
 
-      console.log("✅ Deposit completed successfully");
       setTransactionStatus("deposited");
       toast.success("Deposit successful! Starting withdrawal...");
 
-      // Step 3: Perform withdraw
-      await performWithdraw(note, leafIndex, recipientWallet);
+      await performWithdraw(updatedNote, leafIndex, preparedOutputs);
 
-      console.log("🎉 Complete transaction flow finished!");
-      setTransactionStatus("sent");
       toast.success("Transaction completed successfully!");
-
-      // Keep modal open to show success state
-      // User can close manually with the X button
-      // Don't auto-reset - let user see the success state
     } catch (error: any) {
       console.error("Transaction failed:", error);
       setTransactionStatus("error");
@@ -508,62 +712,102 @@ export default function TransactionPage() {
     }
   };
 
+
+
+
   const performWithdraw = async (
     note: CloakNote,
     leafIndex: number,
-    recipient: string
+    outputsForWithdraw: Array<{ address: string; amountLamports: number }>
   ) => {
     try {
       setTransactionStatus("generating_proof");
       console.log("🔐 Starting withdraw process...");
 
-      // Fetch Merkle root and proof
-      console.log("📡 Fetching Merkle proof...");
-      const { root: merkleRoot } = await indexerClient.getMerkleRoot();
-      const merkleProof: MerkleProof = await indexerClient.getMerkleProof(
-        leafIndex
-      );
+      // Use the saved historical root and Merkle proof from when the note was deposited
+      // This is critical because the Merkle tree may have grown since then,
+      // and using the current tree state would give the wrong root and path
+      let historicalRoot: string;
+      let merklePathElements: string[];
+      let merklePathIndices: number[];
 
-      // Wait for root to be pushed on-chain
-      console.log("⏳ Waiting for root to be available on-chain...");
-      await waitForRootOnChain(merkleRoot);
+      if (note.root && note.merkleProof) {
+        // Use the saved root and proof (preferred)
+        historicalRoot = note.root;
+        merklePathElements = note.merkleProof.pathElements;
+        merklePathIndices = note.merkleProof.pathIndices;
+        console.log("📊 Using saved historical root and proof");
+        console.log("   Root:", historicalRoot);
+        console.log("   Path elements:", merklePathElements.length, "levels");
+      } else {
+        // Fallback: fetch current Merkle proof (for old notes without saved data)
+        console.warn("⚠️ Note doesn't have saved root/proof - using current tree state");
+        console.warn("   This may fail if the tree has grown since deposit!");
+        console.log("📡 Fetching Merkle proof...");
 
-      const merklePathElements = ((merkleProof as any).path_elements ??
-        merkleProof.pathElements) as string[];
-      const merklePathIndices = (
-        (merkleProof as any).path_indices ?? merkleProof.pathIndices
-      ).map((idx: number | string) => Number(idx));
+        const merkleProof: MerkleProof = await indexerClient.getMerkleProof(
+          leafIndex
+        );
 
-      // Calculate fees
+        merklePathElements = ((merkleProof as any).path_elements ?? merkleProof.pathElements) as string[];
+        merklePathIndices = ((merkleProof as any).path_indices ?? merkleProof.pathIndices).map((idx: number | string) => Number(idx));
+
+        // Recompute root from current proof
+        let currentHash: Uint8Array = new Uint8Array(Buffer.from(note.commitment, "hex"));
+        for (let i = 0; i < merklePathElements.length; i++) {
+          const siblingBytes = Buffer.from(merklePathElements[i], "hex");
+          const isLeft = merklePathIndices[i] === 0;
+
+          const combined = new Uint8Array(currentHash.length + siblingBytes.length);
+          if (isLeft) {
+            combined.set(currentHash, 0);
+            combined.set(siblingBytes, currentHash.length);
+          } else {
+            combined.set(siblingBytes, 0);
+            combined.set(currentHash, siblingBytes.length);
+          }
+
+          currentHash = blake3(combined);
+        }
+
+        historicalRoot = Buffer.from(currentHash).toString("hex");
+        console.log("📊 Recomputed root:", historicalRoot);
+      }
+      
+      console.log("⏳ Waiting for historical root to be available on-chain...");
+      await waitForRootOnChain(historicalRoot);
+
       const fee = calculateFee(note.amount);
-      const recipientAmountAfterFee = note.amount - fee;
       const relayFeeBps = Math.ceil((fee * 10_000) / note.amount);
 
-      // Generate nullifier
       const skSpend = Buffer.from(note.sk_spend, "hex");
       const leafIndexBytes = new Uint8Array(4);
       new DataView(leafIndexBytes.buffer).setUint32(0, leafIndex, true);
       const nullifierBytes = blake3HashMany([skSpend, leafIndexBytes]);
       const nullifierHex = Buffer.from(nullifierBytes).toString("hex");
 
-      // Generate outputs hash
-      const recipientPubkey = new PublicKey(recipient);
-      const recipientHex = Buffer.from(recipientPubkey.toBytes()).toString(
-        "hex"
-      );
-      const recipientAmountBytes = new Uint8Array(8);
-      new DataView(recipientAmountBytes.buffer).setBigUint64(
-        0,
-        BigInt(recipientAmountAfterFee),
-        true
-      );
-      const outputsHashBytes = blake3HashMany([
-        recipientPubkey.toBytes(),
-        recipientAmountBytes,
-      ]);
+      const hashChunks: Uint8Array[] = [];
+      const preparedOutputs = outputsForWithdraw.map((entry) => {
+        const pubkey = new PublicKey(entry.address);
+        const pubkeyBytes = pubkey.toBytes();
+        const amountBytes = new Uint8Array(8);
+        new DataView(amountBytes.buffer).setBigUint64(
+          0,
+          BigInt(entry.amountLamports),
+          true
+        );
+        hashChunks.push(pubkeyBytes);
+        hashChunks.push(amountBytes);
+        return {
+          pubkey,
+          amountLamports: entry.amountLamports,
+          hex: Buffer.from(pubkeyBytes).toString("hex"),
+        };
+      });
+
+      const outputsHashBytes = blake3HashMany(hashChunks);
       const outputsHashHex = Buffer.from(outputsHashBytes).toString("hex");
 
-      // Prepare SP1 proof inputs
       const sp1Inputs: SP1ProofInputs = {
         privateInputs: {
           amount: note.amount,
@@ -576,20 +820,17 @@ export default function TransactionPage() {
           },
         },
         publicInputs: {
-          root: merkleRoot,
+          root: historicalRoot,
           nf: nullifierHex,
           outputs_hash: outputsHashHex,
           amount: note.amount,
         },
-        outputs: [
-          {
-            address: recipientHex,
-            amount: recipientAmountAfterFee,
-          },
-        ],
+        outputs: preparedOutputs.map((entry) => ({
+          address: entry.hex,
+          amount: entry.amountLamports,
+        })),
       };
 
-      // Generate proof
       console.log("🔐 Generating zero-knowledge proof...");
       const proofResult: SP1ProofResult = await generateProof(sp1Inputs);
 
@@ -604,19 +845,20 @@ export default function TransactionPage() {
       console.log("✅ Proof generated");
       setTransactionStatus("queued");
 
-      // Submit withdraw via relay
       console.log("📤 Submitting to relay...");
       const withdrawSig = await submitWithdrawViaRelay(
         {
           proof: proofResult.proof,
           publicInputs: {
-            root: merkleRoot,
+            root: historicalRoot,
             nf: nullifierHex,
             outputs_hash: outputsHashHex,
             amount: note.amount,
           },
-          recipient,
-          recipientAmountLamports: recipientAmountAfterFee,
+          outputs: outputsForWithdraw.map((entry) => ({
+            recipient: entry.address,
+            amount: entry.amountLamports,
+          })),
           feeBps: relayFeeBps,
         },
         (status: string) => {
@@ -627,142 +869,132 @@ export default function TransactionPage() {
 
       console.log("✅ Withdraw completed:", withdrawSig);
       setTransactionSignature(withdrawSig);
+      setLastOutputs(outputsForWithdraw);
+      setTransactionStatus("sent");
     } catch (error: any) {
       console.error("❌ Withdraw failed:", error);
       throw error;
     }
   };
 
+
   return (
     <WalletGuard>
       <div className="min-h-screen bg-background flex flex-col">
         <DappHeader />
 
-        <main className="flex-1 flex items-center justify-center p-4">
+        <main className="flex-1 flex items-center justify-center p-6">
           <div className="w-full max-w-2xl">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold font-space-grotesk text-foreground mb-2">
+            <div className="text-center mb-10">
+              <h1 className="text-4xl font-bold font-space-grotesk text-foreground mb-3 tracking-tight">
                 Send Tokens Privately
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-base text-muted-foreground leading-relaxed">
                 Send tokens with complete privacy using zero-knowledge proofs
               </p>
             </div>
 
-            <Card className="w-full">
-              {/* <CardHeader>
-                <CardTitle className="flex items-center justify-center gap-2">
-                  <Shield className="h-5 w-5 text-primary" />
-                  Private Transaction
-                </CardTitle>
-              </CardHeader> */}
-              <CardContent className="space-y-6 mt-4">
-                <div className="space-y-2">
-                  <Label>Select Token</Label>
+            <Card className="w-full shadow-lg border-border/50">
+              <CardContent className="space-y-8 p-6 sm:p-8">
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold text-foreground">Select Token</Label>
                   <div className="grid grid-cols-2 gap-3">
                     {/* SOL */}
                     <button
                       type="button"
                       onClick={() => setSelectedToken("SOL")}
-                      className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all hover:border-primary/50 ${
-                        selectedToken === "SOL"
-                          ? "border-primary bg-primary/5"
-                          : "border-border bg-background hover:bg-muted/50"
-                      }`}
+                      className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 ${selectedToken === "SOL"
+                          ? "border-primary bg-primary/10 shadow-sm ring-2 ring-primary/20"
+                          : "border-border bg-card hover:bg-muted/50 hover:border-primary/30"
+                        }`}
                     >
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-background">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-background shadow-sm">
                         <SOLIcon />
                       </div>
                       <div className="flex-1 text-left">
-                        <p className="font-semibold text-foreground">SOL</p>
+                        <p className="font-semibold text-foreground text-sm">SOL</p>
                         <p className="text-xs text-muted-foreground">Solana</p>
                       </div>
-                      {selectedToken === "SOL" && (
-                        <CheckCircle className="w-5 h-5 text-primary" />
-                      )}
+                      {selectedToken === "SOL" && <CheckCircleIcon />}
                     </button>
 
                     {/* USDC */}
                     <button
                       type="button"
-                      onClick={() => {}}
+                      onClick={() => { }}
                       disabled
-                      className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-background opacity-50 cursor-not-allowed"
+                      className="flex items-center gap-3 p-4 rounded-xl border-2 border-border bg-muted/30 opacity-60 cursor-not-allowed"
                     >
                       <div className="flex items-center justify-center w-10 h-10 rounded-full bg-background">
                         <USDCIcon />
                       </div>
                       <div className="flex-1 text-left">
-                        <p className="font-semibold text-foreground">USDC</p>
-                        <p className="text-xs text-muted-foreground">
-                          Coming Soon
-                        </p>
+                        <p className="font-semibold text-foreground text-sm">USDC</p>
+                        <p className="text-xs text-muted-foreground">Coming Soon</p>
                       </div>
-                      <Lock className="w-5 h-5 text-muted-foreground" />
+                      <LockIcon />
                     </button>
 
                     {/* ORE */}
                     <button
                       type="button"
-                      onClick={() => {}}
+                      onClick={() => { }}
                       disabled
-                      className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-background opacity-50 cursor-not-allowed"
+                      className="flex items-center gap-3 p-4 rounded-xl border-2 border-border bg-muted/30 opacity-60 cursor-not-allowed"
                     >
                       <div className="flex items-center justify-center w-10 h-10">
                         <OREIcon />
                       </div>
                       <div className="flex-1 text-left">
-                        <p className="font-semibold text-foreground">ORE</p>
-                        <p className="text-xs text-muted-foreground">
-                          Coming Soon
-                        </p>
+                        <p className="font-semibold text-foreground text-sm">ORE</p>
+                        <p className="text-xs text-muted-foreground">Coming Soon</p>
                       </div>
-                      <Lock className="w-5 h-5 text-muted-foreground" />
+                      <LockIcon />
                     </button>
 
                     {/* ZCASH */}
                     <button
                       type="button"
-                      onClick={() => {}}
+                      onClick={() => { }}
                       disabled
-                      className="flex items-center gap-3 p-4 rounded-lg border-2 border-border bg-background opacity-50 cursor-not-allowed"
+                      className="flex items-center gap-3 p-4 rounded-xl border-2 border-border bg-muted/30 opacity-60 cursor-not-allowed"
                     >
                       <div className="flex items-center justify-center w-10 h-10 rounded-full bg-background">
                         <ZCashIcon />
                       </div>
                       <div className="flex-1 text-left">
-                        <p className="font-semibold text-foreground">ZCash</p>
-                        <p className="text-xs text-muted-foreground">
-                          Coming Soon
-                        </p>
+                        <p className="font-semibold text-foreground text-sm">ZCash</p>
+                        <p className="text-xs text-muted-foreground">Coming Soon</p>
                       </div>
-                      <Lock className="w-5 h-5 text-muted-foreground" />
+                      <LockIcon />
                     </button>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Amount</Label>
+                <div className="space-y-3">
+                  <Label htmlFor="amount" className="text-sm font-semibold text-foreground">
+                    Amount
+                  </Label>
                   <Input
                     id="amount"
                     type="number"
                     placeholder="0.0"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="text-lg"
+                    className="text-xl h-14 font-semibold"
                   />
 
                   {/* Amount percentage buttons */}
-                  <div className="flex gap-2 mt-2">
+                  <div className="flex gap-2">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => handleAmountPercentage(25)}
                       disabled={!connected || balance === null}
-                      className="flex-1 h-8 text-xs font-medium"
+                      className="flex-1 h-9 text-xs font-semibold hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors"
                     >
-                      +25%
+                      25%
                     </Button>
                     <Button
                       type="button"
@@ -770,9 +1002,9 @@ export default function TransactionPage() {
                       size="sm"
                       onClick={() => handleAmountPercentage(50)}
                       disabled={!connected || balance === null}
-                      className="flex-1 h-8 text-xs font-medium"
+                      className="flex-1 h-9 text-xs font-semibold hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors"
                     >
-                      +50%
+                      50%
                     </Button>
                     <Button
                       type="button"
@@ -780,7 +1012,7 @@ export default function TransactionPage() {
                       size="sm"
                       onClick={() => handleAmountPercentage(100)}
                       disabled={!connected || balance === null}
-                      className="flex-1 h-8 text-xs font-medium"
+                      className="flex-1 h-9 text-xs font-semibold hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors"
                     >
                       Max
                     </Button>
@@ -790,99 +1022,265 @@ export default function TransactionPage() {
                       size="sm"
                       onClick={handleResetAmount}
                       disabled={!amount}
-                      className="flex-1 h-8 text-xs font-medium"
+                      className="flex-1 h-9 text-xs font-semibold hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50 transition-colors bg-transparent"
                     >
                       Reset
                     </Button>
                   </div>
 
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground font-medium">
                     Available:{" "}
+                    <span className="text-foreground font-semibold">
                     {connected && balance !== null
                       ? `${formatAmount(balance)} SOL`
                       : connected
                       ? "Loading..."
-                      : "Connect wallet to see balance"}
+                          : "Connect wallet"}
+                    </span>
                   </p>
                 </div>
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <Label>Recipients</Label>
+                    <Label className="text-sm font-semibold text-foreground">Recipients</Label>
                     <Button
                       variant="outline"
                       size="sm"
-                      disabled
-                      className="opacity-50 cursor-not-allowed"
+                      type="button"
+                      onClick={addRecipientRow}
+                      className="h-9 hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors bg-transparent"
                     >
                       <Plus className="h-4 w-4 mr-2" />
                       Add Recipient
-                      <Lock className="h-3 w-3 ml-2" />
                     </Button>
                   </div>
 
+                  <div className="space-y-3">
+                    {outputs.map((output, index) => {
+                      const parsed = parsedOutputs[index]
+                      const addressError = !!output.address && parsed && !parsed.addressValid
+                      const amountProvided = output.amount.trim() !== ""
+                      const amountLamportsValue = parsed?.amountLamports ?? null
+                      const amountError = amountProvided && (amountLamportsValue === null || amountLamportsValue <= 0)
+
+                      return (
+                        <div
+                          key={index}
+                          className="border-2 border-border rounded-xl p-4 bg-card shadow-sm space-y-3 hover:border-primary/30 transition-colors"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                              Recipient #{index + 1}
+                            </span>
+                            {outputs.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeRecipientRow(index)}
+                                className="text-muted-foreground hover:text-destructive transition-colors p-1 rounded hover:bg-destructive/10"
+                                aria-label="Remove recipient"
+                              >
+                                <XIcon />
+                              </button>
+                            )}
+                          </div>
+
+                          <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="recipient">Recipient 1</Label>
+                              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                Address
+                              </Label>
                     <Input
-                      id="recipient"
-                      placeholder="Enter recipient's wallet address"
-                      value={recipientWallet}
-                      onChange={(e) => setRecipientWallet(e.target.value)}
-                      className="text-lg"
-                    />
+                                placeholder="Enter wallet address"
+                                value={output.address}
+                                onChange={(e) => updateOutputAddress(index, e.target.value)}
+                                className="font-mono text-sm h-11"
+                              />
+                              {addressError && (
+                                <p className="text-xs text-destructive font-medium flex items-center gap-1">
+                                  <span className="inline-block w-1 h-1 rounded-full bg-destructive"></span>
+                                  Enter a valid Solana address
+                                </p>
+                              )}
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                                Amount
+                              </Label>
+                              <div className="flex flex-col sm:flex-row items-stretch gap-2">
+                                <div className="flex flex-row w-full sm:w-auto items-center gap-1">
+                                  <button
+                                    type="button"
+                                    className="w-10 h-11 rounded-lg bg-background border border-border flex items-center justify-center hover:bg-muted active:bg-muted/80 transition-colors disabled:opacity-50"
+                                    aria-label="Decrease amount"
+                                    onClick={() => {
+                                      const current = parseFloat(output.amount) || 0;
+                                      const next = Math.max(current - 0.1, 0);
+                                      updateOutputAmount(index, next.toFixed(3).replace(/\.?0+$/, ""));
+                                    }}
+                                    disabled={
+                                      outputs.length === 1 ||
+                                      parseFloat(output.amount) <= 0.1 ||
+                                      isNaN(parseFloat(output.amount))
+                                    }
+                                    tabIndex={-1}
+                                  >
+                                    <MinusIcon className="w-4 h-4" />
+                                  </button>
+                                  <Input
+                                    inputMode="decimal"
+                                    type="number"
+                                    min={0}
+                                    step={0.000000001}
+                                    autoComplete="off"
+                                    spellCheck={false}
+                                    placeholder="0.000 (SOL)"
+                                    value={output.amount}
+                                    disabled={outputs.length === 1}
+                                    onFocus={e => e.target.select()}
+                                    onChange={e => {
+                                      // Clean input to allow only decimals
+                                      const value = e.target.value.replace(/[^0-9.]/g, "").replace(/^0+(\d)/, "$1");
+                                      updateOutputAmount(index, value);
+                                    }}
+                                    onBlur={e => {
+                                      // Optionally format to fixed decimals on blur
+                                      if (e.target.value && !isNaN(Number(e.target.value)))
+                                        updateOutputAmount(index, parseFloat(e.target.value).toFixed(3).replace(/\.?0+$/, ""));
+                                    }}
+                                    onKeyDown={e => handleAmountKeyDown(index, e)}
+                                    className="font-mono text-sm h-11 flex-1 text-right disabled:bg-muted disabled:opacity-70 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    title={
+                                      outputs.length === 1
+                                        ? "Amount matches your transaction total (disabled when single recipient)"
+                                        : "Enter at least 0.001. Use ↑/↓ arrows to adjust by 0.1 SOL"
+                                    }
+                                    aria-label={`SOL amount for recipient #${index + 1}`}
+                                  />
+                                  <button
+                                    type="button"
+                                    className="w-10 h-11 rounded-lg bg-background border border-border flex items-center justify-center hover:bg-muted active:bg-muted/80 transition-colors disabled:opacity-50"
+                                    aria-label="Increase amount"
+                                    onClick={() => {
+                                      const current = parseFloat(output.amount) || 0;
+                                      const next = current + 0.1;
+                                      updateOutputAmount(index, next.toFixed(3).replace(/\.?0+$/, ""));
+                                    }}
+                                    disabled={outputs.length === 1}
+                                    tabIndex={-1}
+                                  >
+                                    <PlusIcon className="w-4 h-4" />
+                                  </button>
+                                </div>
+                                <span className="text-xs text-muted-foreground pl-1 pt-1 sm:pt-0 sm:self-center">
+                                  SOL
+                                </span>
+                              </div>
+                              {amountError && (
+                                <p className="text-xs text-destructive font-medium flex items-center gap-1">
+                                  <span className="inline-block w-1 h-1 rounded-full bg-destructive"></span>
+                                  Enter a positive amount
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
 
-                  <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <Lock className="h-3 w-3" />
-                      <span>Multiple recipients coming soon</span>
+                  {shouldCheckAllocation && (
+                    <div className="text-sm text-destructive bg-destructive/10 border border-destructive/30 p-4 rounded-xl font-medium">
+                      {remainingIsNegative
+                        ? `⚠️ Over-allocated by ${remainingSolDisplay} SOL`
+                        : `⚠️ Remaining ${remainingSolDisplay} SOL to assign`}
                     </div>
+                  )}
+
+                  {amount && parsedAmountLamports !== null && parsedAmountLamports > 0 && (
+                    <div className="border-2 border-border rounded-xl p-5 space-y-4 bg-muted/30 shadow-sm">
+                      <h4 className="text-sm font-bold text-foreground uppercase tracking-wide">Transaction Summary</h4>
+
+                      {/* Fee Breakdown */}
+                      <div className="space-y-2 text-sm font-mono bg-card rounded-lg p-4 border border-border">
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>Total deposit:</span>
+                          <span className="font-bold text-foreground">{amount} SOL</span>
+                        </div>
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>Protocol fee (0.5%):</span>
+                          <span className="font-semibold">
+                            {formatAmount(Math.floor((parsedAmountLamports * 0.5) / 100))} SOL
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>Fixed fee:</span>
+                          <span className="font-semibold">{formatAmount(2_500_000)} SOL</span>
+                        </div>
+                        <div className="flex justify-between border-t-2 border-border pt-2 mt-2">
+                          <span className="text-foreground font-bold">Total fee:</span>
+                          <span className="font-bold text-foreground">
+                            {formatAmount(calculateFee(parsedAmountLamports))} SOL
+                          </span>
                   </div>
                 </div>
 
-                {/* Documentation and Miners Links */}
-                <div className="flex justify-center gap-4 py-4 border-t border-border/50">
-                  <Link
-                    href="/miners"
-                    className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Shield className="w-4 h-4" />
-                    View Miners
-                  </Link>
-                  <span className="text-muted-foreground">•</span>
-                  <a
-                    href="https://docs.cloakprotocol.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Documentation
-                  </a>
+                      {/* Recipients Breakdown */}
+                      {outputs.length > 0 && (
+                        <div className="space-y-2">
+                          <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                            Recipients ({outputs.length})
+                          </div>
+                          <div className="space-y-1.5 text-sm font-mono max-h-40 overflow-y-auto pr-1">
+                            {outputs.map((output, idx) => {
+                              const recipientAmount = parsedOutputs[idx]?.amountLamports ?? 0
+                              return (
+                                <div
+                                  key={idx}
+                                  className="flex justify-between items-center bg-card rounded-lg px-3 py-2 border border-border"
+                                >
+                                  <span className="text-muted-foreground truncate text-xs">
+                                    #{idx + 1} {output.address.trim() || "Not set"}
+                                  </span>
+                                  <span className="font-bold text-foreground ml-2">
+                                    {formatAmount(recipientAmount)} SOL
+                                  </span>
+                                </div>
+                              )
+                            })}
+                          </div>
+                          <div className="flex justify-between border-t-2 border-border pt-2 mt-2 text-sm font-mono">
+                            <span className="text-foreground font-bold">Total to recipients:</span>
+                            <span className="font-bold text-foreground">{assignedSolDisplay} SOL</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <Button
                   onClick={handleSendTokens}
-                  disabled={
-                    !connected || !amount || !recipientWallet || isLoading
-                  }
-                  className="w-full h-12 text-lg"
+                  disabled={!connected || !amount || !outputsValid || isLoading}
+                  className={`w-full h-14 text-base font-bold shadow-lg hover:shadow-xl transition-all ${!connected || !amount || !outputsValid || isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                   size="lg"
                 >
                   {isLoading ? (
-                    "Processing..."
+                    <span className="flex items-center gap-2">
+                      <span className="animate-spin">⏳</span>
+                      Processing...
+                    </span>
                   ) : (
                     <>
-                      <Send className="h-5 w-5 mr-2" />
+                      <SendIcon />
                       Send Privately
                     </>
                   )}
                 </Button>
 
                 {!connected && (
-                  <div className="text-center p-4 bg-muted/50 rounded-lg">
-                    <Wallet className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">
+                  <div className="text-center p-6 bg-muted/50 rounded-xl border-2 border-dashed border-border">
+                    <WalletIcon />
+                    <p className="text-sm text-muted-foreground font-medium leading-relaxed">
                       Connect your wallet to start sending private transactions
                     </p>
                   </div>
@@ -892,47 +1290,48 @@ export default function TransactionPage() {
 
             {/* Status Modal */}
             {showStatusModal && (
-              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-                <div className="bg-card rounded-xl shadow-2xl border max-w-2xl w-full mx-4 relative">
-                  <button
-                    onClick={() => {
-                      setShowStatusModal(false);
-                      // Reset form when closing modal
-                      setAmount("");
-                      setRecipientWallet("");
-                      setTransactionStatus("idle");
-                      setTransactionSignature("");
-                    }}
-                    className="absolute top-2 right-2 z-10 p-2 rounded-full hover:bg-muted transition-colors"
-                    aria-label="Close modal"
-                  >
-                    <X className="w-5 h-5 text-muted-foreground hover:text-foreground" />
-                  </button>
+              <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
+                <div className="bg-card rounded-2xl shadow-2xl border-2 border-border max-w-2xl w-full mx-4 relative">
+                  {/* Only show close button on error or success */}
+                  {(transactionStatus === "error" || transactionStatus === "sent") && (
+                    <button
+                      onClick={() => {
+                        setShowStatusModal(false)
+                        // Reset form when closing modal
+                        setAmount("")
+                        setOutputs([{ address: "", amount: "" }])
+                        setLastOutputs([])
+                        setTransactionStatus("idle")
+                        setTransactionSignature("")
+                      }}
+                      className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-muted transition-colors"
+                      aria-label="Close modal"
+                    >
+                      <XIcon />
+                    </button>
+                  )}
                   <TransactionStatus
                     status={transactionStatus}
-                    amount={amount}
-                    recipient={recipientWallet}
+                    amount={formatAmount(distributableLamports)}
+                    recipients={lastOutputs.map(({ address, amountLamports }) => ({
+                      address,
+                      amountLamports,
+                    }))}
                     signature={transactionSignature}
                   />
                 </div>
               </div>
             )}
 
-            <div className="text-center mt-8 text-sm text-muted-foreground">
-              <p>Powered by Solana · SP1 zkVM · Cloak Protocol</p>
-              <div className="flex justify-center gap-4 mt-2">
+            <div className="text-center mt-10 space-y-3">
+              <p className="text-sm text-muted-foreground font-medium">Powered by Solana · SP1 zkVM · Cloak Protocol</p>
+              <div className="flex justify-center gap-6">
                 <Link
                   href="/privacy-demo"
-                  className="hover:text-foreground transition-colors font-semibold text-primary inline-flex items-center gap-2"
+                  className="hover:text-foreground transition-colors font-bold text-primary inline-flex items-center gap-2 text-sm"
                 >
-                  <Shield className="w-4 h-4" />
+                  <ShieldIcon />
                   See Privacy in Action
-                </Link>
-                <Link
-                  href="/admin"
-                  className="hover:text-foreground transition-colors"
-                >
-                  Admin
                 </Link>
               </div>
             </div>
@@ -974,6 +1373,46 @@ function createDepositInstruction(params: {
   });
 }
 
+function parseSolToLamports(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (!/^\d+(\.\d{0,9})?$/.test(trimmed)) return null;
+
+  const [wholePart, fractionalPart = ""] = trimmed.split(".");
+  const whole = Number(wholePart);
+  if (!Number.isFinite(whole)) return null;
+
+  const paddedFraction = (fractionalPart + "000000000").slice(0, 9);
+  const fraction = Number(paddedFraction);
+  if (!Number.isFinite(fraction)) return null;
+
+  return whole * LAMPORTS_PER_SOL + fraction;
+}
+
+function lamportsToSolInput(lamports: number): string {
+  if (lamports <= 0) {
+    return "0";
+  }
+  const whole = Math.floor(lamports / LAMPORTS_PER_SOL);
+  const fraction = lamports % LAMPORTS_PER_SOL;
+  if (fraction === 0) {
+    return `${whole}`;
+  }
+  // Round to 9 decimal places to avoid precision issues
+  const rounded = Math.round((lamports / LAMPORTS_PER_SOL) * 1_000_000_000) / 1_000_000_000;
+  const roundedStr = rounded.toFixed(9);
+  return roundedStr.replace(/0+$/, "").replace(/\.$/, "");
+}
+
+function isValidSolanaAddress(address: string): boolean {
+  try {
+    new PublicKey(address);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function blake3HashMany(chunks: Uint8Array[]): Uint8Array {
   const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
   const combined = new Uint8Array(totalLength);
@@ -994,8 +1433,7 @@ async function submitWithdrawViaRelay(
       outputs_hash: string;
       amount: number;
     };
-    recipient: string;
-    recipientAmountLamports: number;
+    outputs: Array<{ recipient: string; amount: number }>;
     feeBps: number;
   },
   onStatusUpdate?: (status: string) => void
@@ -1007,9 +1445,7 @@ async function submitWithdrawViaRelay(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      outputs: [
-        { recipient: params.recipient, amount: params.recipientAmountLamports },
-      ],
+      outputs: params.outputs,
       policy: { fee_bps: params.feeBps },
       public_inputs: {
         root: params.publicInputs.root,

@@ -120,40 +120,40 @@ export default function CloakLandingPage() {
 
   const features = [
     {
-      title: "Private Balance",
+      title: "Shared Privacy Pool",
       description:
-        "Add funds to a secure, private environment invisible to external observers.",
+        "Deposit SOL into a shared pool where individual deposits cannot be linked to withdrawals.",
       icon: <Lock className="size-5" />,
     },
     {
-      title: "Configurable Sends",
+      title: "Zero-Knowledge Proofs",
       description:
-        "Split transactions, add timing variations, or use our waiting room for maximum anonymity.",
-      icon: <Shuffle className="size-5" />,
+        "Cryptographically prove ownership without revealing which deposit you control.",
+      icon: <Shield className="size-5" />,
     },
     {
-      title: "Auditable Receipts",
+      title: "Unlinkable Withdrawals",
       description:
-        "Receive non-transferable NFT receipts as proof of every transaction.",
-      icon: <Receipt className="size-5" />,
-    },
-    {
-      title: "High Performance",
-      description:
-        "Optimized processing on Solana ensures speed, low fees, and reliability.",
-      icon: <Zap className="size-5" />,
-    },
-    {
-      title: "True Privacy",
-      description:
-        "No one can map where your SOL came from or where it's going.",
+        "Withdraw to any address without revealing the connection to your original deposit.",
       icon: <Eye className="size-5" />,
     },
     {
-      title: "Simple Control",
+      title: "On-Chain Verification",
       description:
-        "Intuitive interface with just a few clicks to add funds and send privately.",
-      icon: <Layers className="size-5" />,
+        "SP1 Groth16 proofs verified on Solana ensure mathematical guarantees of privacy.",
+      icon: <Zap className="size-5" />,
+    },
+    {
+      title: "PoW Mining",
+      description:
+        "Optional proof-of-work claims allow prioritized withdrawals for enhanced throughput.",
+      icon: <Hash className="size-5" />,
+    },
+    {
+      title: "Fixed & Transparent Fees",
+      description:
+        "0% on deposits, 0.5% + fixed fee on withdrawals with complete fee transparency.",
+      icon: <Receipt className="size-5" />,
     },
   ];
 
@@ -325,12 +325,12 @@ export default function CloakLandingPage() {
 
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 sm:mb-6 text-foreground font-space-grotesk">
                 {DAPP_AVAILABLE
-                  ? "Send SOL with Complete Privacy in Seconds"
+                  ? "Private SOL Transfers with Unlinkable Withdrawals"
                   : "Private Transfers on Solana"}
               </h1>
 
               <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-4 sm:mb-6 max-w-3xl mx-auto text-balance px-4">
-                Send, swap and route privately with fixed & transparent fees.
+                Deposit into the shared privacy pool and withdraw without revealing which deposit you own.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
                 <motion.div
@@ -497,11 +497,11 @@ export default function CloakLandingPage() {
                 Why Cloak is Different
               </Badge>
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight font-space-grotesk text-balance px-4">
-                Built for True Privacy & Performance
+                Built for True Privacy & Security
               </h2>
               <p className="mx-auto max-w-[700px] text-muted-foreground text-base sm:text-lg md:text-xl text-balance px-4">
-                Unlike traditional mixers, Cloak combines zero-knowledge proofs,
-                permissionless mining, and Solana's speed for unmatched privacy.
+                Cloak uses zero-knowledge proofs, Merkle tree commitments,
+                and optional proof-of-work mining to provide cryptographically guaranteed privacy.
               </p>
             </motion.div>
 
@@ -577,11 +577,11 @@ export default function CloakLandingPage() {
                     </div>
                     <div className="space-y-2 sm:space-y-3">
                       <h3 className="text-xl sm:text-2xl font-bold font-space-grotesk text-foreground">
-                        Solana for Scale
+                        Solana for Speed
                       </h3>
                       <p className="text-muted-foreground leading-relaxed">
-                        Low latency, high throughput, L1 UX. Privacy without
-                        compromising on speed or cost.
+                        On-chain ZK verification happens in seconds. Proof
+                        generation uses SP1 for efficient Groth16 circuit execution.
                       </p>
                     </div>
                     <div className="pt-4">
@@ -611,13 +611,13 @@ export default function CloakLandingPage() {
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Zap className="size-5" />
                   <span className="text-sm font-medium">
-                    Sub-Second Transactions
+                    On-Chain Verification
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Receipt className="size-5" />
                   <span className="text-sm font-medium">
-                    Auditable Receipts
+                    Merkle Proofs
                   </span>
                 </div>
               </div>
@@ -642,12 +642,11 @@ export default function CloakLandingPage() {
                 Features
               </Badge>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight font-space-grotesk text-foreground px-4">
-                Everything You Need for Private Transactions
+                Complete Privacy Solution
               </h2>
               <p className="max-w-[800px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
-                Our comprehensive privacy platform provides all the tools you
-                need to transact anonymously on Solana while maintaining full
-                control and auditability.
+                Deposit SOL privately using commitments, then withdraw to any address
+                with cryptographically guaranteed privacy through zero-knowledge proofs.
               </p>
             </motion.div>
 
@@ -733,21 +732,21 @@ export default function CloakLandingPage() {
               {[
                 {
                   step: "01",
-                  title: "Add to Private Balance",
+                  title: "Deposit to Shield Pool",
                   description:
-                    "Connect your wallet and deposit SOL into your secure, private balance environment.",
+                    "Create a commitment by depositing SOL into the shared privacy pool. Your deposit is cryptographically linked to the commitment.",
                 },
                 {
                   step: "02",
-                  title: "Customize Your Transfer",
+                  title: "Generate ZK Proof",
                   description:
-                    "Choose recipients, split amounts, add timing variations, or use our waiting room for maximum anonymity.",
+                    "Prove ownership of your commitment using zero-knowledge proofs. The proof doesn't reveal which commitment you control.",
                 },
                 {
                   step: "03",
-                  title: "Receive & Verify",
+                  title: "Withdraw Privately",
                   description:
-                    "Recipients get SOL with no trace to you. You receive an auditable NFT receipt as proof.",
+                    "Withdraw to any address without revealing the link to your deposit. On-chain verification ensures privacy.",
                 },
               ].map((step, i) => (
                 <motion.div
@@ -832,9 +831,9 @@ export default function CloakLandingPage() {
                   icon: <Eye className="size-5" />,
                 },
                 {
-                  title: "Auditable Receipts",
+                  title: "Merkle Tree Proofs",
                   description:
-                    "Non-transferable NFT receipts provide cryptographic proof of transactions without revealing details.",
+                    "Every deposit creates a verifiable commitment in the Merkle tree. Prove inclusion without revealing which commitment you control.",
                   icon: <Receipt className="size-5" />,
                 },
                 {
@@ -1082,7 +1081,7 @@ export default function CloakLandingPage() {
           </div>
         </section>
 
-        {/* SDK Section */}
+        {/* Developer Tools Section */}
         <section className="w-full py-12 sm:py-16 md:py-24 lg:py-32">
           <div className="container px-4 md:px-6">
             <motion.div
@@ -1096,12 +1095,11 @@ export default function CloakLandingPage() {
                 Developer Tools
               </Badge>
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight font-space-grotesk text-balance px-4">
-                Cloak SDK
+                Cloak Development Kit
               </h2>
               <p className="mx-auto max-w-[700px] text-muted-foreground text-sm sm:text-base md:text-xl text-balance px-4">
-                Integrate privacy into your Solana applications with our
-                comprehensive SDK. Build private DeFi, NFT marketplaces, and
-                more with zero-knowledge proofs.
+                Rust tools and libraries for building with Cloak's privacy protocol.
+                Generate zero-knowledge proofs, run miners, and parse proofs with our comprehensive tooling.
               </p>
             </motion.div>
 
@@ -1117,34 +1115,30 @@ export default function CloakLandingPage() {
                 <div className="space-y-3 sm:space-y-4">
                   <div className="flex items-center gap-2 sm:gap-3">
                     <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                      <Brain className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
                     </div>
                     <h3 className="text-xl sm:text-2xl font-bold font-space-grotesk">
-                      Trading Terminals & DEXs
+                      ZK Proof Generation
                     </h3>
                   </div>
                   <p className="text-muted-foreground text-base sm:text-lg">
-                    Integrate Cloak as a "Private Route" option in Jupiter,
-                    Mango Markets, and Drift. Users can perform private swaps
-                    without exposing addresses or trading volumes, preventing
-                    front-running and MEV attacks.
+                    Generate zero-knowledge proofs for withdrawals using the SP1 guest program and host CLI.
+                    Local CPU proving (~2 min) or SP1 network TEE (~30-45 sec). Full circuit implementation with 6 constraints enforced.
                   </p>
                 </div>
 
                 <div className="space-y-3 sm:space-y-4">
                   <div className="flex items-center gap-2 sm:gap-3">
                     <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Building className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                      <Hash className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
                     </div>
                     <h3 className="text-xl sm:text-2xl font-bold font-space-grotesk">
-                      DeFi Protocols
+                      PoW Mining
                     </h3>
                   </div>
                   <p className="text-muted-foreground text-base sm:text-lg">
-                    Add privacy layers to lending protocols, yield farming, and
-                    liquidity provision. Protect user positions and strategies
-                    while maintaining composability with existing DeFi
-                    infrastructure.
+                    Run the standalone miner CLI to produce wildcard claims for the scramble registry.
+                    Earn fees by helping prioritize withdrawals during congestion. Automatic difficulty adjustment and claim lifecycle management.
                   </p>
                 </div>
 
@@ -1154,29 +1148,42 @@ export default function CloakLandingPage() {
                       <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
                     </div>
                     <h3 className="text-xl sm:text-2xl font-bold font-space-grotesk">
-                      MEV Protection
+                      Proof Utilities
                     </h3>
                   </div>
                   <p className="text-muted-foreground text-base sm:text-lg">
-                    Shield high-value transactions from MEV bots and sandwich
-                    attacks. Perfect for institutional traders, large position
-                    managers, and anyone requiring transaction privacy on
-                    Solana.
+                    Extract 260-byte Groth16 proofs from SP1 bundles, parse public inputs (104 bytes),
+                    and generate verification keys for on-chain verification. All tools support no_std for on-chain integration.
                   </p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4">
-                  <Button size="lg" className="rounded-full h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base">
-                    Get Started with SDK
-                    <ArrowRight className="ml-2 size-4" />
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="rounded-full h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base"
+                  <a
+                    href="https://cloak-eqpl.vercel.app/docs/packages/overview"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto"
                   >
-                    View on GitHub
-                  </Button>
+                    <Button size="lg" className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base">
+                      View Documentation
+                      <ExternalLink className="ml-2 size-4" />
+                    </Button>
+                  </a>
+                  <a
+                    href="https://github.com/cloak-labz/cloak"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto"
+                  >
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base"
+                    >
+                      View on GitHub
+                      <ExternalLink className="ml-2 size-4" />
+                    </Button>
+                  </a>
                 </div>
               </motion.div>
 
@@ -1197,23 +1204,8 @@ export default function CloakLandingPage() {
                     <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-green-500"></div>
                     <div className="flex-1 text-center">
                       <span className="text-gray-400 text-[10px] sm:text-xs md:text-sm font-mono">
-                        main.rs
+                        terminal
                       </span>
-                    </div>
-                    <div className="w-4 sm:w-6 h-4 sm:h-6 flex items-center justify-center">
-                      <svg
-                        className="w-3 sm:w-4 h-3 sm:h-4 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                        />
-                      </svg>
                     </div>
                   </div>
 
@@ -1222,114 +1214,80 @@ export default function CloakLandingPage() {
                     <div className="p-3 sm:p-4 md:p-6 min-w-max">
                       <pre className="text-[10px] sm:text-xs md:text-sm text-gray-100 font-mono leading-relaxed">
                         <code className="block whitespace-pre">
-                        <span className="text-gray-500">
-                          // Jupiter DEX Integration
+                        <span className="text-green-400">$</span>{" "}
+                        <span className="text-gray-400">
+                          # Generate withdrawal proof
                         </span>
                         <br />
-                        <span className="text-blue-400">use</span>{" "}
-                        <span className="text-yellow-300">jupiter_swap</span>::
-                        <span className="text-green-400">JupiterClient</span>;
-                        <br />
-                        <span className="text-blue-400">use</span>{" "}
-                        <span className="text-yellow-300">cloak_sdk</span>::
-                        <span className="text-green-400">CloakRoute</span>;
-                        <br />
-                        <br />
-                        <span className="text-blue-400">async</span>{" "}
-                        <span className="text-blue-400">fn</span>{" "}
-                        <span className="text-yellow-300">
-                          execute_private_swap
-                        </span>
-                        (
-                        <br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;
-                        <span className="text-yellow-300">
-                          input_mint
-                        </span>: <span className="text-green-400">Pubkey</span>,
-                        <br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;
-                        <span className="text-yellow-300">
-                          output_mint
-                        </span>: <span className="text-green-400">Pubkey</span>,
-                        <br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;
-                        <span className="text-yellow-300">amount</span>:{" "}
-                        <span className="text-blue-400">u64</span>,<br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;
-                        <span className="text-yellow-300">user</span>:{" "}
-                        <span className="text-green-400">Pubkey</span>,<br />){" "}
-                        <span className="text-blue-400">-&gt;</span>{" "}
-                        <span className="text-green-400">Result</span>&lt;
-                        <span className="text-green-400">String</span>,{" "}
-                        <span className="text-red-400">Error</span>&gt;{" "}
-                        <span className="text-gray-500">{`{`}</span>
-                        <br />
+                        <span className="text-green-400">$</span>{" "}
+                        <span className="text-white">cargo run</span>{" "}
+                        <span className="text-blue-400">--package</span>{" "}
+                        <span className="text-yellow-300">zk-guest-sp1-host</span>{" "}
+                        <span className="text-white">--</span>{" "}
+                        <span className="text-blue-400">--bin</span>{" "}
+                        <span className="text-yellow-300">cloak-zk</span>{" "}
+                        <span className="text-white">--</span>{" "}
+                        <span className="text-blue-400">prove</span>
                         <br />
                         &nbsp;&nbsp;
-                        <span className="text-gray-500">
-                          // 1. Get Jupiter quote
-                        </span>
-                        <br />
-                        &nbsp;&nbsp;<span className="text-blue-400">
-                          let
-                        </span>{" "}
-                        <span className="text-yellow-300">quote</span> ={" "}
-                        <span className="text-yellow-300">JupiterClient</span>::
-                        <span className="text-yellow-300">new</span>()
-                        <br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;.
-                        <span className="text-green-400">get_quote</span>(
-                        <span className="text-yellow-300">input_mint</span>,{" "}
-                        <span className="text-yellow-300">output_mint</span>,{" "}
-                        <span className="text-yellow-300">amount</span>)<br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;.
-                        <span className="text-blue-400">await</span>?;
-                        <br />
+                        <span className="text-blue-400">--private</span>{" "}
+                        <span className="text-yellow-300">private.json</span>
                         <br />
                         &nbsp;&nbsp;
-                        <span className="text-gray-500">
-                          // 2. Create private route
-                        </span>
-                        <br />
-                        &nbsp;&nbsp;<span className="text-blue-400">
-                          let
-                        </span>{" "}
-                        <span className="text-yellow-300">cloak_route</span> ={" "}
-                        <span className="text-green-400">CloakRoute</span>::
-                        <span className="text-yellow-300">new</span>()
-                        <br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;.
-                        <span className="text-green-400">
-                          with_jupiter_quote
-                        </span>
-                        (<span className="text-yellow-300">quote</span>)<br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;.
-                        <span className="text-green-400">enable_privacy</span>(
-                        <span className="text-orange-400">true</span>);
-                        <br />
+                        <span className="text-blue-400">--public</span>{" "}
+                        <span className="text-yellow-300">public.json</span>
                         <br />
                         &nbsp;&nbsp;
-                        <span className="text-gray-500">
-                          // 3. Execute private swap
+                        <span className="text-blue-400">--outputs</span>{" "}
+                        <span className="text-yellow-300">outputs.json</span>
+                        <br />
+                        &nbsp;&nbsp;
+                        <span className="text-blue-400">--proof</span>{" "}
+                        <span className="text-yellow-300">out/proof.bin</span>
+                        <br />
+                        <br />
+                        <span className="text-yellow-300">📖</span>{" "}
+                        <span className="text-gray-300">Reading input files...</span>
+                        <br />
+                        <span className="text-green-400">✅</span>{" "}
+                        <span className="text-gray-300">Input files loaded</span>
+                        <br />
+                        <span className="text-yellow-300">🔑</span>{" "}
+                        <span className="text-gray-300">Generating proving key...</span>
+                        <br />
+                        <span className="text-green-400">✅</span>{" "}
+                        <span className="text-gray-300">Proof generated!</span>
+                        <br />
+                        <span className="text-gray-500">Proof size: 89,234 bytes</span>
+                        <br />
+                        <span className="text-gray-500">Total cycles: 1,234,567</span>
+                        <br />
+                        <br />
+                        <span className="text-green-400">$</span>{" "}
+                        <span className="text-gray-400">
+                          # Run PoW miner
                         </span>
                         <br />
-                        &nbsp;&nbsp;<span className="text-blue-400">
-                          let
-                        </span>{" "}
-                        <span className="text-yellow-300">signature</span> ={" "}
-                        <span className="text-yellow-300">cloak_route</span>
-                        <br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;.
-                        <span className="text-green-400">execute_swap</span>(
-                        <span className="text-yellow-300">user</span>)<br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;.
-                        <span className="text-blue-400">await</span>?;
+                        <span className="text-green-400">$</span>{" "}
+                        <span className="text-white">cargo run</span>{" "}
+                        <span className="text-blue-400">--package</span>{" "}
+                        <span className="text-yellow-300">cloak-miner</span>{" "}
+                        <span className="text-white">--</span>{" "}
+                        <span className="text-blue-400">--network</span>{" "}
+                        <span className="text-yellow-300">devnet</span>{" "}
+                        <span className="text-white">mine</span>
                         <br />
                         <br />
-                        &nbsp;&nbsp;<span className="text-green-400">Ok</span>(
-                        <span className="text-yellow-300">signature</span>)
+                        <span className="text-yellow-300">⛏️</span>{" "}
+                        <span className="text-gray-300">Starting PoW mining...</span>
                         <br />
-                        <span className="text-gray-500">{`}`}</span>
+                        <span className="text-yellow-300">🔍</span>{" "}
+                        <span className="text-gray-300">Found solution: 0x3a7f...</span>
+                        <br />
+                        <span className="text-green-400">✅</span>{" "}
+                        <span className="text-gray-300">Claim submitted to registry</span>
+                        <br />
+                        <span className="text-gray-500">Difficulty: 16 | Block: 42,069</span>
                         </code>
                       </pre>
                     </div>
@@ -1476,35 +1434,35 @@ export default function CloakLandingPage() {
                     question:
                       "How do I know my transactions are really private?",
                     answer:
-                      "Cloak uses zero-knowledge architecture that makes it mathematically impossible to trace transactions back to you. When you deposit SOL into your private balance, it becomes completely disconnected from your original wallet. Recipients receive SOL with no traceable link to your identity or transaction history.",
+                      "Cloak uses Merkle tree commitments and zero-knowledge proofs that make it mathematically impossible to link deposits to withdrawals. When you deposit into the shared shield pool, only your commitment is stored. Later withdrawals prove ownership without revealing which commitment you control.",
                   },
                   {
                     question:
-                      "What are auditable receipts and how do they work?",
+                      "How can I verify my deposits and withdrawals?",
                     answer:
-                      "Auditable receipts are non-transferable NFTs that serve as cryptographic proof your transaction was executed correctly. They provide complete transparency about the transaction details without compromising your privacy - you can verify everything worked as expected while maintaining full anonymity.",
+                      "Every deposit creates a commitment hash stored in the Merkle tree. When you withdraw, your zero-knowledge proof is verified on-chain. You can trace your deposit signature and verify the commitment was included in the tree, while your withdrawal remains unlinkable to it.",
                   },
                   {
                     question:
-                      "Can I split or delay transactions for more privacy?",
+                      "How does the proof-of-work mining system work?",
                     answer:
-                      "Cloak offers advanced privacy configurations including splitting transactions across multiple recipients, adding random timing variations, and using our waiting room feature that mixes your transactions with others for enhanced anonymity. You have complete control over your privacy level.",
+                      "Miners can mine wildcard claims that help prioritize withdrawals during periods of congestion. This optional system provides economic incentives while maintaining privacy. Miners don't learn anything about your transaction but help ensure faster processing.",
                   },
                   {
                     question:
-                      "How fast are Cloak transactions compared to regular Solana transfers?",
+                      "How long does it take to complete a private transfer?",
                     answer:
-                      "Cloak transactions benefit from Solana's high-performance blockchain and typically complete in seconds. Direct private sends are nearly as fast as regular Solana transfers, while enhanced privacy features like the waiting room may add a few extra seconds for maximum anonymity.",
+                      "After deposit confirmation, withdrawals require generating a zero-knowledge proof. Proof generation takes ~2 minutes on local CPU or ~30-45 seconds using SP1 network trusted execution. Once the proof is submitted, the on-chain withdrawal completes in seconds.",
                   },
                   {
                     question: "How much does it cost to use Cloak?",
                     answer:
-                      "Cloak charges minimal fees on top of standard Solana network fees. Our transparent fee structure ensures you only pay for the privacy features you use, with no hidden costs or subscription requirements. Most transactions cost just a few cents in total.",
+                      "Deposits are completely free (0% fee). Withdrawals cost 0.5% plus a fixed 0.0025 SOL fee. There are no hidden costs or subscriptions. For example, withdrawing 1 SOL costs 0.05 SOL plus 0.0025 SOL = 0.0525 SOL total (approximately $10.50 on mainnet at $200/SOL).",
                   },
                   {
                     question: "How can I be sure my funds are safe?",
                     answer:
-                      "Cloak is built on Solana's battle-tested blockchain infrastructure using audited smart contracts. Your private balance is secured by the same cryptographic principles that protect the entire Solana network. Additionally, every transaction generates verifiable receipts, and our code is open for independent security review.",
+                      "Cloak is built on Solana's battle-tested blockchain using audited smart contracts. Your commitments are secured by zero-knowledge proofs verified on-chain. Double-spending is prevented by nullifiers. The code is open-source for independent security review, and all deposits remain in the on-chain shield pool backed by Solana's security.",
                   },
                 ].map((faq, i) => (
                   <motion.div

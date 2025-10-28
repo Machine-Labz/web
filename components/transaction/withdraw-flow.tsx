@@ -13,6 +13,8 @@ import {
   Upload,
   AlertCircle,
   ExternalLink,
+  Plus,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Buffer } from "buffer";
@@ -25,11 +27,12 @@ import {
   loadAllNotes,
   formatAmount,
   calculateFee,
-  getRecipientAmount,
+  getDistributableAmount,
   type CloakNote,
 } from "@/lib/note-manager";
 
 const RELAY_URL = process.env.NEXT_PUBLIC_RELAY_URL || "http://localhost:3002";
+const LAMPORTS_PER_SOL = 1_000_000_000;
 
 type WithdrawState =
   | "idle"
@@ -44,9 +47,14 @@ export default function WithdrawFlow() {
   const [state, setState] = useState<WithdrawState>("idle");
   const [note, setNote] = useState<CloakNote | null>(null);
   const [noteInput, setNoteInput] = useState("");
-  const [recipient, setRecipient] = useState("");
+  const [outputs, setOutputs] = useState<Array<{ address: string; amount: string }>>([
+    { address: "", amount: "" },
+  ]);
   const [withdrawSignature, setWithdrawSignature] = useState("");
   const [savedNotes, setSavedNotes] = useState<CloakNote[]>([]);
+  const [lastOutputs, setLastOutputs] = useState<
+    Array<{ address: string; amountLamports: number }>
+  >([]);
 
   const prover = useSP1Prover({
     onStart: () => toast.info("Starting proof generation..."),
@@ -62,10 +70,67 @@ export default function WithdrawFlow() {
 
   const { generateProof, isGenerating, progress } = prover;
 
-  // Derived UI state (must come after isGenerating is defined)
-  const recipientValid = recipient ? isValidSolanaAddress(recipient) : false;
-  const noteDeposited = !!note && !!note.depositSignature && note.leafIndex !== undefined;
-  const canWithdraw = !!note && recipientValid && noteDeposited && state !== "generating-proof" && state !== "submitting" && !isGenerating;
+  const feeLamports = note ? calculateFee(note.amount) : 0;
+  const distributableLamports = note
+    ? Math.max(getDistributableAmount(note.amount), 0)
+    : 0;
+
+  const parsedOutputs = outputs.map((entry) => {
+    const address = entry.address.trim();
+    const amountLamports = entry.amount
+      ? parseSolToLamports(entry.amount)
+      : null;
+    return {
+      address,
+      amountInput: entry.amount,
+      amountLamports,
+      addressValid: address ? isValidSolanaAddress(address) : false,
+      amountValid:
+        amountLamports !== null && Number.isFinite(amountLamports) && amountLamports >= 0,
+    };
+  });
+
+  const totalAssignedLamports = parsedOutputs.reduce((sum, output) => {
+    return sum + (output.amountLamports ?? 0);
+  }, 0);
+
+  const remainingLamports = distributableLamports - totalAssignedLamports;
+  const allocationMismatch = Math.abs(remainingLamports) > 1;
+
+  const allAddressesProvided = parsedOutputs.every((output) => output.address);
+  const allAddressesValid = parsedOutputs.every(
+    (output) => !output.address || output.addressValid,
+  );
+  const allAmountsProvided = parsedOutputs.every(
+    (output) => output.amountLamports !== null && output.amountLamports !== undefined,
+  );
+  const allAmountsPositive = parsedOutputs.every(
+    (output) => (output.amountLamports ?? 0) > 0,
+  );
+  const outputsSumMatches = !note ? false : !allocationMismatch;
+
+  const outputsValid =
+    parsedOutputs.length > 0 &&
+    allAddressesProvided &&
+    allAddressesValid &&
+    allAmountsProvided &&
+    allAmountsPositive &&
+    outputsSumMatches;
+
+  const remainingIsNegative = remainingLamports < 0;
+  const distributableSolDisplay = formatAmount(distributableLamports);
+  const assignedSolDisplay = formatAmount(totalAssignedLamports);
+  const remainingSolDisplay = formatAmount(Math.abs(remainingLamports));
+
+  const noteDeposited =
+    !!note && !!note.depositSignature && note.leafIndex !== undefined;
+  const canWithdraw =
+    !!note &&
+    outputsValid &&
+    noteDeposited &&
+    state !== "generating-proof" &&
+    state !== "submitting" &&
+    !isGenerating;
 
   const refreshSavedNotes = useCallback(() => {
     const notes = loadAllNotes();
@@ -84,6 +149,17 @@ export default function WithdrawFlow() {
       }
     };
   }, [refreshSavedNotes]);
+
+  React.useEffect(() => {
+    if (note) {
+      const distributable = Math.max(getDistributableAmount(note.amount), 0);
+      const defaultAmount =
+        distributable > 0 ? lamportsToSolInput(distributable) : "";
+      setOutputs([{ address: "", amount: defaultAmount }]);
+    } else {
+      setOutputs([{ address: "", amount: "" }]);
+    }
+  }, [note]);
 
   const handleLoadFromFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -120,9 +196,34 @@ export default function WithdrawFlow() {
     toast.success("Note loaded");
   };
 
+  const updateOutputAddress = (index: number, value: string) => {
+    setOutputs((prev) =>
+      prev.map((entry, i) => (i === index ? { ...entry, address: value } : entry)),
+    );
+  };
+
+  const updateOutputAmount = (index: number, value: string) => {
+    setOutputs((prev) =>
+      prev.map((entry, i) => (i === index ? { ...entry, amount: value } : entry)),
+    );
+  };
+
+  const addRecipientRow = () => {
+    setOutputs((prev) => [...prev, { address: "", amount: "" }]);
+  };
+
+  const removeRecipientRow = (index: number) => {
+    setOutputs((prev) => {
+      if (prev.length <= 1) {
+        return prev;
+      }
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
   const handleWithdraw = async () => {
-    if (!note || !recipient) {
-      toast.error("Please load a note and enter recipient address");
+    if (!note) {
+      toast.error("Please load a note before withdrawing");
       return;
     }
 
@@ -131,8 +232,31 @@ export default function WithdrawFlow() {
       return;
     }
 
-    if (!isValidSolanaAddress(recipient)) {
-      toast.error("Please enter a valid Solana address");
+    if (distributableLamports <= 0) {
+      toast.error("Note amount is not sufficient to cover fees");
+      return;
+    }
+
+    if (!outputsValid) {
+      if (!parsedOutputs.length) {
+        toast.error("Add at least one recipient");
+        return;
+      }
+      if (!allAddressesProvided) {
+        toast.error("Please enter an address for each recipient");
+        return;
+      }
+      if (!allAddressesValid) {
+        toast.error("One or more recipient addresses are invalid");
+        return;
+      }
+      if (!allAmountsProvided || !allAmountsPositive) {
+        toast.error("Enter a positive amount for each recipient");
+        return;
+      }
+      toast.error(
+        `Allocated outputs must equal ${formatAmount(distributableLamports)} SOL (currently ${formatAmount(totalAssignedLamports)} SOL)`,
+      );
       return;
     }
 
@@ -140,7 +264,6 @@ export default function WithdrawFlow() {
     setState("generating-proof");
 
     try {
-      // Fetch Merkle root and proof
       const { root: merkleRoot } = await indexerClient.getMerkleRoot();
       const merkleProof: MerkleProof = await indexerClient.getMerkleProof(
         note.leafIndex,
@@ -152,38 +275,42 @@ export default function WithdrawFlow() {
         (merkleProof as any).path_indices ?? merkleProof.pathIndices
       ).map((idx: number | string) => Number(idx));
 
-      // Calculate fees
-      const fee = calculateFee(note.amount);
-      const recipientAmountAfterFee = note.amount - fee;
+      const relayFeeBps = Math.ceil((feeLamports * 10_000) / note.amount);
 
-      // Calculate relay fee BPS (for the API) - use ceiling division to match relay
-      const relayFeeBps = Math.ceil((fee * 10_000) / note.amount);
-
-      // Generate nullifier
       const skSpend = Buffer.from(note.sk_spend, "hex");
       const leafIndexBytes = new Uint8Array(4);
       new DataView(leafIndexBytes.buffer).setUint32(0, note.leafIndex, true);
       const nullifierBytes = blake3HashMany([skSpend, leafIndexBytes]);
       const nullifierHex = Buffer.from(nullifierBytes).toString("hex");
 
-      // Generate outputs hash
-      const recipientPubkey = new PublicKey(recipient);
-      const recipientHex = Buffer.from(recipientPubkey.toBytes()).toString(
-        "hex",
-      );
-      const recipientAmountBytes = new Uint8Array(8);
-      new DataView(recipientAmountBytes.buffer).setBigUint64(
-        0,
-        BigInt(recipientAmountAfterFee),
-        true,
-      );
-      const outputsHashBytes = blake3HashMany([
-        recipientPubkey.toBytes(),
-        recipientAmountBytes,
-      ]);
+      const preparedOutputs = parsedOutputs.map((output) => {
+        const amountLamports = output.amountLamports ?? 0;
+        return {
+          pubkey: new PublicKey(output.address),
+          address: output.address,
+          amountLamports,
+        };
+      });
+
+      const hashChunks: Uint8Array[] = [];
+      const proofOutputs = preparedOutputs.map(({ pubkey, amountLamports }) => {
+        const amountBytes = new Uint8Array(8);
+        new DataView(amountBytes.buffer).setBigUint64(
+          0,
+          BigInt(amountLamports),
+          true,
+        );
+        hashChunks.push(pubkey.toBytes());
+        hashChunks.push(amountBytes);
+        return {
+          address: Buffer.from(pubkey.toBytes()).toString("hex"),
+          amount: amountLamports,
+        };
+      });
+
+      const outputsHashBytes = blake3HashMany(hashChunks);
       const outputsHashHex = Buffer.from(outputsHashBytes).toString("hex");
 
-      // Prepare SP1 proof inputs
       const sp1Inputs: SP1ProofInputs = {
         privateInputs: {
           amount: note.amount,
@@ -201,15 +328,9 @@ export default function WithdrawFlow() {
           outputs_hash: outputsHashHex,
           amount: note.amount,
         },
-        outputs: [
-          {
-            address: recipientHex,
-            amount: recipientAmountAfterFee,
-          },
-        ],
+        outputs: proofOutputs,
       };
 
-      // Generate proof
       const proofResult: SP1ProofResult = await generateProof(sp1Inputs);
 
       if (
@@ -220,8 +341,12 @@ export default function WithdrawFlow() {
         throw new Error(proofResult.error || "Proof generation failed");
       }
 
-      // Submit withdraw via relay
       setState("submitting");
+
+      const relayOutputs = preparedOutputs.map(({ address, amountLamports }) => ({
+        recipient: address,
+        amount: amountLamports,
+      }));
 
       const signature = await submitWithdrawViaRelay({
         proof: proofResult.proof,
@@ -231,12 +356,17 @@ export default function WithdrawFlow() {
           outputs_hash: outputsHashHex,
           amount: note.amount,
         },
-        recipient,
-        recipientAmountLamports: recipientAmountAfterFee,
+        outputs: relayOutputs,
         feeBps: relayFeeBps,
       });
 
       setWithdrawSignature(signature);
+      setLastOutputs(
+        preparedOutputs.map(({ address, amountLamports }) => ({
+          address,
+          amountLamports,
+        })),
+      );
       setState("success");
       toast.success("Withdraw completed!");
     } catch (error: any) {
@@ -252,8 +382,9 @@ export default function WithdrawFlow() {
     setState("idle");
     setNote(null);
     setNoteInput("");
-    setRecipient("");
+    setOutputs([{ address: "", amount: "" }]);
     setWithdrawSignature("");
+    setLastOutputs([]);
   };
 
   function isValidSolanaAddress(address: string): boolean {
@@ -380,9 +511,23 @@ export default function WithdrawFlow() {
                   <span>{formatAmount(calculateFee(note.amount))} SOL</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">You'll receive:</span>{" "}
-                  <span className="font-semibold">
-                    {formatAmount(getRecipientAmount(note.amount))} SOL
+                  <span className="text-muted-foreground">Available for outputs:</span>{" "}
+                  <span className="font-semibold">{distributableSolDisplay} SOL</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Assigned to recipients:</span>{" "}
+                  <span>{assignedSolDisplay} SOL</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Remaining to allocate:</span>{" "}
+                  <span
+                    className={
+                      allocationMismatch
+                        ? "text-destructive font-semibold"
+                        : "font-semibold"
+                    }
+                  >
+                    {remainingSolDisplay} SOL {remainingIsNegative ? "(over)" : ""}
                   </span>
                 </div>
                 {note.leafIndex !== undefined && (
@@ -395,19 +540,94 @@ export default function WithdrawFlow() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">
-                Recipient Address
-              </label>
-              <Input
-                type="text"
-                placeholder="Enter recipient wallet address"
-                value={recipient}
-                onChange={(e) => setRecipient(e.target.value)}
-                className="font-mono text-sm"
-              />
-              {recipient && !isValidSolanaAddress(recipient) && (
-                <p className="text-sm text-destructive">
-                  Please enter a valid Solana address
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-foreground">
+                  Recipients
+                </label>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={addRecipientRow}
+                >
+                  <Plus className="w-4 h-4 mr-1" /> Add Recipient
+                </Button>
+              </div>
+
+              <div className="space-y-3">
+                {outputs.map((output, index) => {
+                  const parsed = parsedOutputs[index];
+                  const addressError =
+                    !!output.address && parsed && !parsed.addressValid;
+                  const amountProvided = output.amount.trim() !== "";
+                  const amountLamports = parsed?.amountLamports ?? null;
+                  const amountError =
+                    amountProvided &&
+                    (amountLamports === null || amountLamports <= 0);
+
+                  return (
+                    <div
+                      key={index}
+                      className="flex flex-col gap-2 rounded-md border border-border bg-muted/30 p-3"
+                    >
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>Recipient #{index + 1}</span>
+                        {outputs.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeRecipientRow(index)}
+                            className="text-muted-foreground transition hover:text-destructive"
+                            aria-label="Remove recipient"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <div className="space-y-1">
+                          <Input
+                            type="text"
+                            placeholder="Wallet address"
+                            value={output.address}
+                            onChange={(e) =>
+                              updateOutputAddress(index, e.target.value)
+                            }
+                            className="font-mono text-sm"
+                          />
+                          {addressError && (
+                            <p className="text-xs text-destructive">
+                              Enter a valid Solana address
+                            </p>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <Input
+                            type="text"
+                            placeholder="Amount (SOL)"
+                            value={output.amount}
+                            onChange={(e) =>
+                              updateOutputAmount(index, e.target.value)
+                            }
+                            className="font-mono text-sm"
+                          />
+                          {amountError && (
+                            <p className="text-xs text-destructive">
+                              Enter a positive amount (up to {distributableSolDisplay} SOL)
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {allocationMismatch && (
+                <p className="text-xs text-destructive">
+                  {remainingIsNegative
+                    ? `Over-allocated by ${remainingSolDisplay} SOL`
+                    : `Remaining ${remainingSolDisplay} SOL to assign`}
                 </p>
               )}
             </div>
@@ -436,12 +656,24 @@ export default function WithdrawFlow() {
               <div className="text-xs text-muted-foreground text-center">
                 {!note ? (
                   <span>Load a note to continue.</span>
-                ) : !recipient ? (
-                  <span>Enter a recipient address.</span>
-                ) : !recipientValid ? (
-                  <span>Recipient address is not valid.</span>
                 ) : !noteDeposited ? (
                   <span>This note has not been deposited yet.</span>
+                ) : outputs.length === 0 ? (
+                  <span>Add at least one recipient.</span>
+                ) : !allAddressesProvided ? (
+                  <span>Enter an address for each recipient.</span>
+                ) : !allAddressesValid ? (
+                  <span>One or more recipient addresses are invalid.</span>
+                ) : !allAmountsProvided ? (
+                  <span>Enter an amount for each recipient.</span>
+                ) : !allAmountsPositive ? (
+                  <span>Recipient amounts must be greater than zero.</span>
+                ) : allocationMismatch ? (
+                  <span>
+                    {remainingIsNegative
+                      ? `Reduce allocations by ${remainingSolDisplay} SOL`
+                      : `Allocate remaining ${remainingSolDisplay} SOL`}
+                  </span>
                 ) : null}
               </div>
             )}
@@ -464,9 +696,19 @@ export default function WithdrawFlow() {
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Withdraw Successful!</h3>
               <p className="text-sm text-muted-foreground">
-                {formatAmount(getRecipientAmount(note.amount))} SOL sent
+                {formatAmount(getDistributableAmount(note.amount))} SOL sent
                 privately
               </p>
+              {lastOutputs.length > 0 && (
+                <div className="mt-2 text-left text-xs space-y-1 font-mono">
+                  {lastOutputs.map((entry, idx) => (
+                    <div key={idx} className="flex justify-between gap-2">
+                      <span className="truncate">{entry.address}</span>
+                      <span>{formatAmount(entry.amountLamports)} SOL</span>
+                    </div>
+                  ))}
+                </div>
+              )}
               {withdrawSignature && (
                 <div className="text-xs break-all text-muted-foreground">
                   Relay Job: {withdrawSignature}
@@ -482,6 +724,35 @@ export default function WithdrawFlow() {
       </CardContent>
     </Card>
   );
+}
+
+function parseSolToLamports(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (!/^\d+(\.\d{0,9})?$/.test(trimmed)) return null;
+
+  const [wholePart, fractionalPart = ""] = trimmed.split(".");
+  const whole = Number(wholePart);
+  if (!Number.isFinite(whole)) return null;
+
+  const paddedFraction = (fractionalPart + "000000000").slice(0, 9);
+  const fraction = Number(paddedFraction);
+  if (!Number.isFinite(fraction)) return null;
+
+  return whole * LAMPORTS_PER_SOL + fraction;
+}
+
+function lamportsToSolInput(lamports: number): string {
+  if (lamports <= 0) {
+    return "0";
+  }
+  const whole = Math.floor(lamports / LAMPORTS_PER_SOL);
+  const fraction = lamports % LAMPORTS_PER_SOL;
+  if (fraction === 0) {
+    return `${whole}`;
+  }
+  const fractionStr = fraction.toString().padStart(9, "0").replace(/0+$/, "");
+  return `${whole}.${fractionStr}`;
 }
 
 function blake3HashMany(chunks: Uint8Array[]): Uint8Array {
@@ -503,20 +774,15 @@ async function submitWithdrawViaRelay(params: {
     outputs_hash: string;
     amount: number;
   };
-  recipient: string;
-  recipientAmountLamports: number;
+  outputs: Array<{ recipient: string; amount: number }>;
   feeBps: number;
+  onStatusUpdate?: (status: string) => void;
 }): Promise<string> {
   const proofBytes = hexToBytes(params.proof);
   const proofBase64 = Buffer.from(proofBytes).toString("base64");
 
   const requestBody = {
-    outputs: [
-      {
-        recipient: params.recipient,
-        amount: params.recipientAmountLamports,
-      },
-    ],
+    outputs: params.outputs,
     policy: {
       fee_bps: params.feeBps,
     },
@@ -577,6 +843,7 @@ async function submitWithdrawViaRelay(params: {
       const status: string | undefined = statusData?.status;
 
       console.log(`[Relay] Status for request ${requestId}: ${status}`);
+      params.onStatusUpdate?.(status ?? "unknown");
 
       if (status === "completed") {
         const txId: string | undefined = statusData?.tx_id;

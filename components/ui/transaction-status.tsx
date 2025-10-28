@@ -9,9 +9,19 @@ import {
   Wallet,
   Copy,
   ExternalLink,
+  Brain,
+  Hammer,
+  Server,
+  Lock,
+  Circle,
+  PickaxeIcon,
+  Pickaxe,
+  LucidePickaxe,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+
+const LAMPORTS_PER_SOL = 1_000_000_000;
 
 export type TransactionStatus =
   | "idle"
@@ -28,9 +38,90 @@ export type TransactionStatus =
 interface TransactionStatusProps {
   status: TransactionStatus;
   amount?: string;
-  recipient?: string;
+  recipients?: Array<{ address: string; amountLamports?: number }>;
   signature?: string;
 }
+
+// Animated Icons for each status
+const AnimatedBrain = () => (
+  <motion.div
+    animate={{
+      scale: [1, 1.2, 1],
+      opacity: [0.8, 1, 0.8],
+    }}
+    transition={{
+      duration: 2,
+      repeat: Infinity,
+      ease: "easeInOut",
+    }}
+    className="relative"
+  >
+    <Brain className="w-6 h-6" />
+    <motion.div
+      animate={{
+        scale: [1, 1.4, 1],
+        opacity: [0.4, 0, 0.4],
+      }}
+      transition={{
+        duration: 2,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+      className="absolute inset-0 border-2 border-current rounded-full"
+    />
+  </motion.div>
+);
+
+const AnimatedPickaxe = () => (
+  <motion.div
+    className="relative w-6 h-6"
+    animate={{
+      rotate: [0, 15, 0, -15, 0],
+    }}
+    transition={{
+      duration: 0.8,
+      repeat: Infinity,
+      ease: "easeInOut",
+    }}
+  >
+    <LucidePickaxe className="w-6 h-6" />
+  </motion.div>
+);
+
+const AnimatedQueue = () => (
+  <motion.div className="relative">
+    <Server className="w-6 h-6" />
+    <motion.div
+      animate={{
+        opacity: [0, 1, 0],
+        y: [4, -4, 4],
+      }}
+      transition={{
+        duration: 1.5,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+      className="absolute -top-2 left-3"
+    >
+      <Circle className="w-2 h-2 fill-current" />
+    </motion.div>
+  </motion.div>
+);
+
+const AnimatedLock = () => (
+  <motion.div
+    animate={{
+      rotate: [0, 360],
+    }}
+    transition={{
+      duration: 3,
+      repeat: Infinity,
+      ease: "linear",
+    }}
+  >
+    <Lock className="w-6 h-6" />
+  </motion.div>
+);
 
 const statusConfig = {
   idle: {
@@ -38,7 +129,7 @@ const statusConfig = {
     icon: Shield,
     color: "bg-muted",
     textColor: "text-muted-foreground",
-    description: "Enter amount and recipient to start",
+    description: "Enter amount and recipients to start",
     estimatedTime: "~30 seconds total",
   },
   depositing: {
@@ -46,7 +137,7 @@ const statusConfig = {
     icon: Loader2,
     color: "bg-blue-500",
     textColor: "text-blue-600",
-    description: "Creating private deposit (5-15 seconds)",
+    description: "Creating private deposit",
     estimatedTime: "5-15 seconds",
   },
   deposited: {
@@ -59,10 +150,10 @@ const statusConfig = {
   },
   generating_proof: {
     label: "Generating Proof",
-    icon: Loader2,
+    icon: () => <AnimatedBrain />,
     color: "bg-purple-500",
     textColor: "text-purple-600",
-    description: "Creating zero-knowledge proof (30-180 seconds)",
+    description: "Creating zero-knowledge proof",
     estimatedTime: "30-180 seconds",
   },
   proof_generated: {
@@ -75,7 +166,7 @@ const statusConfig = {
   },
   queued: {
     label: "Queued",
-    icon: Clock,
+    icon: () => <AnimatedQueue />,
     color: "bg-yellow-500",
     textColor: "text-yellow-600",
     description: "Transaction queued for processing (10-30 seconds)",
@@ -83,7 +174,7 @@ const statusConfig = {
   },
   being_mined: {
     label: "Being Mined",
-    icon: Loader2,
+    icon: () => <AnimatedPickaxe />,
     color: "bg-orange-500",
     textColor: "text-orange-600",
     description: "Mining transaction (15-45 seconds)",
@@ -102,7 +193,7 @@ const statusConfig = {
     icon: CheckCircle,
     color: "bg-green-500",
     textColor: "text-green-600",
-    description: "Tokens sent privately to recipient",
+    description: "Tokens sent privately to recipients",
     estimatedTime: "Complete",
   },
   error: {
@@ -118,12 +209,22 @@ const statusConfig = {
 export function TransactionStatus({
   status,
   amount,
-  recipient,
+  recipients,
   signature,
 }: TransactionStatusProps) {
   const config = statusConfig[status];
   const Icon = config.icon;
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
+
+  // Helper to render icon (handles both regular icons and animated components)
+  const renderIcon = () => {
+    // Check if Icon is a function (animated component)
+    if (typeof Icon === 'function' && Icon.length === 0) {
+      return <Icon />;
+    }
+    // Regular icon component
+    return <Icon className="w-4 h-4" />;
+  };
 
   // Detect cluster based on RPC URL
   const getCluster = () => {
@@ -233,18 +334,25 @@ export function TransactionStatus({
     >
       <div className="bg-card border border-border rounded-lg p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h3 className={`font-semibold ${config.textColor}`}>
-              {config.label}
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {config.description}
-            </p>
-            {config.estimatedTime && (
-              <p className="text-xs text-muted-foreground mt-1">
-                {config.estimatedTime}
+          <div className="flex items-center gap-3">
+            <div>
+            <div className="flex items-center gap-2">
+            <div className={`${config.textColor}`}>
+              {renderIcon()}
+            </div>
+              <h3 className={`font-semibold ${config.textColor}`}>
+                {config.label}
+              </h3>
+            </div>
+              <p className="text-sm text-muted-foreground">
+                {config.description}
               </p>
-            )}
+              {config.estimatedTime && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {config.estimatedTime}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -385,34 +493,51 @@ export function TransactionStatus({
           </div>
         )}
 
-        {amount && recipient && (
-          <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+        {amount && recipients && recipients.length > 0 && (
+          <div className="bg-muted/50 rounded-lg p-4 space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Amount:</span>
               <span className="font-medium">{amount} SOL</span>
             </div>
-            <div className="flex justify-between text-sm items-center">
-              <span className="text-muted-foreground">Recipient:</span>
-              <div className="flex items-center gap-2">
-                <a
-                  href={`https://solscan.io/account/${recipient}?cluster=${getCluster()}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-mono text-xs text-primary hover:underline"
-                >
-                  {recipient.slice(0, 8)}...{recipient.slice(-8)}
-                </a>
-                <button
-                  onClick={() => copyToClipboard(recipient, "recipient")}
-                  className="p-1 hover:bg-muted rounded transition-colors"
-                  title="Copy full address"
-                >
-                  {copiedItem === "recipient" ? (
-                    <CheckCircle className="w-3 h-3 text-green-500" />
-                  ) : (
-                    <Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" />
-                  )}
-                </button>
+            <div className="space-y-2">
+              <span className="text-muted-foreground text-xs uppercase">Recipients</span>
+              <div className="space-y-2">
+                {recipients.map((entry, idx) => {
+                  const formatted = entry.amountLamports !== undefined
+                    ? `${(entry.amountLamports / LAMPORTS_PER_SOL).toFixed(9)} SOL`
+                    : undefined;
+                  const display = `${entry.address.slice(0, 8)}...${entry.address.slice(-8)}`;
+                  const copyKey = `recipient-${idx}`;
+                  return (
+                    <div
+                      key={entry.address + idx}
+                      className="flex items-center justify-between text-xs font-mono"
+                    >
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={`https://solscan.io/account/${entry.address}?cluster=${getCluster()}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          {display}
+                        </a>
+                        <button
+                          onClick={() => copyToClipboard(entry.address, copyKey)}
+                          className="p-1 hover:bg-muted rounded transition-colors"
+                          title="Copy full address"
+                        >
+                          {copiedItem === copyKey ? (
+                            <CheckCircle className="w-3 h-3 text-green-500" />
+                          ) : (
+                            <Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                          )}
+                        </button>
+                      </div>
+                      {formatted && <span>{formatted}</span>}
+                    </div>
+                  );
+                })}
               </div>
             </div>
             {signature && (

@@ -104,10 +104,10 @@ export default function DepositFlow() {
       ]);
       
       if (!poolAccount) {
-        throw new Error("Pool account not initialized. Please initialize the pool first from the admin page.");
+        throw new Error("Pool account not initialized.");
       }
       if (!commitmentsAccount) {
-        throw new Error("Commitments account not initialized. Please initialize it first from the admin page.");
+        throw new Error("Commitments account not initialized.");
       }
       
       console.log("Account verification:", {
@@ -115,13 +115,6 @@ export default function DepositFlow() {
         commitmentsExists: !!commitmentsAccount,
         poolOwner: poolAccount?.owner.toBase58(),
         commitmentsOwner: commitmentsAccount?.owner.toBase58(),
-      });
-
-      const computeUnitLimitIx = ComputeBudgetProgram.setComputeUnitLimit({
-        units: 200_000,
-      });
-      const computeUnitPriceIx = ComputeBudgetProgram.setComputeUnitPrice({
-        microLamports: 1_000,
       });
 
       const commitmentBytes = Buffer.from(note.commitment, "hex");
@@ -151,7 +144,7 @@ export default function DepositFlow() {
         feePayer: publicKey,
         blockhash,
         lastValidBlockHeight,
-      }).add(computeUnitPriceIx, computeUnitLimitIx, depositIx);
+      }).add(depositIx);
 
       // Log transaction details for debugging
       console.log("Transaction details:", {
@@ -271,6 +264,20 @@ export default function DepositFlow() {
       const depositData = await depositResponse.json();
       console.log("✅ Indexer response:", depositData);
       const leafIndex = depositData.leafIndex ?? depositData.leaf_index;
+      const historicalRoot = depositData.root;
+
+      // Fetch the Merkle proof for this leaf (needed for future withdrawals)
+      console.log("📡 Fetching Merkle proof for leaf index:", leafIndex);
+      const merkleProofResponse = await fetch(`${INDEXER_URL}/api/v1/merkle/proof/${leafIndex}`);
+      if (!merkleProofResponse.ok) {
+        throw new Error(`Failed to fetch Merkle proof: ${merkleProofResponse.statusText}`);
+      }
+      const merkleProofData = await merkleProofResponse.json();
+      const historicalMerkleProof = {
+        pathElements: merkleProofData.pathElements ?? merkleProofData.path_elements,
+        pathIndices: merkleProofData.pathIndices ?? merkleProofData.path_indices,
+      };
+      console.log("✅ Merkle proof fetched:", historicalMerkleProof);
 
       // Update note with deposit details (update existing saved note)
       console.log("💾 Updating note with deposit details:", {
@@ -278,12 +285,16 @@ export default function DepositFlow() {
         signature,
         slot: depositSlot,
         leafIndex,
+        root: historicalRoot,
+        merkleProof: historicalMerkleProof,
       });
-      
+
       updateNote(note.commitment, {
         depositSignature: signature,
         depositSlot,
         leafIndex,
+        root: historicalRoot,
+        merkleProof: historicalMerkleProof,
       });
       
       if (typeof window !== "undefined") {
@@ -296,6 +307,8 @@ export default function DepositFlow() {
         depositSignature: signature,
         depositSlot,
         leafIndex,
+        root: historicalRoot,
+        merkleProof: historicalMerkleProof,
       };
 
       setNote(updatedNote);
