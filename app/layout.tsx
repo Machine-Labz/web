@@ -24,6 +24,14 @@ export const metadata: Metadata = {
     "Send SOL with guaranteed privacy. Break the link between deposits and withdrawals using zero-knowledge proofs on Solana.",
   icons: {
     icon: "/favicon.svg",
+    apple: "/android-chrome-192x192.png",
+  },
+  manifest: "/manifest.json",
+  themeColor: "#6366f1",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Cloak",
   },
 };
 
