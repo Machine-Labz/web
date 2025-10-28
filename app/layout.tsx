@@ -5,6 +5,7 @@ import { Space_Grotesk, DM_Sans } from "next/font/google";
 import type { Metadata, Viewport } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import { WalletContextProvider } from "@/components/wallet-provider";
+import { Analytics } from "@vercel/analytics/next"
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -60,6 +61,7 @@ export default function RootLayout({
             {children}
           </WalletContextProvider>
         </ThemeProvider>
+        <Analytics/>
       </body>
     </html>
   );
