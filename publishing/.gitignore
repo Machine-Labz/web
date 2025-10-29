@@ -1,0 +1,22 @@
+# Environment files
+.env
+.env.local
+
+# Node modules
+node_modules/
+
+# Build outputs
+*.apk
+*.aab
+*.idsig
+
+# Keystore files (keep safe elsewhere!)
+*.keystore
+*.jks
+
+# Generated files
+assetlinks.json
+
+# Logs
+*.log
+

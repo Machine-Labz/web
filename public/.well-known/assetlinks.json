@@ -1,14 +1,8 @@
-[
-    {
-        "relation": [
-            "delegate_permission/common.handle_all_urls"
-        ],
-        "target": {
-            "namespace": "android_app",
-            "package_name": "xyz.cloaklabz.twa",
-            "sha256_cert_fingerprints": [
-                "7E:EC:61:23:BD:86:E1:A7:6E:32:D0:9F:63:A0:1E:20:32:BB:57:F3:3A:9B:61:8F:D8:BA:9D:D3:37:44:81:EA"
-            ]
-        }
-    }
-]
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "xyz.cloaklabz.twa",
+        "sha256_cert_fingerprints": ["7E:EC:61:23:BD:86:E1:A7:6E:32:D0:9F:63:A0:1E:20:32:BB:57:F3:3A:9B:61:8F:D8:BA:9D:D3:37:44:81:EA"]
+      }
+    }]

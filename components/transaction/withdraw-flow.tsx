@@ -70,11 +70,6 @@ export default function WithdrawFlow() {
 
   const { generateProof, isGenerating, progress } = prover;
 
-  const feeLamports = note ? calculateFee(note.amount) : 0;
-  const distributableLamports = note
-    ? Math.max(getDistributableAmount(note.amount), 0)
-    : 0;
-
   const parsedOutputs = outputs.map((entry) => {
     const address = entry.address.trim();
     const amountLamports = entry.amount
@@ -94,9 +89,6 @@ export default function WithdrawFlow() {
     return sum + (output.amountLamports ?? 0);
   }, 0);
 
-  const remainingLamports = distributableLamports - totalAssignedLamports;
-  const allocationMismatch = Math.abs(remainingLamports) > 1;
-
   const allAddressesProvided = parsedOutputs.every((output) => output.address);
   const allAddressesValid = parsedOutputs.every(
     (output) => !output.address || output.addressValid,
@@ -107,20 +99,16 @@ export default function WithdrawFlow() {
   const allAmountsPositive = parsedOutputs.every(
     (output) => (output.amountLamports ?? 0) > 0,
   );
-  const outputsSumMatches = !note ? false : !allocationMismatch;
 
   const outputsValid =
+    !!note &&
+    note.amount > 0 &&
     parsedOutputs.length > 0 &&
     allAddressesProvided &&
     allAddressesValid &&
     allAmountsProvided &&
     allAmountsPositive &&
-    outputsSumMatches;
-
-  const remainingIsNegative = remainingLamports < 0;
-  const distributableSolDisplay = formatAmount(distributableLamports);
-  const assignedSolDisplay = formatAmount(totalAssignedLamports);
-  const remainingSolDisplay = formatAmount(Math.abs(remainingLamports));
+    totalAssignedLamports <= note.amount;
 
   const noteDeposited =
     !!note && !!note.depositSignature && note.leafIndex !== undefined;
@@ -152,9 +140,8 @@ export default function WithdrawFlow() {
 
   React.useEffect(() => {
     if (note) {
-      const distributable = Math.max(getDistributableAmount(note.amount), 0);
-      const defaultAmount =
-        distributable > 0 ? lamportsToSolInput(distributable) : "";
+      // Set default amount to full note amount - fee will be calculated at submission time
+      const defaultAmount = note.amount > 0 ? lamportsToSolInput(note.amount) : "";
       setOutputs([{ address: "", amount: defaultAmount }]);
     } else {
       setOutputs([{ address: "", amount: "" }]);
@@ -232,11 +219,6 @@ export default function WithdrawFlow() {
       return;
     }
 
-    if (distributableLamports <= 0) {
-      toast.error("Note amount is not sufficient to cover fees");
-      return;
-    }
-
     if (!outputsValid) {
       if (!parsedOutputs.length) {
         toast.error("Add at least one recipient");
@@ -254,10 +236,21 @@ export default function WithdrawFlow() {
         toast.error("Enter a positive amount for each recipient");
         return;
       }
-      toast.error(
-        `Allocated outputs must equal ${formatAmount(distributableLamports)} SOL (currently ${formatAmount(totalAssignedLamports)} SOL)`,
-      );
+      if (totalAssignedLamports > (note?.amount ?? 0)) {
+        toast.error("Total recipient amounts exceed note amount");
+        return;
+      }
       return;
+    }
+    
+    // Calculate fee to check if note amount is sufficient
+    if (note) {
+      const fee = calculateFee(note.amount);
+      const distributableAmount = note.amount - fee;
+      if (distributableAmount <= 0) {
+        toast.error("Note amount is not sufficient to cover fees");
+        return;
+      }
     }
 
     toast.info("Starting withdraw...");
@@ -275,26 +268,52 @@ export default function WithdrawFlow() {
         (merkleProof as any).path_indices ?? merkleProof.pathIndices
       ).map((idx: number | string) => Number(idx));
 
-      const relayFeeBps = Math.ceil((feeLamports * 10_000) / note.amount);
+      // Calculate fee AFTER recipients and amounts are set (following prove_test_multiple_outputs.rs pattern)
+      const fee = calculateFee(note.amount);
+      const distributableAmount = note.amount - fee;
+      const relayFeeBps = Math.ceil((fee * 10_000) / note.amount);
 
-      // Validate amount conservation: outputs + fee == amount
+      // Enforce amount conservation: outputs + fee == amount
       const totalOutputs = parsedOutputs.reduce((sum, output) => sum + (output.amountLamports ?? 0), 0);
-      const totalWithFee = totalOutputs + feeLamports;
-      const amountMismatch = Math.abs(totalWithFee - note.amount);
       
-      // For single recipient, auto-correct to distributable amount
+      // For single recipient, auto-correct to distributable amount (amount - fee)
       const isSingleRecipient = parsedOutputs.length === 1;
-      if (isSingleRecipient && amountMismatch > 1) {
-        console.log(`⚠️ Correcting single recipient output from ${totalOutputs} to ${distributableLamports} lamports to satisfy amount conservation`);
-        parsedOutputs[0].amountLamports = distributableLamports;
-      } else if (amountMismatch > 1) {
-        const errorMsg = `Amount conservation failed: outputs (${totalOutputs}) + fee (${feeLamports}) = ${totalWithFee} != note amount (${note.amount}). Difference: ${amountMismatch} lamports`;
-        console.error(errorMsg);
-        toast.error("Amount mismatch", {
-          description: `Total outputs + fee must equal the note amount. Adjust by ${formatAmount(amountMismatch)} SOL`,
+      if (isSingleRecipient) {
+        parsedOutputs[0].amountLamports = distributableAmount;
+        console.log(`ℹ️ Single recipient: adjusted output to distributable amount (${distributableAmount} = ${note.amount} - ${fee})`);
+      } else {
+        // For multiple recipients, proportionally scale outputs to sum to distributableAmount
+        if (totalOutputs <= 0) {
+          toast.error("Invalid outputs", {
+            description: "Recipient amounts must be greater than zero",
+          });
+          setState("idle");
+          return;
+        }
+        
+        // Calculate scaling ratio to ensure outputs sum to distributableAmount
+        const scaleRatio = distributableAmount / totalOutputs;
+        let adjustedSum = 0;
+        
+        parsedOutputs.forEach((output, index) => {
+          const originalAmount = output.amountLamports ?? 0;
+          if (index === parsedOutputs.length - 1) {
+            // Last recipient gets any remainder to ensure exact sum
+            output.amountLamports = distributableAmount - adjustedSum;
+          } else {
+            // Scale proportionally (round down to avoid overshooting)
+            output.amountLamports = Math.floor(originalAmount * scaleRatio);
+            adjustedSum += output.amountLamports;
+          }
         });
-        setState("idle");
-        return;
+        
+        const finalSum = parsedOutputs.reduce((sum, output) => sum + (output.amountLamports ?? 0), 0);
+        console.log(`ℹ️ Multiple recipients: proportionally scaled outputs from ${totalOutputs} to ${finalSum} lamports (distributable: ${distributableAmount}, scale ratio: ${scaleRatio.toFixed(6)})`);
+        
+        // Final verification (should always pass due to last recipient adjustment)
+        if (Math.abs(finalSum - distributableAmount) > 1) {
+          console.warn(`⚠️ Scaling adjustment error: final sum (${finalSum}) != distributable (${distributableAmount}), difference: ${Math.abs(finalSum - distributableAmount)}`);
+        }
       }
 
       const skSpend = Buffer.from(note.sk_spend, "hex");
@@ -532,22 +551,22 @@ export default function WithdrawFlow() {
                 </div>
                 <div>
                   <span className="text-muted-foreground">Available for outputs:</span>{" "}
-                  <span className="font-semibold">{distributableSolDisplay} SOL</span>
+                  <span className="font-semibold">{formatAmount(getDistributableAmount(note.amount))} SOL</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Assigned to recipients:</span>{" "}
-                  <span>{assignedSolDisplay} SOL</span>
+                  <span>{formatAmount(totalAssignedLamports)} SOL</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Remaining to allocate:</span>{" "}
                   <span
                     className={
-                      allocationMismatch
+                      Math.abs(totalAssignedLamports - getDistributableAmount(note.amount)) > 1
                         ? "text-destructive font-semibold"
                         : "font-semibold"
                     }
                   >
-                    {remainingSolDisplay} SOL {remainingIsNegative ? "(over)" : ""}
+                    {formatAmount(Math.abs(totalAssignedLamports - getDistributableAmount(note.amount)))} SOL {Math.abs(totalAssignedLamports - getDistributableAmount(note.amount)) > 0 ? "(over)" : ""}
                   </span>
                 </div>
                 {note.leafIndex !== undefined && (
@@ -633,7 +652,7 @@ export default function WithdrawFlow() {
                           />
                           {amountError && (
                             <p className="text-xs text-destructive">
-                              Enter a positive amount (up to {distributableSolDisplay} SOL)
+                              Enter a positive amount (up to {formatAmount(getDistributableAmount(note.amount))} SOL)
                             </p>
                           )}
                         </div>
@@ -643,11 +662,11 @@ export default function WithdrawFlow() {
                 })}
               </div>
 
-              {allocationMismatch && (
+              {Math.abs(totalAssignedLamports - getDistributableAmount(note.amount)) > 1 && (
                 <p className="text-xs text-destructive">
-                  {remainingIsNegative
-                    ? `Over-allocated by ${remainingSolDisplay} SOL`
-                    : `Remaining ${remainingSolDisplay} SOL to assign`}
+                  {Math.abs(totalAssignedLamports - getDistributableAmount(note.amount)) > 0
+                    ? `Over-allocated by ${formatAmount(Math.abs(totalAssignedLamports - getDistributableAmount(note.amount)))} SOL`
+                    : `Remaining ${formatAmount(Math.abs(totalAssignedLamports - getDistributableAmount(note.amount)))} SOL to assign`}
                 </p>
               )}
             </div>
@@ -688,11 +707,11 @@ export default function WithdrawFlow() {
                   <span>Enter an amount for each recipient.</span>
                 ) : !allAmountsPositive ? (
                   <span>Recipient amounts must be greater than zero.</span>
-                ) : allocationMismatch ? (
+                ) : Math.abs(totalAssignedLamports - getDistributableAmount(note.amount)) > 1 ? (
                   <span>
-                    {remainingIsNegative
-                      ? `Reduce allocations by ${remainingSolDisplay} SOL`
-                      : `Allocate remaining ${remainingSolDisplay} SOL`}
+                    {Math.abs(totalAssignedLamports - getDistributableAmount(note.amount)) > 0
+                      ? `Reduce allocations by ${formatAmount(Math.abs(totalAssignedLamports - getDistributableAmount(note.amount)))} SOL`
+                      : `Allocate remaining ${formatAmount(Math.abs(totalAssignedLamports - getDistributableAmount(note.amount)))} SOL`}
                   </span>
                 ) : null}
               </div>

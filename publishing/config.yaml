@@ -1,0 +1,89 @@
+# Cloak dApp Store Publishing Configuration
+# Replace all fields in << >> with your app details.
+# Remove any fields that don't apply (e.g., saga_features, google_store_package, etc).
+# Do not modify or remove the address fields. These will be automatically populated by the CLI in later steps.
+
+publisher:
+  name: "Cloak Labs"
+  website: "https://www.cloaklabz.xyz"
+  email: "support@cloaklabz.xyz"
+
+app:
+  name: "Cloak"
+  description: "Privacy-preserving SOL transfers using zero-knowledge proofs on Solana"
+  
+release:
+  catalog:
+    en-US:
+      name: "Cloak"
+      short_description: "Private SOL transfers"
+      long_description: |
+        Cloak is a privacy-preserving exit router for Solana that enables anonymous deposits and withdrawals. 
+        
+        Key Features:
+        • Send SOL privately with guaranteed anonymity
+        • Zero-knowledge proofs ensure privacy while maintaining security
+        • Decentralized proof-of-work mining for sustainable operations
+        • Full transparency with open-source protocols
+        
+        How It Works:
+        - Deposit SOL into the shared shield pool
+        - Withdraw later without revealing which deposit you own
+        - Miners provide proof-of-work claims to unblock withdrawals
+        - All transactions verified on-chain using zero-knowledge proofs
+        
+        Cloak combines cutting-edge cryptography with Solana's high-performance blockchain to deliver privacy-preserving transactions at scale.
+      new_in_version: "Initial release - Private SOL transfers with zero-knowledge proofs"
+      # Optional: Saga phone features (remove if not applicable)
+      # saga_features: "Advanced privacy features optimized for Solana Mobile devices"
+  
+  # Media assets (must be an array with 'purpose' and 'uri' properties)
+  media:
+    - purpose: "icon"
+      uri: "media/icon-512x512.png"
+    - purpose: "banner_graphic"
+      uri: "media/banner-1200x600.png"
+    # Optional: Feature graphic for Editor's choice carousel
+    # - purpose: "feature_graphic"
+    #   uri: "media/feature-1200x1200.png"
+    # Preview assets - minimum 4 required
+    - purpose: "preview"
+      uri: "media/preview-1.png"
+    - purpose: "preview"
+      uri: "media/preview-2.png"
+    - purpose: "preview"
+      uri: "media/preview-3.png"
+    - purpose: "preview"
+      uri: "media/preview-4.png"
+  
+  # APK file path (will be built from TWA)
+  apk_file: "files/app-release-signed.apk"
+  
+  # Android package name from TWA
+  package_name: "xyz.cloaklabz.twa"
+  
+  # Testing instructions (not published on-chain)
+  testing_instructions: |
+    Test Account Setup:
+    - Connect with Solana Mobile Wallet or Phantom
+    - Use devnet for testing (mainnet requires real SOL)
+    
+    Basic Flow:
+    1. Navigate to deposit page
+    2. Enter amount and complete deposit transaction
+    3. Wait for indexer to process (usually < 1 minute)
+    4. Navigate to withdraw page
+    5. Submit withdrawal with your note commitment
+    
+    For test SOL on devnet:
+    - Use Solana CLI: solana airdrop 1 <wallet-address> --url devnet
+    
+  # Optional: Contact information
+  contact:
+    email: "support@cloaklabz.xyz"
+    website: "https://www.cloaklabz.xyz"
+
+# NFT addresses (automatically populated by CLI)
+app_address: ""
+publisher_address: ""
+release_address: ""
