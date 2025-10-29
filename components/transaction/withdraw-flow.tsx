@@ -277,6 +277,26 @@ export default function WithdrawFlow() {
 
       const relayFeeBps = Math.ceil((feeLamports * 10_000) / note.amount);
 
+      // Validate amount conservation: outputs + fee == amount
+      const totalOutputs = parsedOutputs.reduce((sum, output) => sum + (output.amountLamports ?? 0), 0);
+      const totalWithFee = totalOutputs + feeLamports;
+      const amountMismatch = Math.abs(totalWithFee - note.amount);
+      
+      // For single recipient, auto-correct to distributable amount
+      const isSingleRecipient = parsedOutputs.length === 1;
+      if (isSingleRecipient && amountMismatch > 1) {
+        console.log(`⚠️ Correcting single recipient output from ${totalOutputs} to ${distributableLamports} lamports to satisfy amount conservation`);
+        parsedOutputs[0].amountLamports = distributableLamports;
+      } else if (amountMismatch > 1) {
+        const errorMsg = `Amount conservation failed: outputs (${totalOutputs}) + fee (${feeLamports}) = ${totalWithFee} != note amount (${note.amount}). Difference: ${amountMismatch} lamports`;
+        console.error(errorMsg);
+        toast.error("Amount mismatch", {
+          description: `Total outputs + fee must equal the note amount. Adjust by ${formatAmount(amountMismatch)} SOL`,
+        });
+        setState("idle");
+        return;
+      }
+
       const skSpend = Buffer.from(note.sk_spend, "hex");
       const leafIndexBytes = new Uint8Array(4);
       new DataView(leafIndexBytes.buffer).setUint32(0, note.leafIndex, true);

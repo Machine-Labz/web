@@ -526,10 +526,43 @@ export default function TransactionPage() {
       return;
     }
 
-    const preparedOutputs = parsedOutputs.map((output) => ({
-      address: output.address,
-      amountLamports: output.amountLamports ?? 0,
-    }));
+    // Enforce amount conservation: outputs + fee == amount
+    const fee = calculateFee(parsedAmountLamports);
+    const totalAssignedWithFee = totalAssignedLamports + fee;
+    const amountMismatch = Math.abs(totalAssignedWithFee - parsedAmountLamports);
+    
+    let preparedOutputs: Array<{ address: string; amountLamports: number }>;
+    
+    // For single recipient, auto-correct to distributable amount
+    if (isSingleRecipient && amountMismatch > 1) {
+      preparedOutputs = parsedOutputs.map((output, index) => {
+        if (index === 0) {
+          // First and only recipient gets the full distributable amount
+          return {
+            address: output.address,
+            amountLamports: distributableLamports,
+          };
+        }
+        return {
+          address: output.address,
+          amountLamports: output.amountLamports ?? 0,
+        };
+      });
+      console.log(`⚠️ Corrected single recipient output from ${totalAssignedLamports} to ${distributableLamports} lamports to satisfy amount conservation`);
+    } else if (amountMismatch > 1) {
+      // For multiple recipients or when correction isn't possible, validate strictly
+      const errorMsg = `Amount conservation failed: outputs (${totalAssignedLamports}) + fee (${fee}) = ${totalAssignedWithFee} != amount (${parsedAmountLamports}). Difference: ${amountMismatch} lamports`;
+      console.error(errorMsg);
+      toast.error("Amount mismatch", {
+        description: `Total outputs + fee must equal the deposit amount. Adjust by ${formatAmount(amountMismatch)} SOL`,
+      });
+      return;
+    } else {
+      preparedOutputs = parsedOutputs.map((output) => ({
+        address: output.address,
+        amountLamports: output.amountLamports ?? 0,
+      }));
+    }
 
     setIsLoading(true);
     setTransactionStatus("depositing");
@@ -779,6 +812,15 @@ export default function TransactionPage() {
 
       const fee = calculateFee(note.amount);
       const relayFeeBps = Math.ceil((fee * 10_000) / note.amount);
+      
+      // Validate amount conservation before generating proof
+      const totalOutputs = outputsForWithdraw.reduce((sum, output) => sum + output.amountLamports, 0);
+      const totalWithFee = totalOutputs + fee;
+      if (Math.abs(totalWithFee - note.amount) > 1) {
+        const errorMsg = `Amount conservation failed: outputs (${totalOutputs}) + fee (${fee}) = ${totalWithFee} != note amount (${note.amount}). Difference: ${Math.abs(totalWithFee - note.amount)} lamports`;
+        console.error(errorMsg);
+        throw new Error(errorMsg);
+      }
 
       const skSpend = Buffer.from(note.sk_spend, "hex");
       const leafIndexBytes = new Uint8Array(4);
