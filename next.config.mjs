@@ -23,6 +23,15 @@ const nextConfig = {
   async headers() {
     return [];
   },
+  // Ensure .well-known routes are properly served
+  async rewrites() {
+    return [
+      {
+        source: '/.well-known/assetlinks.json',
+        destination: '/.well-known/assetlinks.json',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
