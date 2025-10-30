@@ -23,11 +23,20 @@ import {
   calculateFee,
   type CloakNote,
 } from "@/lib/note-manager";
+import { getShieldPoolPDAs } from "@/lib/pda";
 
-const PROGRAM_ID = process.env.NEXT_PUBLIC_PROGRAM_ID || "c1oak6tetxYnNfvXKFkpn1d98FxtK7B68vBQLYQpWKp";
-const POOL_ADDRESS = process.env.NEXT_PUBLIC_POOL_ADDRESS;
-const COMMITMENTS_ADDRESS = process.env.NEXT_PUBLIC_COMMITMENTS_ADDRESS;
-const INDEXER_URL = process.env.NEXT_PUBLIC_INDEXER_URL || "http://localhost:3001";
+const PROGRAM_ID = process.env.NEXT_PUBLIC_PROGRAM_ID;
+if (!PROGRAM_ID) {
+  throw new Error("NEXT_PUBLIC_PROGRAM_ID not set");
+}
+const INDEXER_URL = process.env.NEXT_PUBLIC_INDEXER_URL;
+if (!INDEXER_URL) {
+  throw new Error("NEXT_PUBLIC_INDEXER_URL not set");
+}
+const RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL;
+if (!RPC_URL) {
+  throw new Error("NEXT_PUBLIC_SOLANA_RPC_URL not set");
+}
 
 type DepositState = "idle" | "generating" | "depositing" | "success";
 
@@ -60,6 +69,11 @@ export default function DepositFlow() {
   };
 
   const handleDeposit = async () => {
+    const programId = new PublicKey(PROGRAM_ID!);
+    if (!programId) {
+      throw new Error("PROGRAM_ID not set");
+    }
+
     console.log("handleDeposit");
 
     console.log("connected", connected);
@@ -72,65 +86,29 @@ export default function DepositFlow() {
       return;
     }
 
-    if (!POOL_ADDRESS || !COMMITMENTS_ADDRESS) {
-      toast.error("Missing program configuration (POOL_ADDRESS or COMMITMENTS_ADDRESS)");
-      console.log("error", "Missing program configuration (POOL_ADDRESS or COMMITMENTS_ADDRESS)");
-      return;
-    }
-
     setState("depositing");
-    
+
+
+    const { pool: poolPubkey, commitments: commitmentsPubkey } =
+      getShieldPoolPDAs();
+      
     console.log("=".repeat(60));
     console.log("🚀 STARTING DEPOSIT FLOW");
     console.log("=".repeat(60));
     console.log("Configuration:", {
       programId: PROGRAM_ID,
-      pool: POOL_ADDRESS,
-      commitments: COMMITMENTS_ADDRESS,
+      pool: poolPubkey.toBase58(),
+      commitments: commitmentsPubkey.toBase58(),
       indexerUrl: INDEXER_URL,
       amount: note.amount,
       commitment: note.commitment,
     });
 
     try {
-      const programId = new PublicKey(PROGRAM_ID);
-      const poolPubkey = new PublicKey(POOL_ADDRESS);
-      const commitmentsPubkey = new PublicKey(COMMITMENTS_ADDRESS);
-      
-      // Verify accounts exist
-      const [poolAccount, commitmentsAccount] = await Promise.all([
-        connection.getAccountInfo(poolPubkey),
-        connection.getAccountInfo(commitmentsPubkey),
-      ]);
-      
-      if (!poolAccount) {
-        throw new Error("Pool account not initialized.");
-      }
-      if (!commitmentsAccount) {
-        throw new Error("Commitments account not initialized.");
-      }
-      
-      console.log("Account verification:", {
-        poolExists: !!poolAccount,
-        commitmentsExists: !!commitmentsAccount,
-        poolOwner: poolAccount?.owner.toBase58(),
-        commitmentsOwner: commitmentsAccount?.owner.toBase58(),
-      });
-
       const commitmentBytes = Buffer.from(note.commitment, "hex");
-      
-      console.log("Commitment details:", {
-        commitmentHex: note.commitment,
-        commitmentBytesLength: commitmentBytes.length,
-        commitmentBytes: Array.from(commitmentBytes).map(b => b.toString(16).padStart(2, '0')).join(''),
-      });
-      
-      if (commitmentBytes.length !== 32) {
-        throw new Error(`Invalid commitment length: ${commitmentBytes.length} bytes (expected 32)`);
-      }
-      
+
       const depositIx = createDepositInstruction({
-        programId,
+        programId: programId,
         payer: publicKey,
         pool: poolPubkey,
         commitments: commitmentsPubkey,
@@ -314,7 +292,7 @@ export default function DepositFlow() {
       setNote(updatedNote);
       setDepositSignature(signature);
 
-      const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "http://localhost:8899";
+      const rpcUrl = RPC_URL;
       console.log("🎉 Deposit complete!", {
         signature,
         leafIndex,
@@ -461,7 +439,7 @@ export default function DepositFlow() {
               </p>
               {depositSignature && (
                 <a
-                  href={`https://explorer.solana.com/tx/${depositSignature}?cluster=custom&customUrl=${encodeURIComponent(process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "http://localhost:8899")}`}
+                  href={`https://explorer.solana.com/tx/${depositSignature}?cluster=custom&customUrl=${encodeURIComponent(RPC_URL)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-primary hover:underline block"

@@ -31,7 +31,10 @@ import {
   type CloakNote,
 } from "@/lib/note-manager";
 
-const RELAY_URL = process.env.NEXT_PUBLIC_RELAY_URL || "http://localhost:3002";
+const RELAY_URL = process.env.NEXT_PUBLIC_RELAY_URL;
+if (!RELAY_URL) {
+  throw new Error("NEXT_PUBLIC_RELAY_URL not set");
+}
 const LAMPORTS_PER_SOL = 1_000_000_000;
 
 type WithdrawState =

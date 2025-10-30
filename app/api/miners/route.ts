@@ -6,10 +6,6 @@ export const runtime = 'nodejs';
 const MINER_ACCOUNT_SIZE = 56;
 const CLAIM_ACCOUNT_SIZE = 256;
 
-const DEFAULT_PROGRAM_ID = 'EH2FoBqySD7RhPgsmPBK67jZ2P9JRhVHjfdnjxhUQEE6';
-const DEFAULT_RPC_URL = 'http://localhost:8899';
-const DEFAULT_ACTIVE_SLOT_THRESHOLD = 1000;
-
 const readBigUInt64LE = (buffer: Buffer, offset: number): number => {
   return Number(buffer.readBigUInt64LE(offset));
 };
@@ -19,54 +15,27 @@ const readUInt16LE = (buffer: Buffer, offset: number): number => {
 };
 
 const getProgramId = (): PublicKey => {
-  const candidates = [
-    process.env.NEXT_PUBLIC_SCRAMBLE_REGISTRY_PROGRAM_ID,
-    process.env.SCRAMBLE_REGISTRY_PROGRAM_ID,
-    process.env.NEXT_PUBLIC_SCRAMBLE_PROGRAM_ID,
-    process.env.SCRAMBLE_PROGRAM_ID,
-    process.env.NEXT_PUBLIC_PROGRAM_ID,
-    DEFAULT_PROGRAM_ID,
-  ];
-
-  let lastError: unknown;
-
-  for (const candidate of candidates) {
-    const value = candidate?.trim();
-    if (!value) {
-      continue;
-    }
-
-    try {
-      return new PublicKey(value);
-    } catch (error) {
-      lastError = error;
-    }
+  if (!process.env.SCRAMBLE_PROGRAM_ID) {
+    throw new Error('SCRAMBLE_PROGRAM_ID not set');
   }
 
-  throw new Error(
-    lastError instanceof Error
-      ? `Invalid SCRAMBLE program id: ${lastError.message}`
-      : 'Unable to determine SCRAMBLE program id'
-  );
+  return new PublicKey(process.env.SCRAMBLE_PROGRAM_ID!);
 };
 
 const getRpcUrl = (): string => {
-  return (
-    process.env.NEXT_PUBLIC_SOLANA_RPC_URL ||
-    process.env.SOLANA_RPC_URL ||
-    process.env.RPC_URL ||
-    DEFAULT_RPC_URL
-  );
+  if (!process.env.SOLANA_RPC_URL) {
+    throw new Error('SOLANA_RPC_URL not set');
+  }
+
+  return process.env.SOLANA_RPC_URL;
 };
 
 const getActiveSlotThreshold = (): number => {
-  const value = process.env.MINER_ACTIVE_SLOT_THRESHOLD;
-  if (!value) {
-    return DEFAULT_ACTIVE_SLOT_THRESHOLD;
+  if (!process.env.MINER_ACTIVE_SLOT_THRESHOLD) {
+    throw new Error('MINER_ACTIVE_SLOT_THRESHOLD not set');
   }
 
-  const parsed = Number.parseInt(value, 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_ACTIVE_SLOT_THRESHOLD;
+  return Number.parseInt(process.env.MINER_ACTIVE_SLOT_THRESHOLD, 10);
 };
 
 interface MinerAccountData {

@@ -48,7 +48,7 @@ export interface ProverConfig {
  * Default configuration
  */
 const DEFAULT_CONFIG: ProverConfig = {
-  indexerUrl: process.env.NEXT_PUBLIC_INDEXER_URL || "http://localhost:3001", // Hardcoded for testing
+  indexerUrl: process.env.NEXT_PUBLIC_INDEXER_URL || "http://localhost:3001",
   timeout: 5 * 60 * 1000, // 5 minutes
 };
 
