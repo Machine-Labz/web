@@ -156,6 +156,7 @@ const ZCashIcon = () => (
     </g>
   </svg>
 );
+
 import Link from "next/link";
 import { toast } from "sonner";
 import { DappHeader } from "@/components/dapp-header";
@@ -176,6 +177,7 @@ import {
 import {
   ComputeBudgetProgram,
   Connection,
+  LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
   Transaction,
@@ -187,11 +189,6 @@ import { indexerClient, type MerkleProof } from "@/lib/indexer-client";
 import { SP1ProofInputs, type SP1ProofResult } from "@/lib/sp1-prover";
 import { useSP1Prover } from "@/hooks/use-sp1-prover";
 import { getShieldPoolPDAs } from "@/lib/pda";
-
-const RELAY_URL = process.env.NEXT_PUBLIC_RELAY_URL || "http://localhost:3002";
-const SOLANA_RPC_URL =
-  process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com";
-const LAMPORTS_PER_SOL = 1_000_000_000;
 
 export default function TransactionPage() {
   const { connected, publicKey, sendTransaction } = useWallet();
@@ -582,14 +579,16 @@ export default function TransactionPage() {
       saveNote(note);
 
       const PROGRAM_ID =
-        process.env.NEXT_PUBLIC_PROGRAM_ID ||
-        "c1oak6tetxYnNfvXKFkpn1d98FxtK7B68vBQLYQpWKp";
+        process.env.NEXT_PUBLIC_PROGRAM_ID;
+      if (!PROGRAM_ID) {
+        throw new Error("NEXT_PUBLIC_PROGRAM_ID not set");
+      }
 
       const programId = new PublicKey(PROGRAM_ID);
 
       // Derive PDAs instead of using hardcoded addresses
       const { pool: poolPubkey, commitments: commitmentsPubkey } =
-        getShieldPoolPDAs(programId);
+        getShieldPoolPDAs();
 
       const [poolAccount, commitmentsAccount] = await Promise.all([
         connection.getAccountInfo(poolPubkey),
@@ -661,7 +660,11 @@ export default function TransactionPage() {
 
       // Submit deposit to indexer
       console.log("📡 Submitting deposit to indexer...");
-      const INDEXER_URL = process.env.NEXT_PUBLIC_INDEXER_URL || "http://localhost:3001";
+      const INDEXER_URL = process.env.NEXT_PUBLIC_INDEXER_URL;
+      if (!INDEXER_URL) {
+        throw new Error("NEXT_PUBLIC_INDEXER_URL not set");
+      }
+
       const encryptedOutput = btoa(
         JSON.stringify({
           amount: note.amount,
@@ -1472,6 +1475,11 @@ async function submitWithdrawViaRelay(
   },
   onStatusUpdate?: (status: string) => void
 ): Promise<string> {
+  const RELAY_URL = process.env.NEXT_PUBLIC_RELAY_URL;
+  if (!RELAY_URL) {
+    throw new Error("NEXT_PUBLIC_RELAY_URL not set");
+  }
+
   const proofBytes = hexToBytes(params.proof);
   const proofBase64 = Buffer.from(proofBytes).toString("base64");
 
@@ -1550,82 +1558,4 @@ function hexToBytes(hex: string): Uint8Array {
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function waitForRootOnChain(expectedRoot: string): Promise<void> {
-  const PROGRAM_ID =
-    process.env.NEXT_PUBLIC_PROGRAM_ID ||
-    "c1oak6tetxYnNfvXKFkpn1d98FxtK7B68vBQLYQpWKp";
-
-  const programId = new PublicKey(PROGRAM_ID);
-  const { rootsRing: rootsRingPubkey } = getShieldPoolPDAs(programId);
-
-  const connection = new Connection(
-    process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "http://localhost:8899",
-    "confirmed"
-  );
-
-  const maxAttempts = 30;
-  const delayMs = 2000;
-
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      console.log(
-        `🔍 Checking on-chain roots (attempt ${attempt}/${maxAttempts})...`
-      );
-
-      const accountInfo = await connection.getAccountInfo(rootsRingPubkey);
-
-      if (!accountInfo) {
-        console.warn("⚠️ Roots ring account not found");
-        await sleep(delayMs);
-        continue;
-      }
-
-      // Parse roots ring account
-      // Structure: 8 bytes header (u8 head + 7 padding) + 64 * 32 bytes (roots)
-      const data = accountInfo.data;
-      if (data.length < 8 + 64 * 32) {
-        console.warn("⚠️ Invalid roots ring account size");
-        await sleep(delayMs);
-        continue;
-      }
-
-      const head = data[0];
-      console.log(`📊 Roots ring head position: ${head}`);
-
-      // Read all 64 roots
-      const roots: string[] = [];
-      for (let i = 0; i < 64; i++) {
-        const offset = 8 + i * 32;
-        const rootBytes = data.slice(offset, offset + 32);
-        const rootHex = Buffer.from(rootBytes).toString("hex");
-        roots.push(rootHex);
-      }
-
-      // Check if expected root is in the ring
-      const expectedRootClean = expectedRoot.startsWith("0x")
-        ? expectedRoot.slice(2)
-        : expectedRoot;
-
-      const foundRoot = roots.some((root) => root === expectedRootClean);
-
-      if (foundRoot) {
-        console.log("✅ Root found on-chain!");
-        return;
-      }
-
-      console.log(
-        `⏳ Root not yet on-chain (attempt ${attempt}/${maxAttempts})`
-      );
-      await sleep(delayMs);
-    } catch (error) {
-      console.warn(`⚠️ Error checking roots ring (attempt ${attempt}):`, error);
-      await sleep(delayMs);
-    }
-  }
-
-  console.warn(
-    "⚠️ Root verification timeout - proceeding anyway (relay will retry if needed)"
-  );
 }

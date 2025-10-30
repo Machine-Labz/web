@@ -25,7 +25,9 @@ export interface ShieldPoolPDAs {
  * - nullifier_shard: b"nullifier_shard"
  * - treasury: b"treasury"
  */
-export function getShieldPoolPDAs(programId: PublicKey): ShieldPoolPDAs {
+export function getShieldPoolPDAs(): ShieldPoolPDAs {
+  const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!);
+
   const [pool] = PublicKey.findProgramAddressSync(
     [Buffer.from("pool")],
     programId
@@ -60,16 +62,3 @@ export function getShieldPoolPDAs(programId: PublicKey): ShieldPoolPDAs {
   };
 }
 
-/**
- * Get Shield Pool PDAs from environment variable program ID
- */
-export function getShieldPoolPDAsFromEnv(): ShieldPoolPDAs {
-  const programIdStr = process.env.NEXT_PUBLIC_PROGRAM_ID;
-
-  if (!programIdStr) {
-    throw new Error("NEXT_PUBLIC_PROGRAM_ID not configured");
-  }
-
-  const programId = new PublicKey(programIdStr);
-  return getShieldPoolPDAs(programId);
-}

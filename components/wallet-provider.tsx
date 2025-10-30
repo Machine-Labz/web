@@ -31,7 +31,10 @@ interface WalletContextProviderProps {
 export const WalletContextProvider: FC<WalletContextProviderProps> = ({
   children,
 }) => {
-  const endpoint = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.testnet.solana.com";
+  const endpoint = process.env.NEXT_PUBLIC_SOLANA_RPC_URL;
+  if (!endpoint) {
+    throw new Error("NEXT_PUBLIC_SOLANA_RPC_URL not set");
+  }
 
   // Register Mobile Wallet Adapter for Android users
   useEffect(() => {
