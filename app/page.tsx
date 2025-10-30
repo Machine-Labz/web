@@ -316,20 +316,29 @@ export default function CloakLandingPage() {
               transition={{ duration: 0.5 }}
               className="text-center max-w-4xl mx-auto mb-12"
             >
-              <Badge
-                className="mb-4 rounded-full px-4 py-1.5 text-sm font-medium bg-accent text-accent-foreground border-0"
-                variant="secondary"
-              >
-                Private execution on Solana
-              </Badge>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-4">
+                <Badge
+                  className="rounded-full px-4 py-1.5 text-sm font-medium bg-accent text-accent-foreground border-0"
+                  variant="secondary"
+                >
+                  Private execution on Solana
+                </Badge>
+                <Badge
+                  className="rounded-full px-3 py-1 text-xs font-medium bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20"
+                  variant="outline"
+                >
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse"></span>
+                  Testnet Live
+                </Badge>
+              </div>
 
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 sm:mb-6 text-foreground font-space-grotesk">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight mb-4 sm:mb-6 text-foreground font-space-grotesk leading-tight">
                 {DAPP_AVAILABLE
                   ? "Private SOL Transfers with Unlinkable Withdrawals"
                   : "Private Transfers on Solana"}
               </h1>
 
-              <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-4 sm:mb-6 max-w-3xl mx-auto text-balance px-4">
+              <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground mb-4 sm:mb-6 max-w-3xl mx-auto text-balance px-4">
                 Deposit into the shared privacy pool and withdraw without revealing which deposit you own.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
@@ -496,10 +505,10 @@ export default function CloakLandingPage() {
               <Badge variant="secondary" className="mb-4">
                 Why Cloak is Different
               </Badge>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight font-space-grotesk text-balance px-4">
+              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight font-space-grotesk text-balance px-4">
                 Built for True Privacy & Security
               </h2>
-              <p className="mx-auto max-w-[700px] text-muted-foreground text-base sm:text-lg md:text-xl text-balance px-4">
+              <p className="mx-auto max-w-[700px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
                 Cloak uses zero-knowledge proofs, Merkle tree commitments,
                 and optional proof-of-work mining to provide cryptographically guaranteed privacy.
               </p>
@@ -594,6 +603,443 @@ export default function CloakLandingPage() {
           </div>
         </section>
 
+        {/* TypeScript SDK Section (moved just below Differentiation) */}
+        <section className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-gradient-to-br from-primary/5 via-background to-accent/5 relative overflow-hidden">
+          {/* Background decoration */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:3rem_3rem]" />
+
+          <div className="container px-4 md:px-6 relative z-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="text-center space-y-3 sm:space-y-4 mb-8 sm:mb-12 md:mb-16"
+            >
+              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-medium">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                TypeScript SDK
+              </div>
+              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight font-space-grotesk text-balance px-4">
+                Build Private Transfers into Your App
+              </h2>
+              <p className="mx-auto max-w-[700px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
+                Complete TypeScript SDK for integrating Cloak's privacy protocol into your application.
+                One method handles everything - deposit, proof generation, and withdrawal.
+              </p>
+            </motion.div>
+
+            <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center max-w-6xl mx-auto">
+              {/* Code Example */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="relative order-2 lg:order-1"
+              >
+                <div className="bg-gray-900 rounded-lg shadow-2xl overflow-hidden">
+                  {/* macOS traffic lights */}
+                  <div className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-gray-800 border-b border-gray-700">
+                    <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-red-500"></div>
+                    <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-yellow-500"></div>
+                    <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-green-500"></div>
+                    <div className="flex-1 text-center">
+                      <span className="text-gray-400 text-[10px] sm:text-xs font-mono">example.ts</span>
+                    </div>
+                  </div>
+
+                  {/* Code content */}
+                  <div className="bg-gray-900 overflow-x-auto">
+                    <div className="p-3 sm:p-4 md:p-6 min-w-max">
+                      <pre className="text-[10px] sm:text-xs md:text-sm text-gray-100 font-mono leading-relaxed">
+                        <code className="block whitespace-pre">
+                        <span className="text-purple-400">import</span>{" "}
+                        <span className="text-white">{"{"}</span>{" "}
+                        <span className="text-blue-300">CloakSDK</span>{" "}
+                        <span className="text-white">{"}"}</span>{" "}
+                        <span className="text-purple-400">from</span>{" "}
+                        <span className="text-green-400">"@cloak/sdk"</span>
+                        <span className="text-white">;</span>
+                        <br /><br />
+                        <span className="text-gray-500">// Initialize client</span>
+                        <br />
+                        <span className="text-purple-400">const</span>{" "}
+                        <span className="text-blue-300">client</span>{" "}
+                        <span className="text-white">=</span>{" "}
+                        <span className="text-purple-400">new</span>{" "}
+                        <span className="text-yellow-300">CloakSDK</span>
+                        <span className="text-white">({"{"}</span>
+                        <br />
+                        &nbsp;&nbsp;<span className="text-blue-300">network</span>
+                        <span className="text-white">:</span>{" "}
+                        <span className="text-green-400">"devnet"</span>
+                        <span className="text-white">,</span>
+                        <br />
+                        &nbsp;&nbsp;<span className="text-blue-300">programId</span>
+                        <span className="text-white">,</span>{" "}
+                        <span className="text-blue-300">poolAddress</span>
+                        <span className="text-white">,</span>
+                        <br />
+                        &nbsp;&nbsp;<span className="text-blue-300">apiUrl</span>
+                        <br />
+                        <span className="text-white">{"})"}</span>
+                        <span className="text-white">;</span>
+                        <br /><br />
+                        <span className="text-gray-500">// Generate note</span>
+                        <br />
+                        <span className="text-purple-400">const</span>{" "}
+                        <span className="text-blue-300">note</span>{" "}
+                        <span className="text-white">=</span>{" "}
+                        <span className="text-blue-300">client</span>
+                        <span className="text-white">.</span>
+                        <span className="text-yellow-300">generateNote</span>
+                        <span className="text-white">(</span>
+                        <span className="text-orange-400">1_000_000_000</span>
+                        <span className="text-white">)</span>
+                        <span className="text-white">;</span>
+                        <br /><br />
+                        <span className="text-gray-500">// Complete flow: deposit + transfer</span>
+                        <br />
+                        <span className="text-purple-400">const</span>{" "}
+                        <span className="text-blue-300">result</span>{" "}
+                        <span className="text-white">=</span>{" "}
+                        <span className="text-purple-400">await</span>{" "}
+                        <span className="text-blue-300">client</span>
+                        <span className="text-white">.</span>
+                        <span className="text-yellow-300">privateTransfer</span>
+                        <span className="text-white">(</span>
+                        <br />
+                        &nbsp;&nbsp;<span className="text-blue-300">connection</span>
+                        <span className="text-white">,</span>{" "}
+                        <span className="text-blue-300">wallet</span>
+                        <span className="text-white">,</span>{" "}
+                        <span className="text-blue-300">note</span>
+                        <span className="text-white">,</span>
+                        <br />
+                        &nbsp;&nbsp;<span className="text-white">[</span>
+                        <br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-white">{"{"}</span>{" "}
+                        <span className="text-blue-300">recipient</span>
+                        <span className="text-white">:</span>{" "}
+                        <span className="text-blue-300">addr1</span>
+                        <span className="text-white">,</span>{" "}
+                        <span className="text-blue-300">amount</span>
+                        <span className="text-white">:</span>{" "}
+                        <span className="text-orange-400">500_000_000</span>{" "}
+                        <span className="text-white">{"}"}</span>
+                        <span className="text-white">,</span>
+                        <br />
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-white">{"{"}</span>{" "}
+                        <span className="text-blue-300">recipient</span>
+                        <span className="text-white">:</span>{" "}
+                        <span className="text-blue-300">addr2</span>
+                        <span className="text-white">,</span>{" "}
+                        <span className="text-blue-300">amount</span>
+                        <span className="text-white">:</span>{" "}
+                        <span className="text-orange-400">492_500_000</span>{" "}
+                        <span className="text-white">{"}"}</span>
+                        <br />
+                        &nbsp;&nbsp;<span className="text-white">]</span>
+                        <br />
+                        <span className="text-white">)</span>
+                        <span className="text-white">;</span>
+                        <br /><br />
+                        <span className="text-green-400">✅</span>{" "}
+                        <span className="text-gray-400">// Done! Handles deposit + proof + withdrawal</span>
+                        </code>
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Features List */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="space-y-4 sm:space-y-6 order-1 lg:order-2"
+              >
+                {[
+                  {
+                    icon: Zap,
+                    title: "One Method Does It All",
+                    description:
+                      "privateTransfer() automatically handles deposit, proof generation, and withdrawal to up to 5 recipients.",
+                  },
+                  {
+                    icon: Shield,
+                    title: "Type-Safe & Validated",
+                    description:
+                      "Full TypeScript support with compile-time validation. Enforces 1-5 recipients and amount conservation.",
+                  },
+                  {
+                    icon: Cog,
+                    title: "Framework Agnostic",
+                    description:
+                      "Works in any JavaScript environment - React, Vue, Node.js, or vanilla JS. No React dependencies.",
+                  },
+                  {
+                    icon: Workflow,
+                    title: "Progress Callbacks",
+                    description:
+                      "Track deposit, proof generation, and withdrawal status with built-in progress hooks.",
+                  },
+                ].map((feature, i) => {
+                  const Icon = feature.icon;
+                  return (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.3, delay: 0.1 * i }}
+                      className="flex gap-3 sm:gap-4 items-start"
+                    >
+                      <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="text-sm sm:text-base md:text-lg font-bold font-space-grotesk">
+                          {feature.title}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                          {feature.description}
+                        </p>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+
+                <div className="pt-2 sm:pt-4">
+                  <a
+                    href="https://github.com/cloak-labz/cloak/tree/main/packages/cloak-sdk"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block w-full sm:w-auto"
+                  >
+                    <Button size="lg" className="rounded-full w-full sm:w-auto text-sm sm:text-base px-6">
+                      View SDK Documentation
+                      <ExternalLink className="ml-2 w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    </Button>
+                  </a>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Developer Tools Section (restored) */}
+        <section className="w-full py-12 sm:py-16 md:py-24 lg:py-32">
+          <div className="container px-4 md:px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="text-center space-y-3 sm:space-y-4 mb-8 sm:mb-12 md:mb-16"
+            >
+              <Badge variant="secondary" className="mb-4">
+                Developer Tools
+              </Badge>
+              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight font-space-grotesk text-balance px-4">
+                Cloak Development Kit
+              </h2>
+              <p className="mx-auto max-w-[700px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
+                Rust tools and libraries for building with Cloak's privacy protocol.
+                Generate zero-knowledge proofs, run miners, and parse proofs with our comprehensive tooling.
+              </p>
+            </motion.div>
+
+            <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center">
+              {/* Text Content */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="space-y-6 sm:space-y-8 order-2 lg:order-1"
+              >
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Brain className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-bold font-space-grotesk">
+                      ZK Proof Generation
+                    </h3>
+                  </div>
+                  <p className="text-muted-foreground text-base sm:text-lg">
+                    Generate zero-knowledge proofs for withdrawals using the SP1 guest program and host CLI.
+                    Local CPU proving (~2 min) or SP1 network TEE (~30-45 sec). Full circuit implementation with 6 constraints enforced.
+                  </p>
+                </div>
+
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Hash className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-bold font-space-grotesk">
+                      PoW Mining
+                    </h3>
+                  </div>
+                  <p className="text-muted-foreground text-base sm:text-lg">
+                    Run the standalone miner CLI to produce wildcard claims for the scramble registry.
+                    Earn fees by helping prioritize withdrawals during congestion. Automatic difficulty adjustment and claim lifecycle management.
+                  </p>
+                </div>
+
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-bold font-space-grotesk">
+                      Proof Utilities
+                    </h3>
+                  </div>
+                  <p className="text-muted-foreground text-base sm:text-lg">
+                    Extract 260-byte Groth16 proofs from SP1 bundles, parse public inputs (104 bytes),
+                    and generate verification keys for on-chain verification. All tools support no_std for on-chain integration.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4">
+                  <a
+                    href="https://cloak-eqpl.vercel.app/docs/packages/overview"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto"
+                  >
+                    <Button size="lg" className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base">
+                      View Documentation
+                      <ExternalLink className="ml-2 size-4" />
+                    </Button>
+                  </a>
+                  <a
+                    href="https://github.com/cloak-labz/cloak"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto"
+                  >
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base"
+                    >
+                      View on GitHub
+                      <ExternalLink className="ml-2 size-4" />
+                    </Button>
+                  </a>
+                </div>
+              </motion.div>
+
+              {/* Code Snippet */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="relative order-1 lg:order-2"
+              >
+                {/* macOS-style window */}
+                <div className="bg-gray-900 rounded-lg shadow-2xl overflow-hidden max-w-full">
+                  {/* macOS traffic lights */}
+                  <div className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-gray-800 border-b border-gray-700">
+                    <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-red-500"></div>
+                    <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-yellow-500"></div>
+                    <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-green-500"></div>
+                    <div className="flex-1 text-center">
+                      <span className="text-gray-400 text-[10px] sm:text-xs md:text-sm font-mono">
+                        terminal
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Code content */}
+                  <div className="bg-gray-900 overflow-x-auto">
+                    <div className="p-3 sm:p-4 md:p-6 min-w-max">
+                      <pre className="text-[10px] sm:text-xs md:text-sm text-gray-100 font-mono leading-relaxed">
+                        <code className="block whitespace-pre">
+                        <span className="text-green-400">$</span>{" "}
+                        <span className="text-gray-400"># Generate withdrawal proof</span>
+                        <br />
+                        <span className="text-green-400">$</span>{" "}
+                        <span className="text-white">cargo run</span>{" "}
+                        <span className="text-blue-400">--package</span>{" "}
+                        <span className="text-yellow-300">zk-guest-sp1-host</span>{" "}
+                        <span className="text-white">--</span>{" "}
+                        <span className="text-blue-400">--bin</span>{" "}
+                        <span className="text-yellow-300">cloak-zk</span>{" "}
+                        <span className="text-white">--</span>{" "}
+                        <span className="text-blue-400">prove</span>
+                        <br />
+                        &nbsp;&nbsp;<span className="text-blue-400">--private</span>{" "}
+                        <span className="text-yellow-300">private.json</span>
+                        <br />
+                        &nbsp;&nbsp;<span className="text-blue-400">--public</span>{" "}
+                        <span className="text-yellow-300">public.json</span>
+                        <br />
+                        &nbsp;&nbsp;<span className="text-blue-400">--outputs</span>{" "}
+                        <span className="text-yellow-300">outputs.json</span>
+                        <br />
+                        &nbsp;&nbsp;<span className="text-blue-400">--proof</span>{" "}
+                        <span className="text-yellow-300">out/proof.bin</span>
+                        <br />
+                        <br />
+                        <span className="text-yellow-300">📖</span>{" "}
+                        <span className="text-gray-300">Reading input files...</span>
+                        <br />
+                        <span className="text-green-400">✅</span>{" "}
+                        <span className="text-gray-300">Input files loaded</span>
+                        <br />
+                        <span className="text-yellow-300">🔑</span>{" "}
+                        <span className="text-gray-300">Generating proving key...</span>
+                        <br />
+                        <span className="text-green-400">✅</span>{" "}
+                        <span className="text-gray-300">Proof generated!</span>
+                        <br />
+                        <span className="text-gray-500">Proof size: 89,234 bytes</span>
+                        <br />
+                        <span className="text-gray-500">Total cycles: 1,234,567</span>
+                        <br />
+                        <br />
+                        <span className="text-green-400">$</span>{" "}
+                        <span className="text-gray-400"># Run PoW miner</span>
+                        <br />
+                        <span className="text-green-400">$</span>{" "}
+                        <span className="text-white">cargo run</span>{" "}
+                        <span className="text-blue-400">--package</span>{" "}
+                        <span className="text-yellow-300">cloak-miner</span>{" "}
+                        <span className="text-white">--</span>{" "}
+                        <span className="text-blue-400">--network</span>{" "}
+                        <span className="text-yellow-300">devnet</span>{" "}
+                        <span className="text-white">mine</span>
+                        <br />
+                        <br />
+                        <span className="text-yellow-300">⛏️</span>{" "}
+                        <span className="text-gray-300">Starting PoW mining...</span>
+                        <br />
+                        <span className="text-yellow-300">🔍</span>{" "}
+                        <span className="text-gray-300">Found solution: 0x3a7f...</span>
+                        <br />
+                        <span className="text-green-400">✅</span>{" "}
+                        <span className="text-gray-300">Claim submitted to registry</span>
+                        <br />
+                        <span className="text-gray-500">Difficulty: 16 | Block: 42,069</span>
+                        </code>
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
         {/* Trust Indicators */}
         <section className="w-full py-12 border-y bg-muted/30">
           <div className="container px-4 md:px-6">
@@ -641,7 +1087,7 @@ export default function CloakLandingPage() {
               >
                 Features
               </Badge>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight font-space-grotesk text-foreground px-4">
+              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight font-space-grotesk text-foreground px-4">
                 Complete Privacy Solution
               </h2>
               <p className="max-w-[800px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
@@ -716,7 +1162,7 @@ export default function CloakLandingPage() {
               >
                 How It Works
               </Badge>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight font-space-grotesk text-foreground px-4">
+              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight font-space-grotesk text-foreground px-4">
                 Simple Process, Maximum Privacy
               </h2>
               <p className="max-w-[800px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
@@ -811,7 +1257,7 @@ export default function CloakLandingPage() {
               >
                 Security & Trust
               </Badge>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight font-space-grotesk text-foreground px-4">
+              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight font-space-grotesk text-foreground px-4">
                 Built for Maximum Security
               </h2>
               <p className="max-w-[800px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
@@ -889,10 +1335,10 @@ export default function CloakLandingPage() {
                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                 Complete Developer Guide
               </div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight font-space-grotesk text-balance px-4">
+              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight font-space-grotesk text-balance px-4">
                 Everything you need to ship private Solana exits
               </h2>
-              <p className="mx-auto max-w-[700px] text-muted-foreground text-sm sm:text-base md:text-xl text-balance px-4">
+              <p className="mx-auto max-w-[700px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
                 Deep-dive reference for architects, protocol engineers, relayer
                 operators, and front-end teams working on Cloak.
               </p>
@@ -1081,222 +1527,8 @@ export default function CloakLandingPage() {
           </div>
         </section>
 
-        {/* Developer Tools Section */}
-        <section className="w-full py-12 sm:py-16 md:py-24 lg:py-32">
-          <div className="container px-4 md:px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-center space-y-4 mb-8 sm:mb-12 md:mb-16"
-            >
-              <Badge variant="secondary" className="mb-4">
-                Developer Tools
-              </Badge>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight font-space-grotesk text-balance px-4">
-                Cloak Development Kit
-              </h2>
-              <p className="mx-auto max-w-[700px] text-muted-foreground text-sm sm:text-base md:text-xl text-balance px-4">
-                Rust tools and libraries for building with Cloak's privacy protocol.
-                Generate zero-knowledge proofs, run miners, and parse proofs with our comprehensive tooling.
-              </p>
-            </motion.div>
 
-            <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center">
-              {/* Text Content */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="space-y-6 sm:space-y-8 order-2 lg:order-1"
-              >
-                <div className="space-y-3 sm:space-y-4">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Brain className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
-                    </div>
-                    <h3 className="text-xl sm:text-2xl font-bold font-space-grotesk">
-                      ZK Proof Generation
-                    </h3>
-                  </div>
-                  <p className="text-muted-foreground text-base sm:text-lg">
-                    Generate zero-knowledge proofs for withdrawals using the SP1 guest program and host CLI.
-                    Local CPU proving (~2 min) or SP1 network TEE (~30-45 sec). Full circuit implementation with 6 constraints enforced.
-                  </p>
-                </div>
-
-                <div className="space-y-3 sm:space-y-4">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Hash className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
-                    </div>
-                    <h3 className="text-xl sm:text-2xl font-bold font-space-grotesk">
-                      PoW Mining
-                    </h3>
-                  </div>
-                  <p className="text-muted-foreground text-base sm:text-lg">
-                    Run the standalone miner CLI to produce wildcard claims for the scramble registry.
-                    Earn fees by helping prioritize withdrawals during congestion. Automatic difficulty adjustment and claim lifecycle management.
-                  </p>
-                </div>
-
-                <div className="space-y-3 sm:space-y-4">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
-                    </div>
-                    <h3 className="text-xl sm:text-2xl font-bold font-space-grotesk">
-                      Proof Utilities
-                    </h3>
-                  </div>
-                  <p className="text-muted-foreground text-base sm:text-lg">
-                    Extract 260-byte Groth16 proofs from SP1 bundles, parse public inputs (104 bytes),
-                    and generate verification keys for on-chain verification. All tools support no_std for on-chain integration.
-                  </p>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4">
-                  <a
-                    href="https://cloak-eqpl.vercel.app/docs/packages/overview"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full sm:w-auto"
-                  >
-                    <Button size="lg" className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base">
-                      View Documentation
-                      <ExternalLink className="ml-2 size-4" />
-                    </Button>
-                  </a>
-                  <a
-                    href="https://github.com/cloak-labz/cloak"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full sm:w-auto"
-                  >
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base"
-                    >
-                      View on GitHub
-                      <ExternalLink className="ml-2 size-4" />
-                    </Button>
-                  </a>
-                </div>
-              </motion.div>
-
-              {/* Code Snippet */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="relative order-1 lg:order-2"
-              >
-                {/* macOS-style window */}
-                <div className="bg-gray-900 rounded-lg shadow-2xl overflow-hidden max-w-full">
-                  {/* macOS traffic lights */}
-                  <div className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-gray-800 border-b border-gray-700">
-                    <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-red-500"></div>
-                    <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-yellow-500"></div>
-                    <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-green-500"></div>
-                    <div className="flex-1 text-center">
-                      <span className="text-gray-400 text-[10px] sm:text-xs md:text-sm font-mono">
-                        terminal
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Code content */}
-                  <div className="bg-gray-900 overflow-x-auto">
-                    <div className="p-3 sm:p-4 md:p-6 min-w-max">
-                      <pre className="text-[10px] sm:text-xs md:text-sm text-gray-100 font-mono leading-relaxed">
-                        <code className="block whitespace-pre">
-                        <span className="text-green-400">$</span>{" "}
-                        <span className="text-gray-400">
-                          # Generate withdrawal proof
-                        </span>
-                        <br />
-                        <span className="text-green-400">$</span>{" "}
-                        <span className="text-white">cargo run</span>{" "}
-                        <span className="text-blue-400">--package</span>{" "}
-                        <span className="text-yellow-300">zk-guest-sp1-host</span>{" "}
-                        <span className="text-white">--</span>{" "}
-                        <span className="text-blue-400">--bin</span>{" "}
-                        <span className="text-yellow-300">cloak-zk</span>{" "}
-                        <span className="text-white">--</span>{" "}
-                        <span className="text-blue-400">prove</span>
-                        <br />
-                        &nbsp;&nbsp;
-                        <span className="text-blue-400">--private</span>{" "}
-                        <span className="text-yellow-300">private.json</span>
-                        <br />
-                        &nbsp;&nbsp;
-                        <span className="text-blue-400">--public</span>{" "}
-                        <span className="text-yellow-300">public.json</span>
-                        <br />
-                        &nbsp;&nbsp;
-                        <span className="text-blue-400">--outputs</span>{" "}
-                        <span className="text-yellow-300">outputs.json</span>
-                        <br />
-                        &nbsp;&nbsp;
-                        <span className="text-blue-400">--proof</span>{" "}
-                        <span className="text-yellow-300">out/proof.bin</span>
-                        <br />
-                        <br />
-                        <span className="text-yellow-300">📖</span>{" "}
-                        <span className="text-gray-300">Reading input files...</span>
-                        <br />
-                        <span className="text-green-400">✅</span>{" "}
-                        <span className="text-gray-300">Input files loaded</span>
-                        <br />
-                        <span className="text-yellow-300">🔑</span>{" "}
-                        <span className="text-gray-300">Generating proving key...</span>
-                        <br />
-                        <span className="text-green-400">✅</span>{" "}
-                        <span className="text-gray-300">Proof generated!</span>
-                        <br />
-                        <span className="text-gray-500">Proof size: 89,234 bytes</span>
-                        <br />
-                        <span className="text-gray-500">Total cycles: 1,234,567</span>
-                        <br />
-                        <br />
-                        <span className="text-green-400">$</span>{" "}
-                        <span className="text-gray-400">
-                          # Run PoW miner
-                        </span>
-                        <br />
-                        <span className="text-green-400">$</span>{" "}
-                        <span className="text-white">cargo run</span>{" "}
-                        <span className="text-blue-400">--package</span>{" "}
-                        <span className="text-yellow-300">cloak-miner</span>{" "}
-                        <span className="text-white">--</span>{" "}
-                        <span className="text-blue-400">--network</span>{" "}
-                        <span className="text-yellow-300">devnet</span>{" "}
-                        <span className="text-white">mine</span>
-                        <br />
-                        <br />
-                        <span className="text-yellow-300">⛏️</span>{" "}
-                        <span className="text-gray-300">Starting PoW mining...</span>
-                        <br />
-                        <span className="text-yellow-300">🔍</span>{" "}
-                        <span className="text-gray-300">Found solution: 0x3a7f...</span>
-                        <br />
-                        <span className="text-green-400">✅</span>{" "}
-                        <span className="text-gray-300">Claim submitted to registry</span>
-                        <br />
-                        <span className="text-gray-500">Difficulty: 16 | Block: 42,069</span>
-                        </code>
-                      </pre>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </section>
+        {/* Developer Tools Section removed (redundant with SDK section) */}
 
         {/* Partners Section */}
         <section className="w-full py-12 bg-muted/30 relative">
@@ -1342,10 +1574,10 @@ export default function CloakLandingPage() {
               transition={{ duration: 0.5 }}
               className="flex flex-col items-center justify-center space-y-4 sm:space-y-6 text-center"
             >
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight font-space-grotesk text-balance px-4">
+              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight font-space-grotesk text-balance px-4">
                 Ready to Experience True Privacy?
               </h2>
-              <p className="mx-auto max-w-[700px] text-primary-foreground/80 text-base sm:text-lg md:text-xl text-balance px-4">
+              <p className="mx-auto max-w-[700px] text-primary-foreground/80 text-sm sm:text-base md:text-lg text-balance px-4">
                 Join the privacy revolution on Solana. Start sending SOL with
                 complete anonymity while maintaining speed and reliability.
               </p>
@@ -1418,7 +1650,7 @@ export default function CloakLandingPage() {
               >
                 FAQ
               </Badge>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight font-space-grotesk text-foreground px-4">
+              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight font-space-grotesk text-foreground px-4">
                 Frequently Asked Questions
               </h2>
               <p className="max-w-[800px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
@@ -1693,9 +1925,14 @@ export default function CloakLandingPage() {
             </div>
           </div>
           <div className="flex flex-col gap-4 sm:flex-row justify-between items-center border-t border-border/40 pt-8">
-            <p className="text-xs text-muted-foreground">
-              &copy; {new Date().getFullYear()} Cloak. All rights reserved.
-            </p>
+            <div className="flex flex-col items-center sm:items-start gap-2">
+              <p className="text-xs text-muted-foreground">
+                &copy; {new Date().getFullYear()} Cloak. All rights reserved.
+              </p>
+              <p className="text-xs text-muted-foreground/70">
+                Running on Solana Devnet • RPC: api.devnet.solana.com
+              </p>
+            </div>
             <div className="flex gap-4">
               <Link
                 href="#"

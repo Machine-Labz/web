@@ -48,15 +48,9 @@ export interface ProverConfig {
  * Default configuration
  */
 const DEFAULT_CONFIG: ProverConfig = {
-  indexerUrl: "http://localhost:3001", // Hardcoded for testing
+  indexerUrl: process.env.NEXT_PUBLIC_INDEXER_URL || "http://localhost:3001", // Hardcoded for testing
   timeout: 5 * 60 * 1000, // 5 minutes
 };
-
-// Debug logging
-console.log("[SP1Prover] Environment check:", {
-  NEXT_PUBLIC_INDEXER_URL: process.env.NEXT_PUBLIC_INDEXER_URL,
-  defaultIndexerUrl: DEFAULT_CONFIG.indexerUrl
-});
 
 /**
  * SP1 Prover Client
@@ -72,7 +66,6 @@ export class SP1ProverClient {
       ...config,
       timeout: config?.timeout ?? DEFAULT_CONFIG.timeout!,
     };
-    console.log("[SP1Prover] Constructor config:", this.config);
   }
 
   /**

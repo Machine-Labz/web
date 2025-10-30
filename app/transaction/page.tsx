@@ -7,6 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Send,
   Wallet,
   Shield,
@@ -27,64 +34,33 @@ import {
 } from "lucide-react";
 
 // Token Logo SVGs
-const SOLIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 397.7 311.7"
-    className="w-6 h-6"
-  >
-    <defs>
-      <linearGradient
-        id="sol-gradient-1"
-        gradientUnits="userSpaceOnUse"
-        x1="360.8791"
-        y1="351.4553"
-        x2="141.213"
-        y2="-69.2936"
-        gradientTransform="matrix(1 0 0 -1 0 314)"
-      >
-        <stop offset="0" style={{ stopColor: "#00FFA3" }} />
-        <stop offset="1" style={{ stopColor: "#DC1FFF" }} />
-      </linearGradient>
-      <linearGradient
-        id="sol-gradient-2"
-        gradientUnits="userSpaceOnUse"
-        x1="264.8291"
-        y1="401.6014"
-        x2="45.163"
-        y2="-19.1475"
-        gradientTransform="matrix(1 0 0 -1 0 314)"
-      >
-        <stop offset="0" style={{ stopColor: "#00FFA3" }} />
-        <stop offset="1" style={{ stopColor: "#DC1FFF" }} />
-      </linearGradient>
-      <linearGradient
-        id="sol-gradient-3"
-        gradientUnits="userSpaceOnUse"
-        x1="312.5484"
-        y1="376.688"
-        x2="92.8822"
-        y2="-44.061"
-        gradientTransform="matrix(1 0 0 -1 0 314)"
-      >
-        <stop offset="0" style={{ stopColor: "#00FFA3" }} />
-        <stop offset="1" style={{ stopColor: "#DC1FFF" }} />
-      </linearGradient>
-    </defs>
-    <path
-      fill="url(#sol-gradient-1)"
-      d="M64.6,237.9c2.4-2.4,5.7-3.8,9.2-3.8h317.4c5.8,0,8.7,7,4.6,11.1l-62.7,62.7c-2.4,2.4-5.7,3.8-9.2,3.8H6.5  c-5.8,0-8.7-7-4.6-11.1L64.6,237.9z"
-    />
-    <path
-      fill="url(#sol-gradient-2)"
-      d="M64.6,3.8C67.1,1.4,70.4,0,73.8,0h317.4c5.8,0,8.7,7,4.6,11.1l-62.7,62.7c-2.4,2.4-5.7,3.8-9.2,3.8H6.5  c-5.8,0-8.7-7-4.6-11.1L64.6,3.8z"
-    />
-    <path
-      fill="url(#sol-gradient-3)"
-      d="M333.1,120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8,0-8.7,7-4.6,11.1l62.7,62.7c2.4,2.4,5.7,3.8,9.2,3.8h317.4  c5.8,0,8.7-7,4.6-11.1L333.1,120.1z"
-    />
-  </svg>
-);
+const SOLIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => {
+  const uid = React.useId().replace(/:/g, "");
+  const g1 = `sol-grad-1-${uid}`;
+  const g2 = `sol-grad-2-${uid}`;
+  const g3 = `sol-grad-3-${uid}`;
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 397.7 311.7" className={className}>
+      <defs>
+        <linearGradient id={g1} gradientUnits="userSpaceOnUse" x1="360.8791" y1="351.4553" x2="141.213" y2="-69.2936" gradientTransform="matrix(1 0 0 -1 0 314)">
+          <stop offset="0" style={{ stopColor: "#00FFA3" }} />
+          <stop offset="1" style={{ stopColor: "#DC1FFF" }} />
+        </linearGradient>
+        <linearGradient id={g2} gradientUnits="userSpaceOnUse" x1="264.8291" y1="401.6014" x2="45.163" y2="-19.1475" gradientTransform="matrix(1 0 0 -1 0 314)">
+          <stop offset="0" style={{ stopColor: "#00FFA3" }} />
+          <stop offset="1" style={{ stopColor: "#DC1FFF" }} />
+        </linearGradient>
+        <linearGradient id={g3} gradientUnits="userSpaceOnUse" x1="312.5484" y1="376.688" x2="92.8822" y2="-44.061" gradientTransform="matrix(1 0 0 -1 0 314)">
+          <stop offset="0" style={{ stopColor: "#00FFA3" }} />
+          <stop offset="1" style={{ stopColor: "#DC1FFF" }} />
+        </linearGradient>
+      </defs>
+      <path fill={`url(#${g1})`} d="M64.6,237.9c2.4-2.4,5.7-3.8,9.2-3.8h317.4c5.8,0,8.7,7,4.6,11.1l-62.7,62.7c-2.4,2.4-5.7,3.8-9.2,3.8H6.5  c-5.8,0-8.7-7-4.6-11.1L64.6,237.9z" />
+      <path fill={`url(#${g2})`} d="M64.6,3.8C67.1,1.4,70.4,0,73.8,0h317.4c5.8,0,8.7,7,4.6,11.1l-62.7,62.7c-2.4,2.4-5.7,3.8-9.2,3.8H6.5  c-5.8,0-8.7-7-4.6-11.1L64.6,3.8z" />
+      <path fill={`url(#${g3})`} d="M333.1,120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8,0-8.7,7-4.6,11.1l62.7,62.7c2.4,2.4,5.7,3.8,9.2,3.8h317.4  c5.8,0,8.7-7,4.6-11.1L333.1,120.1z" />
+    </svg>
+  );
+};
 
 const USDCIcon = () => (
   <svg
@@ -121,39 +97,14 @@ const OREIcon = () => (
 const ZCashIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    xmlnsXlink="http://www.w3.org/1999/xlink"
     viewBox="0 0 2500 2500"
     className="w-6 h-6"
   >
-    <defs>
-      <style
-        dangerouslySetInnerHTML={{
-          __html: ".cls-1{fill:url(#linear-gradient);}",
-        }}
-      />
-      <linearGradient
-        id="linear-gradient"
-        x1="782.84"
-        y1="165.91"
-        x2="799.34"
-        y2="165.91"
-        gradientTransform="translate(-81568.2 55372.05) rotate(-45) scale(122.41)"
-        gradientUnits="userSpaceOnUse"
-      >
-        <stop offset="0" stopColor="#cf8724" />
-        <stop offset="1" stopColor="#fdce58" />
-      </linearGradient>
-    </defs>
-    <g id="Layer_2" data-name="Layer 2">
-      <g id="Layer_1-2" data-name="Layer 1">
-        <path
-          className="cls-1"
-          d="M1263.05,2297.61c-569.6,0-1034.57-465.43-1034.57-1034.56,0-569.6,465.44-1034.57,1034.57-1034.57,569.6,0,1034.56,465.44,1034.56,1034.57C2297.61,1832.65,1832.65,2297.61,1263.05,2297.61Z"
-        />
-        <path d="M1250,2500C562.5,2500,0,1937.5,0,1250S562.5,0,1250,0,2500,562.5,2500,1250,1937.5,2500,1250,2500Zm0-2222.06c-534.56,0-972.06,437.5-972.06,972.06s437.5,972.06,972.06,972.06,972.06-437.5,972.06-972.06S1784.56,277.94,1250,277.94Z" />
-        <path d="M1221.05,1588.59h541.67v270.84h-319.6v229.16H1165.18V1866.53H831.85c0-90.44-13.73-180.4,7.1-263.73,7.1-41.67,55.4-83.34,90.43-125,104.17-125,208.34-250,319.61-375,41.66-48.77,83.33-90.44,132.1-145.83H860.26V686.13h305.39V457h270.84V679h333.33c0,90.43,13.73,180.4-7.1,263.73-7.1,41.67-55.4,83.33-90.44,125-104.16,125-208.33,250-319.6,375C1311,1491.53,1269.35,1539.82,1221.05,1588.59Z" />
-      </g>
-    </g>
+    <circle cx="1250" cy="1250" r="1250" fill="#F4B728" />
+    <path
+      d="M1221.05,1588.59h541.67v270.84h-319.6v229.16H1165.18V1866.53H831.85c0-90.44-13.73-180.4,7.1-263.73,7.1-41.67,55.4-83.34,90.43-125,104.17-125,208.34-250,319.61-375,41.66-48.77,83.33-90.44,132.1-145.83H860.26V686.13h305.39V457h270.84V679h333.33c0,90.43,13.73,180.4-7.1,263.73-7.1,41.67-55.4,83.33-90.44,125-104.16,125-208.33,250-319.6,375C1311,1491.53,1269.35,1539.82,1221.05,1588.59Z"
+      fill="#000000"
+    />
   </svg>
 );
 import Link from "next/link";
@@ -928,10 +879,16 @@ export default function TransactionPage() {
         <main className="flex-1 flex items-center justify-center p-6">
           <div className="w-full max-w-2xl">
             <div className="text-center mb-10">
-              <h1 className="text-4xl font-bold font-space-grotesk text-foreground mb-3 tracking-tight">
+              <div className="flex items-center justify-center mb-3">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                  Testnet Live
+                </div>
+              </div>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-space-grotesk text-foreground mb-3 tracking-tight">
                 Send Tokens Privately
               </h1>
-              <p className="text-base text-muted-foreground leading-relaxed">
+              <p className="text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed">
                 Send tokens with complete privacy using zero-knowledge proofs
               </p>
             </div>
@@ -940,75 +897,75 @@ export default function TransactionPage() {
               <CardContent className="space-y-8 p-6 sm:p-8">
                 <div className="space-y-3">
                   <Label className="text-sm font-semibold text-foreground">Select Token</Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* SOL */}
+                  {/* Mobile: Compact select */}
+                  <div className="sm:hidden">
+                    <Select value={selectedToken} onValueChange={setSelectedToken}>
+                      <SelectTrigger aria-label="Select token">
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 flex items-center justify-center [&>svg]:w-4 [&>svg]:h-4">
+                            {selectedToken === "SOL" && <SOLIcon />}
+                            {selectedToken === "USDC" && <USDCIcon />}
+                            {selectedToken === "ORE" && <OREIcon />}
+                            {selectedToken === "ZCASH" && <ZCashIcon />}
+                          </div>
+                          <span className="font-medium text-sm">
+                            <SelectValue placeholder="Choose a token" />
+                          </span>
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="SOL" icon={<SOLIcon />}>SOL • Solana</SelectItem>
+                        <SelectItem value="USDC" disabled icon={<USDCIcon />}>USDC (soon)</SelectItem>
+                        <SelectItem value="ORE" disabled icon={<OREIcon />}>ORE (soon)</SelectItem>
+                        <SelectItem value="ZCASH" disabled icon={<ZCashIcon />}>ZCash (soon)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Desktop/Tablet: Compact segmented control */}
+                  <div className="hidden sm:flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setSelectedToken("SOL")}
-                      className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-200 ${selectedToken === "SOL"
-                          ? "border-primary bg-primary/10 shadow-sm ring-2 ring-primary/20"
-                          : "border-border bg-card hover:bg-muted/50 hover:border-primary/30"
-                        }`}
+                      className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                        selectedToken === "SOL"
+                          ? "border-primary text-primary bg-primary/10"
+                          : "border-border text-foreground hover:bg-muted/50"
+                      }`}
                     >
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-background shadow-sm">
-                        <SOLIcon />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="font-semibold text-foreground text-sm">SOL</p>
-                        <p className="text-xs text-muted-foreground">Solana</p>
-                      </div>
-                      {selectedToken === "SOL" && <CheckCircleIcon />}
+                      <SOLIcon className="w-4 h-4" />
+                      <span>SOL</span>
+                      {selectedToken === "SOL" && <CheckCircleIcon className="w-4 h-4" />}
                     </button>
 
-                    {/* USDC */}
                     <button
                       type="button"
-                      onClick={() => { }}
                       disabled
-                      className="flex items-center gap-3 p-4 rounded-xl border-2 border-border bg-muted/30 opacity-60 cursor-not-allowed"
+                      className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium opacity-60 cursor-not-allowed border-border"
                     >
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-background">
-                        <USDCIcon />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="font-semibold text-foreground text-sm">USDC</p>
-                        <p className="text-xs text-muted-foreground">Coming Soon</p>
-                      </div>
-                      <LockIcon />
+                      <USDCIcon />
+                      <span>USDC</span>
+                      <LockIcon className="w-4 h-4" />
                     </button>
 
-                    {/* ORE */}
                     <button
                       type="button"
-                      onClick={() => { }}
                       disabled
-                      className="flex items-center gap-3 p-4 rounded-xl border-2 border-border bg-muted/30 opacity-60 cursor-not-allowed"
+                      className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium opacity-60 cursor-not-allowed border-border"
                     >
-                      <div className="flex items-center justify-center w-10 h-10">
-                        <OREIcon />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="font-semibold text-foreground text-sm">ORE</p>
-                        <p className="text-xs text-muted-foreground">Coming Soon</p>
-                      </div>
-                      <LockIcon />
+                      <OREIcon />
+                      <span>ORE</span>
+                      <LockIcon className="w-4 h-4" />
                     </button>
 
-                    {/* ZCASH */}
                     <button
                       type="button"
-                      onClick={() => { }}
                       disabled
-                      className="flex items-center gap-3 p-4 rounded-xl border-2 border-border bg-muted/30 opacity-60 cursor-not-allowed"
+                      className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium opacity-60 cursor-not-allowed border-border"
                     >
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-background">
-                        <ZCashIcon />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <p className="font-semibold text-foreground text-sm">ZCash</p>
-                        <p className="text-xs text-muted-foreground">Coming Soon</p>
-                      </div>
-                      <LockIcon />
+                      <ZCashIcon />
+                      <span>ZCash</span>
+                      <LockIcon className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -1023,7 +980,7 @@ export default function TransactionPage() {
                     placeholder="0.0"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="text-xl h-14 font-semibold"
+                    className="text-base sm:text-lg md:text-xl h-12 sm:h-14 font-semibold"
                   />
 
                   {/* Amount percentage buttons */}
@@ -1213,9 +1170,6 @@ export default function TransactionPage() {
                                     <PlusIcon className="w-4 h-4" />
                                   </button>
                                 </div>
-                                <span className="text-xs text-muted-foreground pl-1 pt-1 sm:pt-0 sm:self-center">
-                                  SOL
-                                </span>
                               </div>
                               {amountError && (
                                 <p className="text-xs text-destructive font-medium flex items-center gap-1">
@@ -1365,14 +1319,17 @@ export default function TransactionPage() {
               </div>
             )}
 
-            <div className="text-center mt-10 space-y-3">
-              <p className="text-sm text-muted-foreground font-medium">Powered by Solana · SP1 zkVM · Cloak Protocol</p>
-              <div className="flex justify-center gap-6">
+            <div className="text-center mt-6 sm:mt-8 md:mt-10 space-y-3">
+              <p className="text-xs sm:text-sm text-muted-foreground font-medium px-4">Powered by Solana · SP1 zkVM · Cloak Protocol</p>
+              <p className="text-xs text-muted-foreground/70 px-4">
+                Running on Solana Devnet • RPC: api.devnet.solana.com
+              </p>
+              <div className="flex justify-center gap-4 sm:gap-6 px-4">
                 <Link
                   href="/privacy-demo"
-                  className="hover:text-foreground transition-colors font-bold text-primary inline-flex items-center gap-2 text-sm"
+                  className="hover:text-foreground transition-colors font-bold text-primary inline-flex items-center gap-2 text-xs sm:text-sm"
                 >
-                  <ShieldIcon />
+                  <ShieldIcon className="w-4 h-4" />
                   See Privacy in Action
                 </Link>
               </div>
