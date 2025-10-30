@@ -137,6 +137,7 @@ import { blake3 } from "@noble/hashes/blake3.js";
 import { indexerClient, type MerkleProof } from "@/lib/indexer-client";
 import { SP1ProofInputs, type SP1ProofResult } from "@/lib/sp1-prover";
 import { useSP1Prover } from "@/hooks/use-sp1-prover";
+import { getShieldPoolPDAs } from "@/lib/pda";
 
 const RELAY_URL = process.env.NEXT_PUBLIC_RELAY_URL || "http://localhost:3002";
 const SOLANA_RPC_URL =
@@ -531,21 +532,15 @@ export default function TransactionPage() {
       const note = generateNote(parsedAmountLamports, "localnet");
       saveNote(note);
 
-      const POOL_ADDRESS = process.env.NEXT_PUBLIC_POOL_ADDRESS;
-      const COMMITMENTS_ADDRESS = process.env.NEXT_PUBLIC_COMMITMENTS_ADDRESS;
       const PROGRAM_ID =
         process.env.NEXT_PUBLIC_PROGRAM_ID ||
         "c1oak6tetxYnNfvXKFkpn1d98FxtK7B68vBQLYQpWKp";
 
-      if (!POOL_ADDRESS || !COMMITMENTS_ADDRESS) {
-        throw new Error(
-          "Missing program configuration for pool or commitments- Contact support",
-        );
-      }
-
       const programId = new PublicKey(PROGRAM_ID);
-      const poolPubkey = new PublicKey(POOL_ADDRESS);
-      const commitmentsPubkey = new PublicKey(COMMITMENTS_ADDRESS);
+
+      // Derive PDAs instead of using hardcoded addresses
+      const { pool: poolPubkey, commitments: commitmentsPubkey } =
+        getShieldPoolPDAs(programId);
 
       const [poolAccount, commitmentsAccount] = await Promise.all([
         connection.getAccountInfo(poolPubkey),
@@ -757,9 +752,6 @@ export default function TransactionPage() {
         historicalRoot = Buffer.from(currentHash).toString("hex");
         console.log("📊 Recomputed root:", historicalRoot);
       }
-      
-      console.log("⏳ Waiting for historical root to be available on-chain...");
-      await waitForRootOnChain(historicalRoot);
 
       const fee = calculateFee(note.amount);
       const relayFeeBps = Math.ceil((fee * 10_000) / note.amount);
@@ -1518,14 +1510,12 @@ function sleep(ms: number) {
 }
 
 async function waitForRootOnChain(expectedRoot: string): Promise<void> {
-  const ROOTS_RING_ADDRESS = process.env.NEXT_PUBLIC_ROOTS_RING_ADDRESS;
-  if (!ROOTS_RING_ADDRESS) {
-    console.warn(
-      "⚠️ ROOTS_RING_ADDRESS not configured, skipping on-chain root verification"
-    );
-    await sleep(20000); // Fallback to 20 second wait
-    return;
-  }
+  const PROGRAM_ID =
+    process.env.NEXT_PUBLIC_PROGRAM_ID ||
+    "c1oak6tetxYnNfvXKFkpn1d98FxtK7B68vBQLYQpWKp";
+
+  const programId = new PublicKey(PROGRAM_ID);
+  const { rootsRing: rootsRingPubkey } = getShieldPoolPDAs(programId);
 
   const connection = new Connection(
     process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "http://localhost:8899",
@@ -1541,7 +1531,6 @@ async function waitForRootOnChain(expectedRoot: string): Promise<void> {
         `🔍 Checking on-chain roots (attempt ${attempt}/${maxAttempts})...`
       );
 
-      const rootsRingPubkey = new PublicKey(ROOTS_RING_ADDRESS);
       const accountInfo = await connection.getAccountInfo(rootsRingPubkey);
 
       if (!accountInfo) {
