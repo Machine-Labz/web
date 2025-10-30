@@ -141,7 +141,7 @@ import { getShieldPoolPDAs } from "@/lib/pda";
 
 const RELAY_URL = process.env.NEXT_PUBLIC_RELAY_URL || "http://localhost:3002";
 const SOLANA_RPC_URL =
-  process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com";
+  process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.testnet.solana.com";
 const LAMPORTS_PER_SOL = 1_000_000_000;
 
 export default function TransactionPage() {
@@ -1314,11 +1314,11 @@ export default function TransactionPage() {
             <div className="text-center mt-6 sm:mt-8 md:mt-10 space-y-3">
               <p className="text-xs sm:text-sm text-muted-foreground font-medium px-4">Powered by Solana · SP1 zkVM · Cloak Protocol</p>
               <p className="text-xs text-muted-foreground/70 px-4">
-                Running on Solana Devnet • RPC: api.devnet.solana.com
+                Running on Solana Testnet • RPC: api.testnet.solana.com
               </p>
               <div className="flex justify-center gap-4 sm:gap-6 px-4">
                 <Link
-                  href="/privacy-demo"
+                  href="/transactions"
                   className="hover:text-foreground transition-colors font-bold text-primary inline-flex items-center gap-2 text-xs sm:text-sm"
                 >
                   <ShieldIcon className="w-4 h-4" />

@@ -1930,7 +1930,7 @@ export default function CloakLandingPage() {
                 &copy; {new Date().getFullYear()} Cloak. All rights reserved.
               </p>
               <p className="text-xs text-muted-foreground/70">
-                Running on Solana Devnet • RPC: api.devnet.solana.com
+                Running on Solana Testnet • RPC: api.testnet.solana.com
               </p>
             </div>
             <div className="flex gap-4">
