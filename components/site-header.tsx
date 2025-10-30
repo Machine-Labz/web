@@ -1,7 +1,7 @@
 "use client";
 
 // Configuration - Set to true when dapp is ready for public use
-const DAPP_AVAILABLE = false;
+const DAPP_AVAILABLE = true;
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -24,11 +24,6 @@ const navItems = [
   {
     label: "Miners",
     href: "/miners",
-    external: false,
-  },
-  {
-    label: "Mobile Test",
-    href: "/mobile-wallet-test",
     external: false,
   },
   { label: "FAQ", href: "/#faq" },
