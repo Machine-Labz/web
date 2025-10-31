@@ -1929,9 +1929,6 @@ export default function CloakLandingPage() {
               <p className="text-xs text-muted-foreground">
                 &copy; {new Date().getFullYear()} Cloak. All rights reserved.
               </p>
-              <p className="text-xs text-muted-foreground/70">
-                Running on Solana Testnet • RPC: api.testnet.solana.com
-              </p>
             </div>
             <div className="flex gap-4">
               <Link

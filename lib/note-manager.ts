@@ -152,6 +152,29 @@ export function parseNote(jsonString: string): CloakNote {
 }
 
 /**
+ * Import a note from JSON string, avoiding duplicates
+ * Returns true if imported, false if already exists
+ */
+export function importNote(jsonString: string): { success: boolean; note?: CloakNote; error?: string } {
+  try {
+    const note = parseNote(jsonString);
+    const existingNotes = loadAllNotes();
+    
+    // Check if note with same commitment already exists
+    const exists = existingNotes.some((n) => n.commitment === note.commitment);
+    if (exists) {
+      return { success: false, error: "Note with this commitment already exists" };
+    }
+    
+    // Save the note
+    saveNote(note);
+    return { success: true, note };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to import note" };
+  }
+}
+
+/**
  * Format amount for display
  */
 export function formatAmount(lamports: number): string {

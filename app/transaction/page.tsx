@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import {
   Select,
   SelectContent,
@@ -31,6 +34,11 @@ import {
   XIcon,
   PlusIcon,
   MinusIcon,
+  Download,
+  Upload,
+  Trash2,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 // Token Logo SVGs
@@ -123,6 +131,11 @@ import {
   formatAmount,
   calculateFee,
   getDistributableAmount,
+  loadAllNotes,
+  loadWithdrawableNotes,
+  downloadNote,
+  importNote,
+  deleteNote,
   type CloakNote,
 } from "@/lib/note-manager";
 import {
@@ -141,9 +154,12 @@ import { SP1ProofInputs, type SP1ProofResult } from "@/lib/sp1-prover";
 import { useSP1Prover } from "@/hooks/use-sp1-prover";
 import { getShieldPoolPDAs } from "@/lib/pda";
 
+type TransactionMode = "simple" | "advanced";
+
 export default function TransactionPage() {
   const { connected, publicKey, sendTransaction } = useWallet();
   const { connection } = useConnection();
+  const [mode, setMode] = useState<TransactionMode>("simple");
   const [selectedToken, setSelectedToken] = useState("SOL");
   const [amount, setAmount] = useState("");
   const [outputs, setOutputs] = useState<Array<{ address: string; amount: string }>>([
@@ -157,6 +173,12 @@ export default function TransactionPage() {
   const [transactionStatus, setTransactionStatus] = useState<Status>("idle");
   const [transactionSignature, setTransactionSignature] = useState<string>("");
   const [showStatusModal, setShowStatusModal] = useState(false);
+
+  // Advanced mode state
+  const [notes, setNotes] = useState<CloakNote[]>([]);
+  const [noteInput, setNoteInput] = useState("");
+  const [showImportSection, setShowImportSection] = useState(false);
+  const [selectedNoteForWithdraw, setSelectedNoteForWithdraw] = useState<CloakNote | null>(null);
 
   const parsedAmountLamports = parseSolToLamports(amount);
   const amountLamports = parsedAmountLamports ?? 0;
@@ -240,7 +262,7 @@ export default function TransactionPage() {
             amount: lamportsToSolInput(distributableLamports),
           }));
         }
-        
+
         // Multiple recipients - distribute evenly
         const amountPerRecipient = Math.floor(distributableLamports / prev.length);
         const remainder = distributableLamports % prev.length;
@@ -418,6 +440,85 @@ export default function TransactionPage() {
     }
   }, [connected, publicKey, connection]);
 
+  // Load notes for Advanced mode
+  const refreshNotes = () => {
+    const allNotes = loadAllNotes();
+    setNotes(allNotes);
+  };
+
+  useEffect(() => {
+    if (mode === "advanced") {
+      refreshNotes();
+    }
+  }, [mode]);
+
+  // Calculate private balance (sum of all notes with depositSignature)
+  const privateBalance = notes
+    .filter((note) => note.depositSignature && note.leafIndex !== undefined)
+    .reduce((sum, note) => sum + note.amount, 0);
+  const privateBalanceShort = (() => {
+    const sol = privateBalance / 1_000_000_000;
+    const short = sol.toFixed(3);
+    return short.replace(/0+$/g, "").replace(/\.$/, "");
+  })();
+
+  // Handle note import from file
+  const handleImportFromFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target?.result as string;
+        const result = importNote(text);
+        if (result.success) {
+          toast.success("Note imported successfully!");
+          refreshNotes();
+          setNoteInput("");
+          setShowImportSection(false);
+        } else {
+          toast.error("Failed to import note", { description: result.error });
+        }
+      } catch (error: any) {
+        toast.error("Failed to import note", { description: error.message });
+      }
+    };
+    reader.readAsText(file);
+    // Reset input so same file can be selected again
+    event.target.value = "";
+  };
+
+  // Handle note import from text
+  const handleImportFromText = () => {
+    if (!noteInput.trim()) {
+      toast.error("Please paste note JSON");
+      return;
+    }
+    try {
+      const result = importNote(noteInput);
+      if (result.success) {
+        toast.success("Note imported successfully!");
+        refreshNotes();
+        setNoteInput("");
+        setShowImportSection(false);
+      } else {
+        toast.error("Failed to import note", { description: result.error });
+      }
+    } catch (error: any) {
+      toast.error("Failed to import note", { description: error.message });
+    }
+  };
+
+  // Handle note deletion
+  const handleDeleteNote = (commitment: string) => {
+    if (confirm("Are you sure you want to delete this note? This cannot be undone!")) {
+      deleteNote(commitment);
+      refreshNotes();
+      toast.success("Note deleted");
+    }
+  };
+
   const prover = useSP1Prover({
     onStart: () => {
       console.log("🔐 Starting proof generation...");
@@ -454,7 +555,9 @@ export default function TransactionPage() {
       return;
     }
 
-    if (!outputsValid) {
+    // In Advanced mode, only validate amount (recipients not needed for deposit)
+    // In Simple mode, validate everything (recipients needed for immediate withdraw)
+    if (mode === "simple" && !outputsValid) {
       if (!outputs.length) {
         toast.error("Add at least one recipient");
       } else if (!allAddressesProvided) {
@@ -465,7 +568,7 @@ export default function TransactionPage() {
         toast.error("Enter an amount for each recipient");
       } else if (!allAmountsPositive) {
         toast.error("Recipient amounts must be greater than zero");
-        } else if (shouldCheckAllocation) {
+      } else if (shouldCheckAllocation) {
         toast.error(
           remainingIsNegative
             ? `Reduce allocations by ${remainingSolDisplay} SOL`
@@ -475,13 +578,19 @@ export default function TransactionPage() {
       return;
     }
 
+    // Advanced mode: only check amount
+    if (mode === "advanced" && (!amount || parsedAmountLamports === null || parsedAmountLamports <= 0)) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+
     // Enforce amount conservation: outputs + fee == amount
     const fee = calculateFee(parsedAmountLamports);
     const totalAssignedWithFee = totalAssignedLamports + fee;
     const amountMismatch = Math.abs(totalAssignedWithFee - parsedAmountLamports);
-    
+
     let preparedOutputs: Array<{ address: string; amountLamports: number }>;
-    
+
     // For single recipient, auto-correct to distributable amount
     if (isSingleRecipient && amountMismatch > 1) {
       preparedOutputs = parsedOutputs.map((output, index) => {
@@ -678,11 +787,24 @@ export default function TransactionPage() {
       });
 
       setTransactionStatus("deposited");
-      toast.success("Deposit successful! Starting withdrawal...");
 
-      await performWithdraw(updatedNote, leafIndex, preparedOutputs);
-
-      toast.success("Transaction completed successfully!");
+      if (mode === "advanced") {
+        // In Advanced mode, just save the note and don't withdraw
+        refreshNotes();
+        toast.success("Deposit successful! Note saved. You can withdraw it later.");
+        setTransactionStatus("sent");
+      } else {
+        // Simple mode: continue with withdraw
+        toast.success("Deposit successful! Starting withdrawal...");
+        await performWithdraw(updatedNote, leafIndex, preparedOutputs);
+        // After successful withdraw in Simple mode, delete the used note
+        try {
+          deleteNote(updatedNote.commitment);
+        } catch (e) {
+          console.warn("Failed to delete used note", e);
+        }
+        toast.success("Transaction completed successfully!");
+      }
     } catch (error: any) {
       console.error("Transaction failed:", error);
       setTransactionStatus("error");
@@ -758,7 +880,7 @@ export default function TransactionPage() {
 
       const fee = calculateFee(note.amount);
       const relayFeeBps = Math.ceil((fee * 10_000) / note.amount);
-      
+
       // Validate amount conservation before generating proof
       const totalOutputs = outputsForWithdraw.reduce((sum, output) => sum + output.amountLamports, 0);
       const totalWithFee = totalOutputs + fee;
@@ -888,8 +1010,37 @@ export default function TransactionPage() {
               </p>
             </div>
 
+
+
             <Card className="w-full shadow-lg border-border/50">
               <CardContent className="space-y-8 p-6 sm:p-8">
+                {/* Advanced Mode: Private Balance Display */}
+                {mode === "advanced" && (
+                  <div className="border-2 border-primary/30 rounded-xl p-4 bg-primary/5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Private Balance</p>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <p className="text-2xl font-bold text-foreground mt-1 cursor-help underline decoration-dotted hover:no-underline">
+                                {privateBalanceShort} SOL
+                              </p>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom">
+                              {formatAmount(privateBalance)} SOL
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {notes.filter((n) => n.depositSignature && n.leafIndex !== undefined).length} note(s) ready to withdraw
+                        </p>
+                      </div>
+                      <ShieldIcon className="w-8 h-8 text-primary opacity-50" />
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-3">
                   <Label className="text-sm font-semibold text-foreground">Select Token</Label>
                   {/* Mobile: Compact select */}
@@ -922,11 +1073,10 @@ export default function TransactionPage() {
                     <button
                       type="button"
                       onClick={() => setSelectedToken("SOL")}
-                      className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                        selectedToken === "SOL"
+                      className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${selectedToken === "SOL"
                           ? "border-primary text-primary bg-primary/10"
                           : "border-border text-foreground hover:bg-muted/50"
-                      }`}
+                        }`}
                     >
                       <SOLIcon className="w-4 h-4" />
                       <span>SOL</span>
@@ -975,6 +1125,10 @@ export default function TransactionPage() {
                     placeholder="0.0"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
+                    onWheel={(e) => {
+                      e.currentTarget.blur();
+                      e.preventDefault();
+                    }}
                     className="text-base sm:text-lg md:text-xl h-12 sm:h-14 font-semibold"
                   />
 
@@ -1025,10 +1179,10 @@ export default function TransactionPage() {
                   <p className="text-sm text-muted-foreground font-medium">
                     Available:{" "}
                     <span className="text-foreground font-semibold">
-                    {connected && balance !== null
-                      ? `${formatAmount(balance)} SOL`
-                      : connected
-                      ? "Loading..."
+                      {connected && balance !== null
+                        ? `${formatAmount(balance)} SOL`
+                        : connected
+                          ? "Loading..."
                           : "Connect wallet"}
                     </span>
                   </p>
@@ -1079,11 +1233,11 @@ export default function TransactionPage() {
                           </div>
 
                           <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-2">
+                            <div className="space-y-2">
                               <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                 Address
                               </Label>
-                    <Input
+                              <Input
                                 placeholder="Enter wallet address"
                                 value={output.address}
                                 onChange={(e) => updateOutputAddress(index, e.target.value)}
@@ -1140,6 +1294,10 @@ export default function TransactionPage() {
                                       // Optionally format to fixed decimals on blur
                                       if (e.target.value && !isNaN(Number(e.target.value)))
                                         updateOutputAmount(index, parseFloat(e.target.value).toFixed(3).replace(/\.?0+$/, ""));
+                                    }}
+                                    onWheel={(e) => {
+                                      e.currentTarget.blur();
+                                      e.preventDefault();
                                     }}
                                     onKeyDown={e => handleAmountKeyDown(index, e)}
                                     className="font-mono text-sm h-11 flex-1 text-right disabled:bg-muted disabled:opacity-70 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -1212,8 +1370,8 @@ export default function TransactionPage() {
                           <span className="font-bold text-foreground">
                             {formatAmount(calculateFee(parsedAmountLamports))} SOL
                           </span>
-                  </div>
-                </div>
+                        </div>
+                      </div>
 
                       {/* Recipients Breakdown */}
                       {outputs.length > 0 && (
@@ -1251,8 +1409,8 @@ export default function TransactionPage() {
 
                 <Button
                   onClick={handleSendTokens}
-                  disabled={!connected || !amount || !outputsValid || isLoading}
-                  className={`w-full h-14 text-base font-bold shadow-lg hover:shadow-xl transition-all ${!connected || !amount || !outputsValid || isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                  disabled={!connected || !amount || (mode === "simple" && !outputsValid) || isLoading || (mode === "advanced" && (parsedAmountLamports === null || parsedAmountLamports <= 0))}
+                  className={`w-full h-14 text-base font-bold shadow-lg hover:shadow-xl transition-all ${!connected || !amount || (mode === "simple" && !outputsValid) || isLoading || (mode === "advanced" && (parsedAmountLamports === null || parsedAmountLamports <= 0)) ? "opacity-50 cursor-not-allowed" : ""}`}
                   size="lg"
                 >
                   {isLoading ? (
@@ -1263,10 +1421,276 @@ export default function TransactionPage() {
                   ) : (
                     <>
                       <SendIcon />
-                      Send Privately
+                      {mode === "advanced" ? "Deposit Privately" : "Send Privately"}
                     </>
                   )}
                 </Button>
+
+                {/* Bottom-right Mode Toggle (Simple <-> Pro) */}
+                <div className="flex justify-end">
+                  <TooltipProvider>
+                    <div className="flex items-center gap-3">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={() => setMode("simple")}
+                            className={`text-xs sm:text-sm font-semibold underline decoration-dotted ${mode === "simple" ? "text-foreground" : "text-muted-foreground"} hover:no-underline`}
+                            aria-label="Simple mode"
+                          >
+                            Simple
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          One-step private send: deposit, prove, and deliver funds to recipients immediately (no notes retained).
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Switch
+                        checked={mode === "advanced"}
+                        onCheckedChange={(checked) => setMode(checked ? "advanced" as TransactionMode : "simple")}
+                        aria-label="Toggle Simple / Pro"
+                      />
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={() => setMode("advanced")}
+                            className={`text-xs sm:text-sm font-semibold underline decoration-dotted ${mode === "advanced" ? "text-foreground" : "text-muted-foreground"} hover:no-underline`}
+                            aria-label="Pro mode"
+                          >
+                            Pro
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          Generate private notes and decide when to execute the withdrawal. Export/import notes and manage them across devices.
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </TooltipProvider>
+                </div>
+
+                {/* Advanced Mode: Notes Management */}
+                {mode === "advanced" && (
+                  <div className="space-y-4 mt-8 pt-6 border-t border-border">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-semibold text-foreground">Your Notes</Label>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          type="button"
+                          onClick={() => setShowImportSection(!showImportSection)}
+                          className="h-9"
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          {showImportSection ? "Hide Import" : "Import Note"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          type="button"
+                          onClick={refreshNotes}
+                          className="h-9"
+                        >
+                          Refresh
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Import Section */}
+                    {showImportSection && (
+                      <Card className="border-2 border-dashed border-border">
+                        <CardContent className="p-4 space-y-4">
+                          <Label className="text-sm font-semibold">Import Note</Label>
+
+                          <div className="space-y-2">
+                            <Label className="text-xs text-muted-foreground">Load from File</Label>
+                            <Input
+                              type="file"
+                              accept=".json"
+                              onChange={handleImportFromFile}
+                              className="text-sm"
+                            />
+                          </div>
+
+                          <div className="relative">
+                            <div className="absolute inset-0 flex items-center">
+                              <span className="w-full border-t" />
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                              <span className="bg-card px-2 text-muted-foreground">Or paste JSON</span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Textarea
+                              placeholder='{"version":"1.0","amount":...}'
+                              value={noteInput}
+                              onChange={(e) => setNoteInput(e.target.value)}
+                              className="font-mono text-xs min-h-[100px]"
+                              rows={6}
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleImportFromText}
+                              disabled={!noteInput.trim()}
+                              className="w-full"
+                            >
+                              Import from Text
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Notes List */}
+                    <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                      {notes.length === 0 ? (
+                        <div className="text-center p-6 bg-muted/30 rounded-xl border border-dashed border-border">
+                          <p className="text-sm text-muted-foreground">
+                            No notes found. Deposit tokens to create notes or import existing notes.
+                          </p>
+                        </div>
+                      ) : (
+                        notes.map((note) => {
+                          const isWithdrawable = note.depositSignature && note.leafIndex !== undefined;
+                          return (
+                            <Card key={note.commitment} className="border-2 border-border">
+                              <CardContent className="p-4">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1 space-y-2">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-mono text-muted-foreground">
+                                        {note.commitment.slice(0, 8)}...{note.commitment.slice(-8)}
+                                      </span>
+                                      {isWithdrawable && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20">
+                                          Ready
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-sm font-semibold">
+                                      {formatAmount(note.amount)} SOL
+                                    </p>
+                                    {note.depositSignature && (
+                                      <p className="text-xs text-muted-foreground font-mono">
+                                        Deposit: {note.depositSignature.slice(0, 8)}...
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => downloadNote(note)}
+                                      className="h-8 w-8 p-0"
+                                      title="Download note"
+                                    >
+                                      <Download className="h-4 w-4" />
+                                    </Button>
+                                    {isWithdrawable && (
+                                      <Button
+                                        variant="default"
+                                        size="sm"
+                                        onClick={() => {
+                                          setSelectedNoteForWithdraw(note);
+                                          const withdrawableAmount = note.amount - calculateFee(note.amount);
+                                          setAmount(formatAmount(note.amount));
+                                          setOutputs([{ address: publicKey?.toBase58() || "", amount: formatAmount(withdrawableAmount) }]);
+                                          toast.info("Note selected. Enter recipient details below to withdraw.");
+                                        }}
+                                        className="h-8"
+                                        title="Withdraw this note"
+                                      >
+                                        Withdraw
+                                      </Button>
+                                    )}
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleDeleteNote(note.commitment)}
+                                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                                      title="Delete note"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    {/* Withdraw Section for Selected Note */}
+                    {selectedNoteForWithdraw && mode === "advanced" && (
+                      <Card className="border-2 border-primary/30 bg-primary/5">
+                        <CardContent className="p-4 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-sm font-semibold">Withdraw Note</Label>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedNoteForWithdraw(null);
+                                setAmount("");
+                                setOutputs([{ address: "", amount: "" }]);
+                              }}
+                              className="h-8 w-8 p-0"
+                            >
+                              <XIcon className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Note: {formatAmount(selectedNoteForWithdraw.amount)} SOL (Fee: {formatAmount(calculateFee(selectedNoteForWithdraw.amount))} SOL)
+                          </p>
+                          <Button
+                            onClick={async () => {
+                              if (!selectedNoteForWithdraw.leafIndex || !selectedNoteForWithdraw.depositSignature) {
+                                toast.error("Note is not ready for withdrawal");
+                                return;
+                              }
+
+                              if (!outputsValid) {
+                                toast.error("Please enter valid recipient information");
+                                return;
+                              }
+
+                              setIsLoading(true);
+                              setTransactionStatus("generating_proof");
+                              setShowStatusModal(true);
+
+                              try {
+                                const withdrawOutputs = parsedOutputs.map((output) => ({
+                                  address: output.address,
+                                  amountLamports: output.amountLamports ?? 0,
+                                }));
+                                await performWithdraw(selectedNoteForWithdraw, selectedNoteForWithdraw.leafIndex, withdrawOutputs);
+                                toast.success("Withdrawal completed successfully!");
+                                setSelectedNoteForWithdraw(null);
+                                refreshNotes();
+                              } catch (error: any) {
+                                console.error("Withdraw failed:", error);
+                                setTransactionStatus("error");
+                                toast.error("Withdrawal failed", { description: error.message });
+                              } finally {
+                                setIsLoading(false);
+                              }
+                            }}
+                            disabled={!connected || !outputsValid || isLoading || !selectedNoteForWithdraw}
+                            className="w-full"
+                          >
+                            {isLoading ? "Processing..." : "Confirm Withdraw"}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                )}
 
                 {!connected && (
                   <div className="text-center p-6 bg-muted/50 rounded-xl border-2 border-dashed border-border">
@@ -1316,9 +1740,6 @@ export default function TransactionPage() {
 
             <div className="text-center mt-6 sm:mt-8 md:mt-10 space-y-3">
               <p className="text-xs sm:text-sm text-muted-foreground font-medium px-4">Powered by Solana · SP1 zkVM · Cloak Protocol</p>
-              <p className="text-xs text-muted-foreground/70 px-4">
-                Running on Solana Testnet • RPC: api.testnet.solana.com
-              </p>
               <div className="flex justify-center gap-4 sm:gap-6 px-4">
                 <Link
                   href="/transactions"
