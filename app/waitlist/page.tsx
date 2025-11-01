@@ -28,7 +28,7 @@ import {
 import { toast } from "sonner";
 import { ClientOnly } from "@/components/client-only";
 
-type Step = "connect" | "sign" | "email" | "success";
+type Step = "connect" | "sign" | "email";
 
 export default function WaitlistPage() {
   const { connected, publicKey, wallet, disconnect } = useWallet();
@@ -39,6 +39,7 @@ export default function WaitlistPage() {
   const [timestamp, setTimestamp] = useState<number | null>(null);
   const [registrationCount, setRegistrationCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     if (connected && publicKey) {
@@ -163,7 +164,7 @@ export default function WaitlistPage() {
       }
 
       setError(null); // Clear error on success
-      setStep("success");
+      setIsSuccess(true); // Show success inline
       toast.success("Success!", {
         description: "Your wallet and email have been saved",
       });
@@ -197,14 +198,14 @@ export default function WaitlistPage() {
     currentStep: Step;
     step: Step;
   }) => {
-    const stepOrder: Step[] = ["connect", "sign", "email", "success"];
+    const stepOrder: Step[] = ["connect", "sign", "email"];
     const currentIndex = stepOrder.indexOf(currentStep);
     const stepIndex = stepOrder.indexOf(step);
 
     if (stepIndex === -1) return null;
 
-    const isCompleted = stepIndex < currentIndex;
-    const isCurrent = stepIndex === currentIndex;
+    const isCompleted = stepIndex < currentIndex || isSuccess;
+    const isCurrent = stepIndex === currentIndex && !isSuccess;
 
     return (
       <div className="flex items-center">
@@ -325,24 +326,14 @@ export default function WaitlistPage() {
                     <div className="flex-1 h-0.5 bg-muted">
                       <div
                         className={`h-full transition-all ${
-                          step === "email" || step === "success"
+                          step === "email" || isSuccess
                             ? "bg-primary"
                             : "bg-muted"
                         }`}
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 flex-1">
-                    <StepIndicator currentStep={step} step="email" />
-                    <div className="flex-1 h-0.5 bg-muted">
-                      <div
-                        className={`h-full transition-all ${
-                          step === "success" ? "bg-primary" : "bg-muted"
-                        }`}
-                      />
-                    </div>
-                  </div>
-                  <StepIndicator currentStep={step} step="success" />
+                  <StepIndicator currentStep={step} step="email" />
                 </div>
 
                 {/* Step 1: Connect Wallet */}
@@ -434,7 +425,7 @@ export default function WaitlistPage() {
                       We'll notify you about early access opportunities.
                     </p>
                     
-                    {error && (
+                    {error && !isSuccess && (
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -449,69 +440,70 @@ export default function WaitlistPage() {
                       </motion.div>
                     )}
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="your.email@example.com"
-                        value={email}
-                        onChange={(e) => {
-                          setEmail(e.target.value);
-                          setError(null); // Clear error when user types
-                        }}
-                        className="w-full"
-                        disabled={isSubmitting}
-                      />
-                    </div>
-                    <Button
-                      onClick={handleSubmit}
-                      className="w-full rounded-full"
-                      size="lg"
-                      disabled={isSubmitting || !email}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Submitting...
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="w-4 h-4 mr-2" />
-                          Submit Interest Form
-                        </>
-                      )}
-                    </Button>
-                  </motion.div>
-                )}
-
-                {/* Step 4: Success */}
-                {step === "success" && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="text-center space-y-6 py-8"
-                  >
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10">
-                      <CheckCircle2 className="w-8 h-8 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold mb-2">
-                        You're all set!
-                      </h3>
-                      <p className="text-muted-foreground">
-                        Your wallet and email have been saved.
-                      </p>
-                    </div>
-                    {publicKey && (
-                      <div className="p-4 rounded-lg bg-muted">
-                        <p className="text-sm text-muted-foreground mb-1">
-                          Registered Wallet:
-                        </p>
-                        <p className="font-mono text-sm break-all">
-                          {publicKey.toBase58()}
-                        </p>
-                      </div>
+                    {isSuccess ? (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="text-center space-y-6 py-8"
+                      >
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10">
+                          <CheckCircle2 className="w-8 h-8 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="text-2xl font-bold mb-2">
+                            You're all set!
+                          </h3>
+                          <p className="text-muted-foreground">
+                            Your wallet and email have been saved.
+                          </p>
+                        </div>
+                        {publicKey && (
+                          <div className="p-4 rounded-lg bg-muted">
+                            <p className="text-sm text-muted-foreground mb-1">
+                              Registered Wallet:
+                            </p>
+                            <p className="font-mono text-sm break-all">
+                              {publicKey.toBase58()}
+                            </p>
+                          </div>
+                        )}
+                      </motion.div>
+                    ) : (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email Address</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="your.email@example.com"
+                            value={email}
+                            onChange={(e) => {
+                              setEmail(e.target.value);
+                              setError(null); // Clear error when user types
+                            }}
+                            className="w-full"
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                        <Button
+                          onClick={handleSubmit}
+                          className="w-full rounded-full"
+                          size="lg"
+                          disabled={isSubmitting || !email}
+                        >
+                          {isSubmitting ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Submitting...
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="w-4 h-4 mr-2" />
+                              Submit Interest Form
+                            </>
+                          )}
+                        </Button>
+                      </>
                     )}
                   </motion.div>
                 )}

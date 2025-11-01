@@ -114,9 +114,9 @@ export async function POST(request: Request) {
   
   try {
     const body: WaitlistRequest = await request.json();
-    const { wallet, email, signature, timestamp } = body;
+    let { wallet, email, signature, timestamp } = body;
 
-    // Validate inputs
+    // Validate inputs exist
     if (!wallet || !email || !signature || !timestamp) {
       return NextResponse.json(
         { error: 'Missing required fields: wallet, email, signature, and timestamp are required' },
@@ -124,20 +124,36 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate wallet address
-    let publicKey: PublicKey;
-    try {
-      publicKey = new PublicKey(wallet);
-    } catch {
+    // Sanitize and validate string lengths to prevent potential attacks
+    wallet = String(wallet).trim();
+    email = String(email).toLowerCase().trim();
+    signature = String(signature).trim();
+
+    if (wallet.length > 100 || email.length > 255 || signature.length > 500) {
       return NextResponse.json(
-        { error: 'Invalid wallet address' },
+        { error: 'Input exceeds maximum allowed length' },
         { status: 400, headers: corsHeaders(origin) }
       );
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    // Validate wallet address (Solana wallet addresses are 32-44 characters)
+    let publicKey: PublicKey;
+    try {
+      publicKey = new PublicKey(wallet);
+      // Additional check: ensure it's a valid base58 string
+      if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(wallet)) {
+        throw new Error('Invalid wallet format');
+      }
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid wallet address format' },
+        { status: 400, headers: corsHeaders(origin) }
+      );
+    }
+
+    // Validate email format (more strict validation)
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    if (!emailRegex.test(email) || email.length < 5) {
       return NextResponse.json(
         { error: 'Invalid email format' },
         { status: 400, headers: corsHeaders(origin) }
@@ -177,13 +193,13 @@ export async function POST(request: Request) {
                null;
     const userAgent = request.headers.get('user-agent') || null;
 
-    // Store in database
+    // Store in database using parameterized queries (prevents SQL injection)
     try {
       // First check if wallet or email already exists
       const existing = await query<{ wallet_address: string; email: string }>(
         `SELECT wallet_address, email FROM beta_interest 
          WHERE wallet_address = $1 OR email = $2`,
-        [wallet, email.toLowerCase().trim()]
+        [wallet, email]
       );
 
       if (existing.length > 0) {
@@ -194,7 +210,7 @@ export async function POST(request: Request) {
             { status: 409, headers: corsHeaders(origin) }
           );
         }
-        if (existingRecord.email === email.toLowerCase().trim()) {
+        if (existingRecord.email === email) {
           return NextResponse.json(
             { error: 'This email address is already registered' },
             { status: 409, headers: corsHeaders(origin) }
@@ -202,16 +218,16 @@ export async function POST(request: Request) {
         }
       }
 
-      // Insert new record
+      // Insert new record using parameterized query (SQL injection safe)
       await query(
         `INSERT INTO beta_interest (wallet_address, email, signature, ip_address, user_agent)
          VALUES ($1, $2, $3, $4, $5)`,
-        [wallet, email.toLowerCase().trim(), signature, ip, userAgent]
+        [wallet, email, signature, ip, userAgent]
       );
 
       console.log('Waitlist registration successful:', {
         wallet,
-        email: email.toLowerCase().trim(),
+        email,
         signatureVerified: true,
         timestamp: new Date().toISOString(),
       });
