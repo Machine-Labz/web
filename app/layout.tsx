@@ -60,7 +60,7 @@ export default function RootLayout({
         >
           <WalletContextProvider>{children}</WalletContextProvider>
         </ThemeProvider>
-        <Toaster position="top-center" />
+        <Toaster position='top-right' />
         <Analytics />
       </body>
     </html>

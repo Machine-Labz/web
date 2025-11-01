@@ -22,18 +22,23 @@ import {
   FileSignature,
   Loader2,
   Rocket,
+  LogOut,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ClientOnly } from "@/components/client-only";
 
 type Step = "connect" | "sign" | "email" | "success";
 
-export default function BetaInterestPage() {
-  const { connected, publicKey, wallet } = useWallet();
+export default function WaitlistPage() {
+  const { connected, publicKey, wallet, disconnect } = useWallet();
   const [step, setStep] = useState<Step>("connect");
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [signature, setSignature] = useState<string | null>(null);
+  const [timestamp, setTimestamp] = useState<number | null>(null);
+  const [registrationCount, setRegistrationCount] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (connected && publicKey) {
@@ -41,7 +46,25 @@ export default function BetaInterestPage() {
     }
   }, [connected, publicKey]);
 
+  useEffect(() => {
+    // Fetch registration count on mount
+    const fetchCount = async () => {
+      try {
+        const response = await fetch("/api/waitlist");
+        const data = await response.json();
+        if (response.ok) {
+          setRegistrationCount(data.count);
+        }
+      } catch (error) {
+        console.error("Failed to fetch registration count:", error);
+      }
+    };
+    fetchCount();
+  }, []);
+
   const handleSignMessage = async () => {
+    setError(null); // Clear any previous errors
+    
     if (!wallet?.adapter || !publicKey) {
       toast.error("Wallet not connected");
       return;
@@ -60,13 +83,17 @@ export default function BetaInterestPage() {
     }
 
     try {
-      const message = new TextEncoder().encode(
-        `Cloak Mainnet Beta Interest Form\n\nWallet: ${publicKey.toBase58()}\nTimestamp: ${Date.now()}`
-      );
+      // Generate timestamp for message
+      const messageTimestamp = Date.now();
+      
+      // Simple message for receiving updates
+      const message = `Sign up for Cloak waitlist. By signing this message, you confirm ownership of this wallet to receive notifications. Wallet: ${publicKey.toBase58()} | Timestamp: ${messageTimestamp}`;
 
-      const sig = await adapter.signMessage(message);
+      const encodedMessage = new TextEncoder().encode(message);
+      const sig = await adapter.signMessage(encodedMessage);
       const signatureBase58 = Buffer.from(sig).toString("base64");
       setSignature(signatureBase58);
+      setTimestamp(messageTimestamp);
       setStep("email");
       toast.success("Message signed", {
         description: "Please enter your email to complete the registration",
@@ -80,16 +107,22 @@ export default function BetaInterestPage() {
   };
 
   const handleSubmit = async () => {
+    setError(null); // Clear any previous errors
+    
     if (!email) {
+      const errorMsg = "Please enter your email address";
+      setError(errorMsg);
       toast.error("Email required", {
-        description: "Please enter your email address",
+        description: errorMsg,
       });
       return;
     }
 
-    if (!publicKey || !signature) {
+    if (!publicKey || !signature || !timestamp) {
+      const errorMsg = "Please complete all steps";
+      setError(errorMsg);
       toast.error("Missing information", {
-        description: "Please complete all steps",
+        description: errorMsg,
       });
       return;
     }
@@ -97,8 +130,10 @@ export default function BetaInterestPage() {
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
+      const errorMsg = "Please enter a valid email address";
+      setError(errorMsg);
       toast.error("Invalid email", {
-        description: "Please enter a valid email address",
+        description: errorMsg,
       });
       return;
     }
@@ -106,7 +141,7 @@ export default function BetaInterestPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/beta", {
+      const response = await fetch("/api/waitlist", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -115,23 +150,40 @@ export default function BetaInterestPage() {
           wallet: publicKey.toBase58(),
           email,
           signature,
+          timestamp,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to submit interest form");
+        const errorMsg = data.error || "Failed to submit interest form";
+        setError(errorMsg);
+        throw new Error(errorMsg);
       }
 
+      setError(null); // Clear error on success
       setStep("success");
       toast.success("Success!", {
-        description: "Your interest has been registered for Cloak Mainnet Beta",
+        description: "Your wallet and email have been saved",
       });
+      
+      // Refresh registration count
+      try {
+        const countResponse = await fetch("/api/waitlist");
+        const countData = await countResponse.json();
+        if (countResponse.ok) {
+          setRegistrationCount(countData.count);
+        }
+      } catch (error) {
+        console.error("Failed to refresh count:", error);
+      }
     } catch (error: any) {
       console.error("Error submitting form:", error);
+      const errorMsg = error.message || "Failed to submit interest form";
+      setError(errorMsg);
       toast.error("Submission failed", {
-        description: error.message || "Failed to submit interest form",
+        description: errorMsg,
       });
     } finally {
       setIsSubmitting(false);
@@ -228,12 +280,24 @@ export default function BetaInterestPage() {
                 <Rocket className="w-8 h-8 md:w-10 md:h-10 text-primary" />
               </motion.div>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                Cloak Mainnet Beta
+                Join the Waitlist
               </h1>
               <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto">
-                Join the waitlist for early access to Cloak's private
-                transaction layer on Solana mainnet.
+                Get early access to Cloak's private transaction layer on Solana.
               </p>
+              {registrationCount !== null && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20"
+                >
+                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  <span className="text-sm font-medium">
+                    <span className="font-bold text-primary">{registrationCount.toLocaleString()}</span> wallets registered
+                  </span>
+                </motion.div>
+              )}
             </div>
 
             <Card className="border-2 backdrop-blur-sm bg-card/95">
@@ -339,6 +403,19 @@ export default function BetaInterestPage() {
                       <FileSignature className="w-4 h-4 mr-2" />
                       Sign Message
                     </Button>
+                    <Button
+                      onClick={async () => {
+                        await disconnect();
+                        setStep("connect");
+                        toast.info("Wallet disconnected");
+                      }}
+                      variant="outline"
+                      className="w-full rounded-full"
+                      size="lg"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Disconnect Wallet
+                    </Button>
                   </motion.div>
                 )}
 
@@ -354,8 +431,24 @@ export default function BetaInterestPage() {
                       <span>Step 3: Enter Your Email</span>
                     </div>
                     <p className="text-muted-foreground">
-                      We'll notify you when the mainnet beta is available.
+                      We'll notify you about early access opportunities.
                     </p>
+                    
+                    {error && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex items-start gap-3 p-4 rounded-lg bg-destructive/10 border border-destructive/20"
+                      >
+                        <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-destructive">
+                            {error}
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                    
                     <div className="space-y-2">
                       <Label htmlFor="email">Email Address</Label>
                       <Input
@@ -363,7 +456,10 @@ export default function BetaInterestPage() {
                         type="email"
                         placeholder="your.email@example.com"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          setError(null); // Clear error when user types
+                        }}
                         className="w-full"
                         disabled={isSubmitting}
                       />
@@ -404,8 +500,7 @@ export default function BetaInterestPage() {
                         You're all set!
                       </h3>
                       <p className="text-muted-foreground">
-                        Your interest has been registered. We'll notify you when
-                        Cloak Mainnet Beta is available.
+                        Your wallet and email have been saved.
                       </p>
                     </div>
                     {publicKey && (

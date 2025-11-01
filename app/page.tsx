@@ -384,14 +384,14 @@ export default function CloakLandingPage() {
                   transition={{ duration: 0.2 }}
                   className="w-full sm:w-auto"
                 >
-                  <Link href="/beta" className="block w-full sm:w-auto">
+                  <Link href="/waitlist" className="block w-full sm:w-auto">
                     <Button
                       size="lg"
                       variant="outline"
                       className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base border-primary/20 hover:bg-primary/5 bg-transparent text-foreground"
                     >
                       <Rocket className="mr-2 size-4" />
-                      Join Mainnet Beta
+                      Join Waitlist
                     </Button>
                   </Link>
                 </motion.div>
