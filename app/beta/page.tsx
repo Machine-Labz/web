@@ -8,8 +8,21 @@ import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, Mail, Wallet, FileSignature, Loader2, Rocket } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  CheckCircle2,
+  Mail,
+  Wallet,
+  FileSignature,
+  Loader2,
+  Rocket,
+} from "lucide-react";
 import { toast } from "sonner";
 import { ClientOnly } from "@/components/client-only";
 
@@ -36,7 +49,10 @@ export default function BetaInterestPage() {
 
     // Check if wallet supports signMessage
     const adapter = wallet.adapter;
-    if (!("signMessage" in adapter) || typeof adapter.signMessage !== "function") {
+    if (
+      !("signMessage" in adapter) ||
+      typeof adapter.signMessage !== "function"
+    ) {
       toast.error("Signing not supported", {
         description: "Your wallet does not support message signing",
       });
@@ -122,7 +138,13 @@ export default function BetaInterestPage() {
     }
   };
 
-  const StepIndicator = ({ currentStep, step }: { currentStep: Step; step: Step }) => {
+  const StepIndicator = ({
+    currentStep,
+    step,
+  }: {
+    currentStep: Step;
+    step: Step;
+  }) => {
     const stepOrder: Step[] = ["connect", "sign", "email", "success"];
     const currentIndex = stepOrder.indexOf(currentStep);
     const stepIndex = stepOrder.indexOf(step);
@@ -154,9 +176,9 @@ export default function BetaInterestPage() {
   };
 
   return (
-    <div className="flex min-h-[100dvh] flex-col">
+    <div className="flex h-[100dvh] flex-col overflow-hidden">
       <SiteHeader />
-      <main className="flex-1">
+      <main className="flex-1 flex items-center justify-center overflow-y-auto">
         {/* Animated Background */}
         <div
           className="fixed inset-0 top-0 left-0 w-full h-full -z-20 pointer-events-none"
@@ -165,9 +187,7 @@ export default function BetaInterestPage() {
             width: "100vw",
           }}
         >
-          <div
-            className="absolute inset-0 h-full w-full bg-white dark:bg-black [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]"
-          >
+          <div className="absolute inset-0 h-full w-full bg-white dark:bg-black [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]">
             {[...Array(12)].map((_, i) => (
               <motion.div
                 key={`h-${i}`}
@@ -191,28 +211,28 @@ export default function BetaInterestPage() {
         </div>
 
         {/* Content */}
-        <section className="container mx-auto px-4 py-12 md:py-20 lg:py-32">
+        <section className="container mx-auto px-4 py-8 w-full">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="max-w-2xl mx-auto"
           >
-            <div className="text-center mb-12">
+            <div className="text-center mb-6 md:mb-8">
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-6"
+                className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary/10 mb-4 md:mb-6"
               >
-                <Rocket className="w-10 h-10 text-primary" />
+                <Rocket className="w-8 h-8 md:w-10 md:h-10 text-primary" />
               </motion.div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                 Cloak Mainnet Beta
               </h1>
-              <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-                Join the waitlist for early access to Cloak's private transaction layer on Solana
-                mainnet.
+              <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto">
+                Join the waitlist for early access to Cloak's private
+                transaction layer on Solana mainnet.
               </p>
             </div>
 
@@ -223,7 +243,7 @@ export default function BetaInterestPage() {
                   Complete these steps to register your interest
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-8">
+              <CardContent className="space-y-6 md:space-y-8">
                 {/* Step Indicators */}
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-4 flex-1">
@@ -241,7 +261,9 @@ export default function BetaInterestPage() {
                     <div className="flex-1 h-0.5 bg-muted">
                       <div
                         className={`h-full transition-all ${
-                          step === "email" || step === "success" ? "bg-primary" : "bg-muted"
+                          step === "email" || step === "success"
+                            ? "bg-primary"
+                            : "bg-muted"
                         }`}
                       />
                     </div>
@@ -291,19 +313,28 @@ export default function BetaInterestPage() {
                       <span>Step 2: Sign Message</span>
                     </div>
                     <p className="text-muted-foreground">
-                      Sign a message to prove wallet ownership. This doesn't cost any fees.
+                      Sign a message to prove wallet ownership. This doesn't
+                      cost any fees.
                     </p>
                     {publicKey && (
                       <div className="p-4 rounded-lg bg-muted">
-                        <p className="text-sm text-muted-foreground mb-1">Wallet Address:</p>
-                        <p className="font-mono text-sm break-all">{publicKey.toBase58()}</p>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          Wallet Address:
+                        </p>
+                        <p className="font-mono text-sm break-all">
+                          {publicKey.toBase58()}
+                        </p>
                       </div>
                     )}
                     <Button
                       onClick={handleSignMessage}
                       className="w-full rounded-full"
                       size="lg"
-                      disabled={!wallet?.adapter || !publicKey || !("signMessage" in (wallet?.adapter || {}))}
+                      disabled={
+                        !wallet?.adapter ||
+                        !publicKey ||
+                        !("signMessage" in (wallet?.adapter || {}))
+                      }
                     >
                       <FileSignature className="w-4 h-4 mr-2" />
                       Sign Message
@@ -369,16 +400,22 @@ export default function BetaInterestPage() {
                       <CheckCircle2 className="w-8 h-8 text-primary" />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-bold mb-2">You're all set!</h3>
+                      <h3 className="text-2xl font-bold mb-2">
+                        You're all set!
+                      </h3>
                       <p className="text-muted-foreground">
-                        Your interest has been registered. We'll notify you when Cloak Mainnet Beta
-                        is available.
+                        Your interest has been registered. We'll notify you when
+                        Cloak Mainnet Beta is available.
                       </p>
                     </div>
                     {publicKey && (
                       <div className="p-4 rounded-lg bg-muted">
-                        <p className="text-sm text-muted-foreground mb-1">Registered Wallet:</p>
-                        <p className="font-mono text-sm break-all">{publicKey.toBase58()}</p>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          Registered Wallet:
+                        </p>
+                        <p className="font-mono text-sm break-all">
+                          {publicKey.toBase58()}
+                        </p>
                       </div>
                     )}
                   </motion.div>
@@ -391,4 +428,3 @@ export default function BetaInterestPage() {
     </div>
   );
 }
-
