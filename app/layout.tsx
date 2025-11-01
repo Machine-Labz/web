@@ -58,12 +58,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <WalletContextProvider>
-            {children}
-          </WalletContextProvider>
+          <WalletContextProvider>{children}</WalletContextProvider>
         </ThemeProvider>
         <Toaster position="top-center" />
-        <Analytics/>
+        <Analytics />
       </body>
     </html>
   );
