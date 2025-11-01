@@ -429,11 +429,11 @@ export default function WaitlistPage() {
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex items-start gap-3 p-4 rounded-lg bg-destructive/10 border border-destructive/20"
+                        className="flex items-start gap-3 p-4 rounded-lg bg-red-50 dark:bg-red-950/40 border-2 border-red-500 dark:border-red-800"
                       >
-                        <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                        <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-500 flex-shrink-0 mt-0.5" />
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-destructive">
+                          <p className="text-sm font-semibold text-red-800 dark:text-red-500">
                             {error}
                           </p>
                         </div>
