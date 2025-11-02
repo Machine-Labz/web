@@ -819,7 +819,7 @@ export default function CloakLandingPage() {
 
                 <div className="pt-2 sm:pt-4">
                   <a
-                    href="https://github.com/cloak-labz/cloak/tree/main/packages/cloak-sdk"
+                    href="https://github.com/Machine-Labz/cloak/blob/feat/cloak-sdk/tooling/cloak-sdk/README.md"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-block w-full sm:w-auto"
