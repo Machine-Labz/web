@@ -14,9 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { Buffer } from "buffer";
 import {
-  generateNote,
+  generateNoteFromWallet,
   saveNote,
   updateNote,
   formatAmount,
@@ -24,6 +23,11 @@ import {
   type CloakNote,
 } from "@/lib/note-manager";
 import { getShieldPoolPDAs } from "@/lib/pda";
+import {
+  buildDepositInstruction,
+  executeDeposit,
+  type DepositTransactionParams,
+} from "@/lib/deposit-service";
 
 const PROGRAM_ID = process.env.NEXT_PUBLIC_PROGRAM_ID;
 if (!PROGRAM_ID) {
@@ -57,7 +61,8 @@ export default function DepositFlow() {
 
     setState("generating");
     const amountLamports = Math.floor(parseFloat(amount) * 1_000_000_000);
-    const newNote = generateNote(amountLamports, "localnet");
+    // Use new wallet-based note generation with view/spend key support
+    const newNote = generateNoteFromWallet(amountLamports, "localnet");
     setNote(newNote);
     // Save immediately so the note is not lost if the user navigates away
     saveNote(newNote);
@@ -65,33 +70,19 @@ export default function DepositFlow() {
       window.dispatchEvent(new Event("cloak-notes-updated"));
     }
     setState("idle");
-    toast.success("Note generated and saved locally");
+    toast.success("Note generated (v2.0 with scanning support)");
   };
 
   const handleDeposit = async () => {
-    const programId = new PublicKey(PROGRAM_ID!);
-    if (!programId) {
-      throw new Error("PROGRAM_ID not set");
-    }
-
-    console.log("handleDeposit");
-
-    console.log("connected", connected);
-    console.log("publicKey", publicKey?.toBase58());
-    console.log("note", note);
-
     if (!connected || !publicKey || !note) {
       toast.error("Please connect wallet and generate a note first");
-      console.log("error", "Please connect wallet and generate a note first");
       return;
     }
 
     setState("depositing");
 
-
-    const { pool: poolPubkey, commitments: commitmentsPubkey } =
-      getShieldPoolPDAs();
-      
+    const { pool: poolPubkey, commitments: commitmentsPubkey } = getShieldPoolPDAs();
+    
     console.log("=".repeat(60));
     console.log("🚀 STARTING DEPOSIT FLOW");
     console.log("=".repeat(60));
@@ -105,6 +96,16 @@ export default function DepositFlow() {
     });
 
     try {
+      // Build deposit instruction
+      const depositParams: DepositTransactionParams = {
+        note,
+        poolPubkey,
+        commitmentsPubkey,
+        userPubkey: publicKey,
+        programId: PROGRAM_ID!,
+      };
+      
+      const depositIx = buildDepositInstruction(depositParams);
       const commitmentBytes = Buffer.from(note.commitment, "hex");
 
       const depositIx = createDepositInstruction({
@@ -207,15 +208,26 @@ export default function DepositFlow() {
       const depositSlot = txDetails?.slot ?? 0;
       console.log("Transaction details:", { slot: depositSlot, blockTime: txDetails?.blockTime });
 
-      // Submit to indexer
+      // Submit to indexer with proper encryption
       console.log("📡 Submitting to indexer at:", INDEXER_URL);
-      const encryptedOutput = btoa(
-        JSON.stringify({
-          amount: note.amount,
-          r: note.r,
-          sk_spend: note.sk_spend,
-        })
-      );
+      
+      // Get wallet's public view key for self-encryption
+      const publicViewKey = getPublicViewKey();
+      const pvkBytes = Buffer.from(publicViewKey, "hex");
+      
+      // Prepare note data
+      const noteData: NoteData = {
+        amount: note.amount,
+        r: note.r,
+        sk_spend: note.sk_spend,
+        commitment: note.commitment,
+      };
+      
+      // Encrypt note data using public view key (so we can scan it later)
+      const encryptedNote = encryptNoteForRecipient(noteData, pvkBytes);
+      
+      // Encode encrypted note as base64 JSON
+      const encryptedOutput = btoa(JSON.stringify(encryptedNote));
 
       const depositPayload = {
         leaf_commit: note.commitment,
@@ -297,7 +309,9 @@ export default function DepositFlow() {
         signature,
         leafIndex,
         slot: depositSlot,
-        explorerUrl: `https://explorer.solana.com/tx/${signature}?cluster=custom&customUrl=${encodeURIComponent(rpcUrl)}`,
+        explorerUrl: `https://explorer.solana.com/tx/${signature}${
+          rpcUrl ? `?cluster=custom&customUrl=${encodeURIComponent(rpcUrl)}` : ''
+        }`,
       });
 
       setState("success");
@@ -439,7 +453,9 @@ export default function DepositFlow() {
               </p>
               {depositSignature && (
                 <a
-                  href={`https://explorer.solana.com/tx/${depositSignature}?cluster=custom&customUrl=${encodeURIComponent(RPC_URL)}`}
+                  href={`https://explorer.solana.com/tx/${depositSignature}${
+                    RPC_URL ? `?cluster=custom&customUrl=${encodeURIComponent(RPC_URL)}` : ''
+                  }`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-primary hover:underline block"

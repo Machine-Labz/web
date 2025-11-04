@@ -1,5 +1,14 @@
 import { blake3 } from "@noble/hashes/blake3.js";
 import { Buffer } from "buffer";
+import {
+  generateCloakKeys,
+  type CloakKeyPair,
+  type ViewKey,
+  scanNotesForWallet,
+  exportKeys,
+  importKeys,
+} from "./keys";
+import { getCurrentNetwork, type SolanaNetwork } from "./network";
 
 export interface CloakNote {
   version: string;
@@ -16,15 +25,18 @@ export interface CloakNote {
     pathIndices: number[];
   };
   timestamp: number;
-  network: "localnet" | "devnet" | "mainnet";
+  network: SolanaNetwork;
 }
 
 const STORAGE_KEY = "cloak_notes";
+const KEYS_STORAGE_KEY = "cloak_wallet_keys";
 
 /**
  * Generate a new Cloak note
+ * @deprecated Use generateNoteFromWallet instead (v2.0 with key hierarchy)
  */
-export function generateNote(amountLamports: number, network: "localnet" | "devnet" | "mainnet" = "localnet"): CloakNote {
+export function generateNote(amountLamports: number, network?: SolanaNetwork): CloakNote {
+  const actualNetwork = network || getCurrentNetwork();
   const skSpend = new Uint8Array(32);
   const rBytes = new Uint8Array(32);
   crypto.getRandomValues(skSpend);
@@ -51,7 +63,7 @@ export function generateNote(amountLamports: number, network: "localnet" | "devn
     sk_spend: skSpendHex,
     r: rHex,
     timestamp: Date.now(),
-    network,
+    network: actualNetwork,
   };
 }
 
@@ -202,4 +214,161 @@ export function getDistributableAmount(amountLamports: number): number {
  */
 export function getRecipientAmount(amountLamports: number): number {
   return getDistributableAmount(amountLamports);
+}
+
+// ============================================================================
+// New Key Management Functions (v2.0)
+// ============================================================================
+
+/**
+ * Generate or load wallet keys
+ * Creates new keys if none exist, otherwise loads from storage
+ */
+export function getOrCreateWalletKeys(): CloakKeyPair {
+  if (typeof window === "undefined") {
+    // Server-side: generate temporary keys
+    return generateCloakKeys();
+  }
+
+  const stored = localStorage.getItem(KEYS_STORAGE_KEY);
+  
+  if (stored) {
+    try {
+      return importKeys(stored);
+    } catch (e) {
+      console.error("Failed to load stored keys, generating new ones:", e);
+    }
+  }
+  
+  // Generate new keys
+  const keys = generateCloakKeys();
+  localStorage.setItem(KEYS_STORAGE_KEY, exportKeys(keys));
+  return keys;
+}
+
+/**
+ * Export wallet keys for backup
+ * WARNING: This exports secret keys! User must store securely.
+ */
+export function exportWalletKeys(): string {
+  const keys = getOrCreateWalletKeys();
+  return exportKeys(keys);
+}
+
+/**
+ * Import wallet keys from backup
+ */
+export function importWalletKeys(keysJson: string): void {
+  try {
+    const keys = importKeys(keysJson);
+    localStorage.setItem(KEYS_STORAGE_KEY, exportKeys(keys));
+  } catch (e) {
+    throw new Error("Invalid keys format: " + (e as Error).message);
+  }
+}
+
+/**
+ * Get public view key for receiving encrypted notes
+ */
+export function getPublicViewKey(): string {
+  const keys = getOrCreateWalletKeys();
+  return keys.view.pvk_hex;
+}
+
+/**
+ * Get view key for scanning
+ */
+export function getViewKey(): ViewKey {
+  const keys = getOrCreateWalletKeys();
+  return keys.view;
+}
+
+/**
+ * Generate a note using the wallet's spend key
+ * Network is automatically detected from NEXT_PUBLIC_SOLANA_RPC_URL
+ */
+export function generateNoteFromWallet(
+  amountLamports: number,
+  network?: SolanaNetwork
+): CloakNote {
+  const actualNetwork = network || getCurrentNetwork();
+  const keys = getOrCreateWalletKeys();
+  const rBytes = new Uint8Array(32);
+  crypto.getRandomValues(rBytes);
+
+  const sk_spend = Buffer.from(keys.spend.sk_spend_hex, "hex");
+  const pk_spend = Buffer.from(keys.spend.pk_spend_hex, "hex");
+  
+  const amountBytes = new Uint8Array(8);
+  new DataView(amountBytes.buffer).setBigUint64(0, BigInt(amountLamports), true);
+
+  const commitmentInput = new Uint8Array(8 + 32 + 32);
+  commitmentInput.set(amountBytes, 0);
+  commitmentInput.set(rBytes, 8);
+  commitmentInput.set(pk_spend, 40);
+  const commitmentBytes = blake3(commitmentInput);
+
+  return {
+    version: "2.0", // Updated version for new key scheme
+    amount: amountLamports,
+    commitment: Buffer.from(commitmentBytes).toString("hex"),
+    sk_spend: keys.spend.sk_spend_hex,
+    r: Buffer.from(rBytes).toString("hex"),
+    timestamp: Date.now(),
+    network: actualNetwork,
+  };
+}
+
+/**
+ * Scan encrypted outputs from indexer and add discovered notes to wallet
+ * Returns number of new notes found
+ */
+export async function scanAndImportNotes(
+  encryptedOutputs: string[]
+): Promise<number> {
+  const viewKey = getViewKey();
+  const discoveredNotes = scanNotesForWallet(encryptedOutputs, viewKey);
+  
+  let importedCount = 0;
+  const existingNotes = loadAllNotes();
+  
+  for (const noteData of discoveredNotes) {
+    // Check if we already have this note
+    const exists = existingNotes.some(
+      (n) => n.commitment === noteData.commitment
+    );
+    
+    if (!exists) {
+      // Convert NoteData to CloakNote format
+      const note: CloakNote = {
+        version: "2.0",
+        amount: noteData.amount,
+        commitment: noteData.commitment,
+        sk_spend: noteData.sk_spend,
+        r: noteData.r,
+        timestamp: Date.now(),
+        network: getCurrentNetwork(),
+      };
+      
+      saveNote(note);
+      importedCount++;
+    }
+  }
+  
+  return importedCount;
+}
+
+/**
+ * Download wallet keys as a backup file
+ */
+export function downloadWalletKeys(): void {
+  const keysJson = exportWalletKeys();
+  const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(keysJson)}`;
+
+  const exportFileDefaultName = `cloak-wallet-keys-${Date.now()}.json`;
+
+  const linkElement = document.createElement("a");
+  linkElement.setAttribute("href", dataUri);
+  linkElement.setAttribute("download", exportFileDefaultName);
+  linkElement.click();
 }

@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -17,16 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Send,
-  Wallet,
-  Shield,
   Plus,
-  Lock,
-  CheckCircle,
-  ExternalLink,
-  X,
   ShieldIcon,
-  ExternalLinkIcon,
   CheckCircleIcon,
   LockIcon,
   SendIcon,
@@ -37,85 +29,8 @@ import {
   Download,
   Upload,
   Trash2,
-  Eye,
-  EyeOff,
 } from "lucide-react";
-
-// Token Logo SVGs
-const SOLIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => {
-  const uid = React.useId().replace(/:/g, "");
-  const g1 = `sol-grad-1-${uid}`;
-  const g2 = `sol-grad-2-${uid}`;
-  const g3 = `sol-grad-3-${uid}`;
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 397.7 311.7" className={className}>
-      <defs>
-        <linearGradient id={g1} gradientUnits="userSpaceOnUse" x1="360.8791" y1="351.4553" x2="141.213" y2="-69.2936" gradientTransform="matrix(1 0 0 -1 0 314)">
-          <stop offset="0" style={{ stopColor: "#00FFA3" }} />
-          <stop offset="1" style={{ stopColor: "#DC1FFF" }} />
-        </linearGradient>
-        <linearGradient id={g2} gradientUnits="userSpaceOnUse" x1="264.8291" y1="401.6014" x2="45.163" y2="-19.1475" gradientTransform="matrix(1 0 0 -1 0 314)">
-          <stop offset="0" style={{ stopColor: "#00FFA3" }} />
-          <stop offset="1" style={{ stopColor: "#DC1FFF" }} />
-        </linearGradient>
-        <linearGradient id={g3} gradientUnits="userSpaceOnUse" x1="312.5484" y1="376.688" x2="92.8822" y2="-44.061" gradientTransform="matrix(1 0 0 -1 0 314)">
-          <stop offset="0" style={{ stopColor: "#00FFA3" }} />
-          <stop offset="1" style={{ stopColor: "#DC1FFF" }} />
-        </linearGradient>
-      </defs>
-      <path fill={`url(#${g1})`} d="M64.6,237.9c2.4-2.4,5.7-3.8,9.2-3.8h317.4c5.8,0,8.7,7,4.6,11.1l-62.7,62.7c-2.4,2.4-5.7,3.8-9.2,3.8H6.5  c-5.8,0-8.7-7-4.6-11.1L64.6,237.9z" />
-      <path fill={`url(#${g2})`} d="M64.6,3.8C67.1,1.4,70.4,0,73.8,0h317.4c5.8,0,8.7,7,4.6,11.1l-62.7,62.7c-2.4,2.4-5.7,3.8-9.2,3.8H6.5  c-5.8,0-8.7-7-4.6-11.1L64.6,3.8z" />
-      <path fill={`url(#${g3})`} d="M333.1,120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8,0-8.7,7-4.6,11.1l62.7,62.7c2.4,2.4,5.7,3.8,9.2,3.8h317.4  c5.8,0,8.7-7,4.6-11.1L333.1,120.1z" />
-    </svg>
-  );
-};
-
-const USDCIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    data-name="86977684-12db-4850-8f30-233a7c267d11"
-    viewBox="0 0 2000 2000"
-    className="w-6 h-6"
-  >
-    <path
-      d="M1000 2000c554.17 0 1000-445.83 1000-1000S1554.17 0 1000 0 0 445.83 0 1000s445.83 1000 1000 1000z"
-      fill="#2775ca"
-    />
-    <path
-      d="M1275 1158.33c0-145.83-87.5-195.83-262.5-216.66-125-16.67-150-50-150-108.34s41.67-95.83 125-95.83c75 0 116.67 25 137.5 87.5 4.17 12.5 16.67 20.83 29.17 20.83h66.66c16.67 0 29.17-12.5 29.17-29.16v-4.17c-16.67-91.67-91.67-162.5-187.5-170.83v-100c0-16.67-12.5-29.17-33.33-33.34h-62.5c-16.67 0-29.17 12.5-33.34 33.34v95.83c-125 16.67-204.16 100-204.16 204.17 0 137.5 83.33 191.66 258.33 212.5 116.67 20.83 154.17 45.83 154.17 112.5s-58.34 112.5-137.5 112.5c-108.34 0-145.84-45.84-158.34-108.34-4.16-16.66-16.66-25-29.16-25h-70.84c-16.66 0-29.16 12.5-29.16 29.17v4.17c16.66 104.16 83.33 179.16 220.83 200v100c0 16.66 12.5 29.16 33.33 33.33h62.5c16.67 0 29.17-12.5 33.34-33.33v-100c125-20.84 208.33-108.34 208.33-220.84z"
-      fill="#fff"
-    />
-    <path
-      d="M787.5 1595.83c-325-116.66-491.67-479.16-370.83-800 62.5-175 200-308.33 370.83-370.83 16.67-8.33 25-20.83 25-41.67V325c0-16.67-8.33-29.17-25-33.33-4.17 0-12.5 0-16.67 4.16-395.83 125-612.5 545.84-487.5 941.67 75 233.33 254.17 412.5 487.5 487.5 16.67 8.33 33.34 0 37.5-16.67 4.17-4.16 4.17-8.33 4.17-16.66v-58.34c0-12.5-12.5-29.16-25-37.5zM1229.17 295.83c-16.67-8.33-33.34 0-37.5 16.67-4.17 4.17-4.17 8.33-4.17 16.67v58.33c0 16.67 12.5 33.33 25 41.67 325 116.66 491.67 479.16 370.83 800-62.5 175-200 308.33-370.83 370.83-16.67 8.33-25 20.83-25 41.67V1700c0 16.67 8.33 29.17 25 33.33 4.17 0 12.5 0 16.67-4.16 395.83-125 612.5-545.84 487.5-941.67-75-237.5-258.34-416.67-487.5-491.67z"
-      fill="#fff"
-    />
-  </svg>
-);
-
-const OREIcon = () => (
-  <svg viewBox="0 0 216 216" fill="#f97316" className="w-6 h-6">
-    <path
-      fillRule="evenodd"
-      clipRule="evenodd"
-      d="M0.279729 192.083C-0.0932429 191.71 -0.0932429 191.105 0.279729 190.732L28.4516 162.56C28.7938 162.218 28.8414 161.68 28.5687 161.28C18.1262 145.969 12.0208 127.463 12.0208 107.532C12.0208 54.7824 54.7823 12.0209 107.531 12.0209C127.463 12.0209 145.969 18.1262 161.28 28.569C161.68 28.8417 162.218 28.7941 162.56 28.4519L190.732 0.279816C191.105 -0.0932721 191.71 -0.0932721 192.083 0.279816L215.72 23.9178C216.093 24.2908 216.093 24.8953 215.72 25.2683L187.365 53.6242C187.026 53.9626 186.975 54.493 187.239 54.8921C197.227 69.9845 203.042 88.0792 203.042 107.532C203.042 160.281 160.28 203.042 107.531 203.042C88.0788 203.042 69.9844 197.226 54.8921 187.24C54.4929 186.976 53.9625 187.026 53.6241 187.365L25.2681 215.721C24.8952 216.094 24.2904 216.094 23.9174 215.721L0.279729 192.083ZM107.531 167.703C97.5942 167.703 88.2198 165.294 79.96 161.029C69.2678 155.507 60.4434 146.875 54.6844 136.327C50.0141 127.774 47.3597 117.963 47.3597 107.532C47.3597 74.2996 74.2995 47.3598 107.531 47.3598C117.963 47.3598 127.774 50.0144 136.327 54.6845C146.874 60.4431 155.507 69.2685 161.029 79.9603C165.294 88.2205 167.703 97.5943 167.703 107.532C167.703 140.763 140.763 167.703 107.531 167.703Z"
-    />
-  </svg>
-);
-
-const ZCashIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 2500 2500"
-    className="w-6 h-6"
-  >
-    <circle cx="1250" cy="1250" r="1250" fill="#F4B728" />
-    <path
-      d="M1221.05,1588.59h541.67v270.84h-319.6v229.16H1165.18V1866.53H831.85c0-90.44-13.73-180.4,7.1-263.73,7.1-41.67,55.4-83.34,90.43-125,104.17-125,208.34-250,319.61-375,41.66-48.77,83.33-90.44,132.1-145.83H860.26V686.13h305.39V457h270.84V679h333.33c0,90.43,13.73,180.4-7.1,263.73-7.1,41.67-55.4,83.33-90.44,125-104.16,125-208.33,250-319.6,375C1311,1491.53,1269.35,1539.82,1221.05,1588.59Z"
-      fill="#000000"
-    />
-  </svg>
-);
-
+import { SOLIcon, USDCIcon, OREIcon, ZCashIcon } from "@/components/icons/token-icons";
 import Link from "next/link";
 import { toast } from "sonner";
 import { DappHeader } from "@/components/dapp-header";
@@ -125,22 +40,21 @@ import {
   type TransactionStatus as Status,
 } from "@/components/ui/transaction-status";
 import {
-  generateNote,
+  generateNoteFromWallet,
   saveNote,
   updateNote,
   formatAmount,
   calculateFee,
-  getDistributableAmount,
   loadAllNotes,
-  loadWithdrawableNotes,
   downloadNote,
   importNote,
   deleteNote,
+  getPublicViewKey,
   type CloakNote,
 } from "@/lib/note-manager";
+import { encryptNoteForRecipient } from "@/lib/keys";
 import {
   ComputeBudgetProgram,
-  Connection,
   LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
@@ -635,7 +549,7 @@ export default function TransactionPage() {
         publicKey: publicKey?.toBase58(),
       });
 
-      const note = generateNote(parsedAmountLamports, "localnet");
+      const note = generateNoteFromWallet(parsedAmountLamports);
       saveNote(note);
 
       const PROGRAM_ID =
@@ -725,13 +639,21 @@ export default function TransactionPage() {
         throw new Error("NEXT_PUBLIC_INDEXER_URL not set");
       }
 
-      const encryptedOutput = btoa(
-        JSON.stringify({
+      // Encrypt note data using proper encryption (v2.0 with view/spend keys)
+      const publicViewKey = getPublicViewKey();
+      const pvkBytes = Buffer.from(publicViewKey, "hex");
+      
+      const encryptedNote = encryptNoteForRecipient(
+        {
           amount: note.amount,
           r: note.r,
           sk_spend: note.sk_spend,
-        })
+          commitment: note.commitment,
+        },
+        pvkBytes
       );
+      
+      const encryptedOutput = btoa(JSON.stringify(encryptedNote));
 
       const depositResponse = await fetch(`${INDEXER_URL}/api/v1/deposit`, {
         method: "POST",
