@@ -481,9 +481,9 @@ export default function CloakLandingPage() {
               transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
               className="relative mx-auto max-w-5xl px-4"
             >
-              <div className="rounded-xl overflow-hidden shadow-2xl border border-border/40 bg-gradient-to-b from-background to-card/20 p-4 sm:p-6 md:p-8">
+      <div className="relative rounded-xl overflow-hidden shadow-2xl border border-border/40 bg-gradient-to-b from-background to-card/20 p-4 sm:p-6 md:p-8">
+                <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-black/10 dark:ring-white/10 z-0"></div>
                 <CloakPrivacyAnimation />
-                <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-black/10 dark:ring-white/10"></div>
               </div>
               <div className="absolute -bottom-3 sm:-bottom-6 -right-3 sm:-right-6 -z-10 h-[150px] sm:h-[200px] md:h-[300px] w-[150px] sm:w-[200px] md:w-[300px] rounded-full bg-gradient-to-br from-primary/30 to-accent/30 blur-3xl opacity-70"></div>
               <div className="absolute -top-3 sm:-top-6 -left-3 sm:-left-6 -z-10 h-[150px] sm:h-[200px] md:h-[300px] w-[150px] sm:w-[200px] md:w-[300px] rounded-full bg-gradient-to-br from-accent/30 to-primary/30 blur-3xl opacity-70"></div>
