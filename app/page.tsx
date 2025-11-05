@@ -170,8 +170,8 @@ export default function CloakLandingPage() {
               max-h-[300vw]
               "
             style={{
-              minHeight: '100dvh',
-              width: '100vw',
+              minHeight: "100dvh",
+              width: "100vw",
             }}
           >
             <div
@@ -207,7 +207,9 @@ export default function CloakLandingPage() {
                   key={`v-${i}`}
                   className="absolute top-0 w-px h-full bg-gradient-to-b from-transparent via-primary to-transparent"
                   style={{
-                    left: `calc(${12.5 + i * 12.5}% * (min(100vw,100dvh)/100vw))`,
+                    left: `calc(${
+                      12.5 + i * 12.5
+                    }% * (min(100vw,100dvh)/100vw))`,
                   }}
                   animate={{
                     opacity: [0, 0.6, 0],
@@ -291,7 +293,9 @@ export default function CloakLandingPage() {
                   className="absolute w-1 h-1 bg-primary/60 rounded-full"
                   style={{
                     left: `calc(${10 + i * 12}% * (min(100vw,100dvh)/100vw))`,
-                    top: `calc(${20 + (i % 4) * 20}% * (min(100vw,100dvh)/100vw))`,
+                    top: `calc(${
+                      20 + (i % 4) * 20
+                    }% * (min(100vw,100dvh)/100vw))`,
                   }}
                   animate={{
                     y: [-30, 30, -30],
@@ -339,7 +343,8 @@ export default function CloakLandingPage() {
               </h1>
 
               <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground mb-4 sm:mb-6 max-w-3xl mx-auto text-balance px-4">
-                Deposit into the shared privacy pool and withdraw without revealing which deposit you own.
+                Deposit into the shared privacy pool and withdraw without
+                revealing which deposit you own.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
                 <motion.div
@@ -349,7 +354,10 @@ export default function CloakLandingPage() {
                   className="w-full sm:w-auto"
                 >
                   {DAPP_AVAILABLE ? (
-                    <Link href="/transaction" className="block w-full sm:w-auto">
+                    <Link
+                      href="/transaction"
+                      className="block w-full sm:w-auto"
+                    >
                       <Button
                         size="lg"
                         className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -448,25 +456,33 @@ export default function CloakLandingPage() {
                     <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary">
                       {timeLeft.days.toString().padStart(2, "0")}
                     </div>
-                    <div className="text-[10px] sm:text-xs text-muted-foreground">Days</div>
+                    <div className="text-[10px] sm:text-xs text-muted-foreground">
+                      Days
+                    </div>
                   </div>
                   <div className="text-center">
                     <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary">
                       {timeLeft.hours.toString().padStart(2, "0")}
                     </div>
-                    <div className="text-[10px] sm:text-xs text-muted-foreground">Hours</div>
+                    <div className="text-[10px] sm:text-xs text-muted-foreground">
+                      Hours
+                    </div>
                   </div>
                   <div className="text-center">
                     <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary">
                       {timeLeft.minutes.toString().padStart(2, "0")}
                     </div>
-                    <div className="text-[10px] sm:text-xs text-muted-foreground">Min</div>
+                    <div className="text-[10px] sm:text-xs text-muted-foreground">
+                      Min
+                    </div>
                   </div>
                   <div className="text-center">
                     <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary">
                       {timeLeft.seconds.toString().padStart(2, "0")}
                     </div>
-                    <div className="text-[10px] sm:text-xs text-muted-foreground">Sec</div>
+                    <div className="text-[10px] sm:text-xs text-muted-foreground">
+                      Sec
+                    </div>
                   </div>
                 </div>
                 <p className="text-center text-[10px] sm:text-xs text-muted-foreground mt-2 px-2">
@@ -481,7 +497,7 @@ export default function CloakLandingPage() {
               transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
               className="relative mx-auto max-w-5xl px-4"
             >
-      <div className="relative rounded-xl overflow-hidden shadow-2xl border border-border/40 bg-gradient-to-b from-background to-card/20 p-4 sm:p-6 md:p-8">
+              <div className="relative rounded-xl overflow-hidden shadow-2xl border border-border/40 bg-gradient-to-b from-background to-card/20 p-4 sm:p-6 md:p-8">
                 <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-black/10 dark:ring-white/10 z-0"></div>
                 <CloakPrivacyAnimation />
               </div>
@@ -513,8 +529,9 @@ export default function CloakLandingPage() {
                 Built for True Privacy & Security
               </h2>
               <p className="mx-auto max-w-[700px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
-                Cloak uses zero-knowledge proofs, Merkle tree commitments,
-                and optional proof-of-work mining to provide cryptographically guaranteed privacy.
+                Cloak uses zero-knowledge proofs, Merkle tree commitments, and
+                optional proof-of-work mining to provide cryptographically
+                guaranteed privacy.
               </p>
             </motion.div>
 
@@ -594,7 +611,8 @@ export default function CloakLandingPage() {
                       </h3>
                       <p className="text-muted-foreground leading-relaxed">
                         On-chain ZK verification happens in seconds. Proof
-                        generation uses SP1 for efficient Groth16 circuit execution.
+                        generation uses SP1 for efficient Groth16 circuit
+                        execution.
                       </p>
                     </div>
                     <div className="pt-4">
@@ -628,8 +646,9 @@ export default function CloakLandingPage() {
                 Build Private Transfers into Your App
               </h2>
               <p className="mx-auto max-w-[700px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
-                Complete TypeScript SDK for integrating Cloak's privacy protocol into your application.
-                One method handles everything - deposit, proof generation, and withdrawal.
+                Complete TypeScript SDK for integrating Cloak's privacy protocol
+                into your application. One method handles everything - deposit,
+                proof generation, and withdrawal.
               </p>
             </motion.div>
 
@@ -649,7 +668,9 @@ export default function CloakLandingPage() {
                     <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-yellow-500"></div>
                     <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-green-500"></div>
                     <div className="flex-1 text-center">
-                      <span className="text-gray-400 text-[10px] sm:text-xs font-mono">example.ts</span>
+                      <span className="text-gray-400 text-[10px] sm:text-xs font-mono">
+                        example.ts
+                      </span>
                     </div>
                   </div>
 
@@ -658,99 +679,119 @@ export default function CloakLandingPage() {
                     <div className="p-3 sm:p-4 md:p-6 min-w-max">
                       <pre className="text-[10px] sm:text-xs md:text-sm text-gray-100 font-mono leading-relaxed">
                         <code className="block whitespace-pre">
-                        <span className="text-purple-400">import</span>{" "}
-                        <span className="text-white">{"{"}</span>{" "}
-                        <span className="text-blue-300">CloakSDK</span>{" "}
-                        <span className="text-white">{"}"}</span>{" "}
-                        <span className="text-purple-400">from</span>{" "}
-                        <span className="text-green-400">"@cloak/sdk"</span>
-                        <span className="text-white">;</span>
-                        <br /><br />
-                        <span className="text-gray-500">// Initialize client</span>
-                        <br />
-                        <span className="text-purple-400">const</span>{" "}
-                        <span className="text-blue-300">client</span>{" "}
-                        <span className="text-white">=</span>{" "}
-                        <span className="text-purple-400">new</span>{" "}
-                        <span className="text-yellow-300">CloakSDK</span>
-                        <span className="text-white">({"{"}</span>
-                        <br />
-                        &nbsp;&nbsp;<span className="text-blue-300">network</span>
-                        <span className="text-white">:</span>{" "}
-                        <span className="text-green-400">"devnet"</span>
-                        <span className="text-white">,</span>
-                        <br />
-                        &nbsp;&nbsp;<span className="text-blue-300">programId</span>
-                        <span className="text-white">,</span>{" "}
-                        <span className="text-blue-300">poolAddress</span>
-                        <span className="text-white">,</span>
-                        <br />
-                        &nbsp;&nbsp;<span className="text-blue-300">apiUrl</span>
-                        <br />
-                        <span className="text-white">{"})"}</span>
-                        <span className="text-white">;</span>
-                        <br /><br />
-                        <span className="text-gray-500">// Generate note</span>
-                        <br />
-                        <span className="text-purple-400">const</span>{" "}
-                        <span className="text-blue-300">note</span>{" "}
-                        <span className="text-white">=</span>{" "}
-                        <span className="text-blue-300">client</span>
-                        <span className="text-white">.</span>
-                        <span className="text-yellow-300">generateNote</span>
-                        <span className="text-white">(</span>
-                        <span className="text-orange-400">1_000_000_000</span>
-                        <span className="text-white">)</span>
-                        <span className="text-white">;</span>
-                        <br /><br />
-                        <span className="text-gray-500">// Complete flow: deposit + transfer</span>
-                        <br />
-                        <span className="text-purple-400">const</span>{" "}
-                        <span className="text-blue-300">result</span>{" "}
-                        <span className="text-white">=</span>{" "}
-                        <span className="text-purple-400">await</span>{" "}
-                        <span className="text-blue-300">client</span>
-                        <span className="text-white">.</span>
-                        <span className="text-yellow-300">privateTransfer</span>
-                        <span className="text-white">(</span>
-                        <br />
-                        &nbsp;&nbsp;<span className="text-blue-300">connection</span>
-                        <span className="text-white">,</span>{" "}
-                        <span className="text-blue-300">wallet</span>
-                        <span className="text-white">,</span>{" "}
-                        <span className="text-blue-300">note</span>
-                        <span className="text-white">,</span>
-                        <br />
-                        &nbsp;&nbsp;<span className="text-white">[</span>
-                        <br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-white">{"{"}</span>{" "}
-                        <span className="text-blue-300">recipient</span>
-                        <span className="text-white">:</span>{" "}
-                        <span className="text-blue-300">addr1</span>
-                        <span className="text-white">,</span>{" "}
-                        <span className="text-blue-300">amount</span>
-                        <span className="text-white">:</span>{" "}
-                        <span className="text-orange-400">500_000_000</span>{" "}
-                        <span className="text-white">{"}"}</span>
-                        <span className="text-white">,</span>
-                        <br />
-                        &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-white">{"{"}</span>{" "}
-                        <span className="text-blue-300">recipient</span>
-                        <span className="text-white">:</span>{" "}
-                        <span className="text-blue-300">addr2</span>
-                        <span className="text-white">,</span>{" "}
-                        <span className="text-blue-300">amount</span>
-                        <span className="text-white">:</span>{" "}
-                        <span className="text-orange-400">492_500_000</span>{" "}
-                        <span className="text-white">{"}"}</span>
-                        <br />
-                        &nbsp;&nbsp;<span className="text-white">]</span>
-                        <br />
-                        <span className="text-white">)</span>
-                        <span className="text-white">;</span>
-                        <br /><br />
-                        <span className="text-green-400">✅</span>{" "}
-                        <span className="text-gray-400">// Done! Handles deposit + proof + withdrawal</span>
+                          <span className="text-purple-400">import</span>{" "}
+                          <span className="text-white">{"{"}</span>{" "}
+                          <span className="text-blue-300">CloakSDK</span>{" "}
+                          <span className="text-white">{"}"}</span>{" "}
+                          <span className="text-purple-400">from</span>{" "}
+                          <span className="text-green-400">"@cloak/sdk"</span>
+                          <span className="text-white">;</span>
+                          <br />
+                          <br />
+                          <span className="text-gray-500">
+                            // Initialize client
+                          </span>
+                          <br />
+                          <span className="text-purple-400">const</span>{" "}
+                          <span className="text-blue-300">client</span>{" "}
+                          <span className="text-white">=</span>{" "}
+                          <span className="text-purple-400">new</span>{" "}
+                          <span className="text-yellow-300">CloakSDK</span>
+                          <span className="text-white">({"{"}</span>
+                          <br />
+                          &nbsp;&nbsp;
+                          <span className="text-blue-300">network</span>
+                          <span className="text-white">:</span>{" "}
+                          <span className="text-green-400">"devnet"</span>
+                          <span className="text-white">,</span>
+                          <br />
+                          &nbsp;&nbsp;
+                          <span className="text-blue-300">programId</span>
+                          <span className="text-white">,</span>{" "}
+                          <span className="text-blue-300">poolAddress</span>
+                          <span className="text-white">,</span>
+                          <br />
+                          &nbsp;&nbsp;
+                          <span className="text-blue-300">apiUrl</span>
+                          <br />
+                          <span className="text-white">{"})"}</span>
+                          <span className="text-white">;</span>
+                          <br />
+                          <br />
+                          <span className="text-gray-500">
+                            // Generate note
+                          </span>
+                          <br />
+                          <span className="text-purple-400">const</span>{" "}
+                          <span className="text-blue-300">note</span>{" "}
+                          <span className="text-white">=</span>{" "}
+                          <span className="text-blue-300">client</span>
+                          <span className="text-white">.</span>
+                          <span className="text-yellow-300">generateNote</span>
+                          <span className="text-white">(</span>
+                          <span className="text-orange-400">1_000_000_000</span>
+                          <span className="text-white">)</span>
+                          <span className="text-white">;</span>
+                          <br />
+                          <br />
+                          <span className="text-gray-500">
+                            // Complete flow: deposit + transfer
+                          </span>
+                          <br />
+                          <span className="text-purple-400">const</span>{" "}
+                          <span className="text-blue-300">result</span>{" "}
+                          <span className="text-white">=</span>{" "}
+                          <span className="text-purple-400">await</span>{" "}
+                          <span className="text-blue-300">client</span>
+                          <span className="text-white">.</span>
+                          <span className="text-yellow-300">
+                            privateTransfer
+                          </span>
+                          <span className="text-white">(</span>
+                          <br />
+                          &nbsp;&nbsp;
+                          <span className="text-blue-300">connection</span>
+                          <span className="text-white">,</span>{" "}
+                          <span className="text-blue-300">wallet</span>
+                          <span className="text-white">,</span>{" "}
+                          <span className="text-blue-300">note</span>
+                          <span className="text-white">,</span>
+                          <br />
+                          &nbsp;&nbsp;<span className="text-white">[</span>
+                          <br />
+                          &nbsp;&nbsp;&nbsp;&nbsp;
+                          <span className="text-white">{"{"}</span>{" "}
+                          <span className="text-blue-300">recipient</span>
+                          <span className="text-white">:</span>{" "}
+                          <span className="text-blue-300">addr1</span>
+                          <span className="text-white">,</span>{" "}
+                          <span className="text-blue-300">amount</span>
+                          <span className="text-white">:</span>{" "}
+                          <span className="text-orange-400">500_000_000</span>{" "}
+                          <span className="text-white">{"}"}</span>
+                          <span className="text-white">,</span>
+                          <br />
+                          &nbsp;&nbsp;&nbsp;&nbsp;
+                          <span className="text-white">{"{"}</span>{" "}
+                          <span className="text-blue-300">recipient</span>
+                          <span className="text-white">:</span>{" "}
+                          <span className="text-blue-300">addr2</span>
+                          <span className="text-white">,</span>{" "}
+                          <span className="text-blue-300">amount</span>
+                          <span className="text-white">:</span>{" "}
+                          <span className="text-orange-400">492_500_000</span>{" "}
+                          <span className="text-white">{"}"}</span>
+                          <br />
+                          &nbsp;&nbsp;<span className="text-white">]</span>
+                          <br />
+                          <span className="text-white">)</span>
+                          <span className="text-white">;</span>
+                          <br />
+                          <br />
+                          <span className="text-green-400">✅</span>{" "}
+                          <span className="text-gray-400">
+                            // Done! Handles deposit + proof + withdrawal
+                          </span>
                         </code>
                       </pre>
                     </div>
@@ -824,7 +865,10 @@ export default function CloakLandingPage() {
                     rel="noopener noreferrer"
                     className="inline-block w-full sm:w-auto"
                   >
-                    <Button size="lg" className="rounded-full w-full sm:w-auto text-sm sm:text-base px-6">
+                    <Button
+                      size="lg"
+                      className="rounded-full w-full sm:w-auto text-sm sm:text-base px-6"
+                    >
                       View SDK Documentation
                       <ExternalLink className="ml-2 w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </Button>
@@ -852,8 +896,9 @@ export default function CloakLandingPage() {
                 Cloak Development Kit
               </h2>
               <p className="mx-auto max-w-[700px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
-                Rust tools and libraries for building with Cloak's privacy protocol.
-                Generate zero-knowledge proofs, run miners, and parse proofs with our comprehensive tooling.
+                Rust tools and libraries for building with Cloak's privacy
+                protocol. Generate zero-knowledge proofs, run miners, and parse
+                proofs with our comprehensive tooling.
               </p>
             </motion.div>
 
@@ -876,8 +921,10 @@ export default function CloakLandingPage() {
                     </h3>
                   </div>
                   <p className="text-muted-foreground text-base sm:text-lg">
-                    Generate zero-knowledge proofs for withdrawals using the SP1 guest program and host CLI.
-                    Local CPU proving (~2 min) or SP1 network TEE (~30-45 sec). Full circuit implementation with 6 constraints enforced.
+                    Generate zero-knowledge proofs for withdrawals using the SP1
+                    guest program and host CLI. Local CPU proving (~2 min) or
+                    SP1 network TEE (~30-45 sec). Full circuit implementation
+                    with 6 constraints enforced.
                   </p>
                 </div>
 
@@ -891,8 +938,10 @@ export default function CloakLandingPage() {
                     </h3>
                   </div>
                   <p className="text-muted-foreground text-base sm:text-lg">
-                    Run the standalone miner CLI to produce wildcard claims for the scramble registry.
-                    Earn fees by helping prioritize withdrawals during congestion. Automatic difficulty adjustment and claim lifecycle management.
+                    Run the standalone miner CLI to produce wildcard claims for
+                    the scramble registry. Earn fees by helping prioritize
+                    withdrawals during congestion. Automatic difficulty
+                    adjustment and claim lifecycle management.
                   </p>
                 </div>
 
@@ -906,8 +955,10 @@ export default function CloakLandingPage() {
                     </h3>
                   </div>
                   <p className="text-muted-foreground text-base sm:text-lg">
-                    Extract 260-byte Groth16 proofs from SP1 bundles, parse public inputs (104 bytes),
-                    and generate verification keys for on-chain verification. All tools support no_std for on-chain integration.
+                    Extract 260-byte Groth16 proofs from SP1 bundles, parse
+                    public inputs (104 bytes), and generate verification keys
+                    for on-chain verification. All tools support no_std for
+                    on-chain integration.
                   </p>
                 </div>
 
@@ -918,7 +969,10 @@ export default function CloakLandingPage() {
                     rel="noopener noreferrer"
                     className="w-full sm:w-auto"
                   >
-                    <Button size="lg" className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base">
+                    <Button
+                      size="lg"
+                      className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base"
+                    >
                       View Documentation
                       <ExternalLink className="ml-2 size-4" />
                     </Button>
@@ -968,72 +1022,100 @@ export default function CloakLandingPage() {
                     <div className="p-3 sm:p-4 md:p-6 min-w-max">
                       <pre className="text-[10px] sm:text-xs md:text-sm text-gray-100 font-mono leading-relaxed">
                         <code className="block whitespace-pre">
-                        <span className="text-green-400">$</span>{" "}
-                        <span className="text-gray-400"># Generate withdrawal proof</span>
-                        <br />
-                        <span className="text-green-400">$</span>{" "}
-                        <span className="text-white">cargo run</span>{" "}
-                        <span className="text-blue-400">--package</span>{" "}
-                        <span className="text-yellow-300">zk-guest-sp1-host</span>{" "}
-                        <span className="text-white">--</span>{" "}
-                        <span className="text-blue-400">--bin</span>{" "}
-                        <span className="text-yellow-300">cloak-zk</span>{" "}
-                        <span className="text-white">--</span>{" "}
-                        <span className="text-blue-400">prove</span>
-                        <br />
-                        &nbsp;&nbsp;<span className="text-blue-400">--private</span>{" "}
-                        <span className="text-yellow-300">private.json</span>
-                        <br />
-                        &nbsp;&nbsp;<span className="text-blue-400">--public</span>{" "}
-                        <span className="text-yellow-300">public.json</span>
-                        <br />
-                        &nbsp;&nbsp;<span className="text-blue-400">--outputs</span>{" "}
-                        <span className="text-yellow-300">outputs.json</span>
-                        <br />
-                        &nbsp;&nbsp;<span className="text-blue-400">--proof</span>{" "}
-                        <span className="text-yellow-300">out/proof.bin</span>
-                        <br />
-                        <br />
-                        <span className="text-yellow-300">📖</span>{" "}
-                        <span className="text-gray-300">Reading input files...</span>
-                        <br />
-                        <span className="text-green-400">✅</span>{" "}
-                        <span className="text-gray-300">Input files loaded</span>
-                        <br />
-                        <span className="text-yellow-300">🔑</span>{" "}
-                        <span className="text-gray-300">Generating proving key...</span>
-                        <br />
-                        <span className="text-green-400">✅</span>{" "}
-                        <span className="text-gray-300">Proof generated!</span>
-                        <br />
-                        <span className="text-gray-500">Proof size: 89,234 bytes</span>
-                        <br />
-                        <span className="text-gray-500">Total cycles: 1,234,567</span>
-                        <br />
-                        <br />
-                        <span className="text-green-400">$</span>{" "}
-                        <span className="text-gray-400"># Run PoW miner</span>
-                        <br />
-                        <span className="text-green-400">$</span>{" "}
-                        <span className="text-white">cargo run</span>{" "}
-                        <span className="text-blue-400">--package</span>{" "}
-                        <span className="text-yellow-300">cloak-miner</span>{" "}
-                        <span className="text-white">--</span>{" "}
-                        <span className="text-blue-400">--network</span>{" "}
-                        <span className="text-yellow-300">devnet</span>{" "}
-                        <span className="text-white">mine</span>
-                        <br />
-                        <br />
-                        <span className="text-yellow-300">⛏️</span>{" "}
-                        <span className="text-gray-300">Starting PoW mining...</span>
-                        <br />
-                        <span className="text-yellow-300">🔍</span>{" "}
-                        <span className="text-gray-300">Found solution: 0x3a7f...</span>
-                        <br />
-                        <span className="text-green-400">✅</span>{" "}
-                        <span className="text-gray-300">Claim submitted to registry</span>
-                        <br />
-                        <span className="text-gray-500">Difficulty: 16 | Block: 42,069</span>
+                          <span className="text-green-400">$</span>{" "}
+                          <span className="text-gray-400">
+                            # Generate withdrawal proof
+                          </span>
+                          <br />
+                          <span className="text-green-400">$</span>{" "}
+                          <span className="text-white">cargo run</span>{" "}
+                          <span className="text-blue-400">--package</span>{" "}
+                          <span className="text-yellow-300">
+                            zk-guest-sp1-host
+                          </span>{" "}
+                          <span className="text-white">--</span>{" "}
+                          <span className="text-blue-400">--bin</span>{" "}
+                          <span className="text-yellow-300">cloak-zk</span>{" "}
+                          <span className="text-white">--</span>{" "}
+                          <span className="text-blue-400">prove</span>
+                          <br />
+                          &nbsp;&nbsp;
+                          <span className="text-blue-400">--private</span>{" "}
+                          <span className="text-yellow-300">private.json</span>
+                          <br />
+                          &nbsp;&nbsp;
+                          <span className="text-blue-400">--public</span>{" "}
+                          <span className="text-yellow-300">public.json</span>
+                          <br />
+                          &nbsp;&nbsp;
+                          <span className="text-blue-400">--outputs</span>{" "}
+                          <span className="text-yellow-300">outputs.json</span>
+                          <br />
+                          &nbsp;&nbsp;
+                          <span className="text-blue-400">--proof</span>{" "}
+                          <span className="text-yellow-300">out/proof.bin</span>
+                          <br />
+                          <br />
+                          <span className="text-yellow-300">📖</span>{" "}
+                          <span className="text-gray-300">
+                            Reading input files...
+                          </span>
+                          <br />
+                          <span className="text-green-400">✅</span>{" "}
+                          <span className="text-gray-300">
+                            Input files loaded
+                          </span>
+                          <br />
+                          <span className="text-yellow-300">🔑</span>{" "}
+                          <span className="text-gray-300">
+                            Generating proving key...
+                          </span>
+                          <br />
+                          <span className="text-green-400">✅</span>{" "}
+                          <span className="text-gray-300">
+                            Proof generated!
+                          </span>
+                          <br />
+                          <span className="text-gray-500">
+                            Proof size: 89,234 bytes
+                          </span>
+                          <br />
+                          <span className="text-gray-500">
+                            Total cycles: 1,234,567
+                          </span>
+                          <br />
+                          <br />
+                          <span className="text-green-400">$</span>{" "}
+                          <span className="text-gray-400"># Run PoW miner</span>
+                          <br />
+                          <span className="text-green-400">$</span>{" "}
+                          <span className="text-white">cargo run</span>{" "}
+                          <span className="text-blue-400">--package</span>{" "}
+                          <span className="text-yellow-300">cloak-miner</span>{" "}
+                          <span className="text-white">--</span>{" "}
+                          <span className="text-blue-400">--network</span>{" "}
+                          <span className="text-yellow-300">devnet</span>{" "}
+                          <span className="text-white">mine</span>
+                          <br />
+                          <br />
+                          <span className="text-yellow-300">⛏️</span>{" "}
+                          <span className="text-gray-300">
+                            Starting PoW mining...
+                          </span>
+                          <br />
+                          <span className="text-yellow-300">🔍</span>{" "}
+                          <span className="text-gray-300">
+                            Found solution: 0x3a7f...
+                          </span>
+                          <br />
+                          <span className="text-green-400">✅</span>{" "}
+                          <span className="text-gray-300">
+                            Claim submitted to registry
+                          </span>
+                          <br />
+                          <span className="text-gray-500">
+                            Difficulty: 16 | Block: 42,069
+                          </span>
                         </code>
                       </pre>
                     </div>
@@ -1066,9 +1148,7 @@ export default function CloakLandingPage() {
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Receipt className="size-5" />
-                  <span className="text-sm font-medium">
-                    Merkle Proofs
-                  </span>
+                  <span className="text-sm font-medium">Merkle Proofs</span>
                 </div>
               </div>
             </div>
@@ -1076,7 +1156,10 @@ export default function CloakLandingPage() {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="w-full py-12 sm:py-16 md:py-24 lg:py-32">
+        <section
+          id="features"
+          className="w-full py-12 sm:py-16 md:py-24 lg:py-32"
+        >
           <div className="container px-4 md:px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -1095,8 +1178,9 @@ export default function CloakLandingPage() {
                 Complete Privacy Solution
               </h2>
               <p className="max-w-[800px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
-                Deposit SOL privately using commitments, then withdraw to any address
-                with cryptographically guaranteed privacy through zero-knowledge proofs.
+                Deposit SOL privately using commitments, then withdraw to any
+                address with cryptographically guaranteed privacy through
+                zero-knowledge proofs.
               </p>
             </motion.div>
 
@@ -1246,7 +1330,10 @@ export default function CloakLandingPage() {
         </section>
 
         {/* Security Section */}
-        <section id="security" className="w-full py-12 sm:py-16 md:py-24 lg:py-32">
+        <section
+          id="security"
+          className="w-full py-12 sm:py-16 md:py-24 lg:py-32"
+        >
           <div className="container px-4 md:px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -1531,7 +1618,6 @@ export default function CloakLandingPage() {
           </div>
         </section>
 
-
         {/* Developer Tools Section removed (redundant with SDK section) */}
 
         {/* Partners Section */}
@@ -1639,7 +1725,10 @@ export default function CloakLandingPage() {
         </section>
 
         {/* FAQ Section */}
-        <section id="faq" className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-muted/30">
+        <section
+          id="faq"
+          className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-muted/30"
+        >
           <div className="container px-4 md:px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -1673,14 +1762,12 @@ export default function CloakLandingPage() {
                       "Cloak uses Merkle tree commitments and zero-knowledge proofs that make it mathematically impossible to link deposits to withdrawals. When you deposit into the shared shield pool, only your commitment is stored. Later withdrawals prove ownership without revealing which commitment you control.",
                   },
                   {
-                    question:
-                      "How can I verify my deposits and withdrawals?",
+                    question: "How can I verify my deposits and withdrawals?",
                     answer:
                       "Every deposit creates a commitment hash stored in the Merkle tree. When you withdraw, your zero-knowledge proof is verified on-chain. You can trace your deposit signature and verify the commitment was included in the tree, while your withdrawal remains unlinkable to it.",
                   },
                   {
-                    question:
-                      "How does the proof-of-work mining system work?",
+                    question: "How does the proof-of-work mining system work?",
                     answer:
                       "Miners can mine wildcard claims that help prioritize withdrawals during periods of congestion. This optional system provides economic incentives while maintaining privacy. Miners don't learn anything about your transaction but help ensure faster processing.",
                   },
@@ -1740,7 +1827,7 @@ export default function CloakLandingPage() {
               </p>
               <div className="flex gap-4">
                 <Link
-                  href="#"
+                  href="https://x.com/cloaklabz"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <svg
@@ -1760,7 +1847,7 @@ export default function CloakLandingPage() {
                   <span className="sr-only">Twitter</span>
                 </Link>
                 <Link
-                  href="#"
+                  href="https://github.com/Machine-Labz/cloak"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <svg
@@ -1778,28 +1865,6 @@ export default function CloakLandingPage() {
                     <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
                   </svg>
                   <span className="sr-only">GitHub</span>
-                </Link>
-                <Link
-                  href="#"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="size-5"
-                  >
-                    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
-                    <rect width="4" height="12" x="2" y="9"></rect>
-                    <circle cx="4" cy="4" r="2"></circle>
-                  </svg>
-                  <span className="sr-only">Discord</span>
                 </Link>
               </div>
             </div>
@@ -1879,30 +1944,6 @@ export default function CloakLandingPage() {
                     Documentation
                   </a>
                 </li>
-                <li>
-                  <Link
-                    href="#"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Privacy Guide
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="#"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Blog
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="#"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Support
-                  </Link>
-                </li>
               </ul>
             </div>
             <div className="space-y-4">
@@ -1936,13 +1977,13 @@ export default function CloakLandingPage() {
             </div>
             <div className="flex gap-4">
               <Link
-                href="#"
+                href="/privacy"
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 Privacy Policy
               </Link>
               <Link
-                href="#"
+                href="/terms"
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 Terms of Service
