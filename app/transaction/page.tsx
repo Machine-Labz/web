@@ -36,7 +36,12 @@ import {
   Upload,
   Trash2,
 } from "lucide-react";
-import { SOLIcon, USDCIcon, OREIcon, ZCashIcon } from "@/components/icons/token-icons";
+import {
+  SOLIcon,
+  USDCIcon,
+  OREIcon,
+  ZCashIcon,
+} from "@/components/icons/token-icons";
 import Link from "next/link";
 import { toast } from "sonner";
 import { DappHeader } from "@/components/dapp-header";
@@ -101,6 +106,8 @@ export default function TransactionPage() {
   const [selectedNoteForWithdraw, setSelectedNoteForWithdraw] =
     useState<CloakNote | null>(null);
 
+  const MAX_RECIPIENTS = 5;
+
   const parsedAmountLamports = parseSolToLamports(amount);
   const amountLamports = parsedAmountLamports ?? 0;
   // Distribution must account for fees: sum(outputs) + fee == amount
@@ -157,6 +164,7 @@ export default function TransactionPage() {
     parsedAmountLamports > 0 &&
     distributableLamports > 0 &&
     parsedOutputs.length > 0 &&
+    parsedOutputs.length <= MAX_RECIPIENTS &&
     allAddressesProvided &&
     allAddressesValid &&
     allAmountsProvided &&
@@ -265,6 +273,10 @@ export default function TransactionPage() {
 
   const addRecipientRow = () => {
     setOutputs((prev) => {
+      if (prev.length >= MAX_RECIPIENTS) {
+        toast.error(`Maximum of ${MAX_RECIPIENTS} recipients reached`);
+        return prev;
+      }
       const newOutputs = [...prev, { address: "", amount: "" }];
 
       // Re-distribute amounts evenly among all recipients, preserving addresses
@@ -677,7 +689,7 @@ export default function TransactionPage() {
       // Encrypt note data using proper encryption (v2.0 with view/spend keys)
       const publicViewKey = getPublicViewKey();
       const pvkBytes = Buffer.from(publicViewKey, "hex");
-      
+
       const encryptedNote = encryptNoteForRecipient(
         {
           amount: note.amount,
@@ -687,7 +699,7 @@ export default function TransactionPage() {
         },
         pvkBytes
       );
-      
+
       const encryptedOutput = btoa(JSON.stringify(encryptedNote));
 
       const depositResponse = await fetch(`${INDEXER_URL}/api/v1/deposit`, {
@@ -1231,7 +1243,8 @@ export default function TransactionPage() {
                         size="sm"
                         type="button"
                         onClick={addRecipientRow}
-                        className="h-9 hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors bg-transparent"
+                        disabled={outputs.length >= MAX_RECIPIENTS}
+                        className="h-9 hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors bg-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         Add Recipient
