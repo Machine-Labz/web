@@ -17,11 +17,11 @@ import { Connection, PublicKey } from '@solana/web3.js';
 
 const INDEXER_URL = process.env.INDEXER_URL;
 if (!INDEXER_URL) {
-    console.error('[Deposit Finalize] Missing INDEXER_URL environment variable');
+    // console.error('[Deposit Finalize] Missing INDEXER_URL environment variable');
 }
 const RPC_URL = process.env.SOLANA_RPC_URL;
 if (!RPC_URL) {
-  console.error('[Deposit Finalize] Missing RPC_URL environment variable');
+  // console.error('[Deposit Finalize] Missing RPC_URL environment variable');
 }
 
 interface FinalizeDepositRequest {
@@ -94,10 +94,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const { tx_signature, commitment, encrypted_output } = body;
 
-    console.log('[Deposit Finalize] Starting finalization for tx:', tx_signature);
+    // console.log('[Deposit Finalize] Starting finalization for tx:', tx_signature);
 
     // Step 1: Verify transaction on-chain
-    console.log('[Deposit Finalize] Step 1: Verifying transaction on-chain...');
+    // console.log('[Deposit Finalize] Step 1: Verifying transaction on-chain...');
     const connection = new Connection(RPC_URL, 'confirmed');
     
     let txDetails;
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         const status = await connection.getSignatureStatus(tx_signature);
         
         if (status?.value?.err) {
-          console.error('[Deposit Finalize] Transaction failed on-chain:', status.value.err);
+          // console.error('[Deposit Finalize] Transaction failed on-chain:', status.value.err);
           return NextResponse.json(
             {
               success: false,
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           status?.value?.confirmationStatus === 'confirmed' ||
           status?.value?.confirmationStatus === 'finalized'
         ) {
-          console.log('[Deposit Finalize] Transaction confirmed:', status.value.confirmationStatus);
+          // console.log('[Deposit Finalize] Transaction confirmed:', status.value.confirmationStatus);
           
           // Get transaction details
           txDetails = await connection.getTransaction(tx_signature, {
@@ -139,11 +139,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           }
         }
 
-        console.log(`[Deposit Finalize] Waiting for confirmation (${attempts + 1}/${maxAttempts})...`);
+        // console.log(`[Deposit Finalize] Waiting for confirmation (${attempts + 1}/${maxAttempts})...`);
         await new Promise((resolve) => setTimeout(resolve, 2000));
         attempts++;
       } catch (error) {
-        console.error('[Deposit Finalize] Error checking transaction status:', error);
+        // console.error('[Deposit Finalize] Error checking transaction status:', error);
         
         if (attempts >= maxAttempts - 1) {
           throw error;
@@ -164,10 +164,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    console.log('[Deposit Finalize] ✅ Transaction verified, slot:', slot);
+    // console.log('[Deposit Finalize] ✅ Transaction verified, slot:', slot);
 
     // Step 2: Register deposit with indexer
-    console.log('[Deposit Finalize] Step 2: Registering with indexer...');
+    // console.log('[Deposit Finalize] Step 2: Registering with indexer...');
     
     const depositPayload = {
       leaf_commit: commitment,
@@ -194,16 +194,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           break;
         }
 
-        console.warn(
-          `[Deposit Finalize] Indexer returned ${depositResponse.status}, attempt ${depositAttempts + 1}/${maxDepositAttempts}`
-        );
+        // console.warn(
+        //   `[Deposit Finalize] Indexer returned ${depositResponse.status}, attempt ${depositAttempts + 1}/${maxDepositAttempts}`
+        // );
         
         depositAttempts++;
         if (depositAttempts < maxDepositAttempts) {
           await new Promise((resolve) => setTimeout(resolve, 2000));
         }
       } catch (error) {
-        console.error('[Deposit Finalize] Error calling indexer:', error);
+        // console.error('[Deposit Finalize] Error calling indexer:', error);
         depositAttempts++;
         
         if (depositAttempts < maxDepositAttempts) {
@@ -214,7 +214,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (!depositResponse || !depositResponse.ok) {
       const errorText = depositResponse ? await depositResponse.text() : 'No response';
-      console.error('[Deposit Finalize] Indexer registration failed:', errorText);
+      // console.error('[Deposit Finalize] Indexer registration failed:', errorText);
       
       return NextResponse.json(
         {
@@ -226,7 +226,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     const depositData = await depositResponse.json();
-    console.log('[Deposit Finalize] ✅ Deposit registered:', depositData);
+    // console.log('[Deposit Finalize] ✅ Deposit registered:', depositData);
     
     const leafIndex = depositData.leafIndex ?? depositData.leaf_index;
     const root = depositData.root;
@@ -242,7 +242,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // Step 3: Fetch Merkle proof
-    console.log('[Deposit Finalize] Step 3: Fetching Merkle proof for leaf:', leafIndex);
+    // console.log('[Deposit Finalize] Step 3: Fetching Merkle proof for leaf:', leafIndex);
     
     let merkleProofResponse;
     let proofAttempts = 0;
@@ -262,16 +262,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           break;
         }
 
-        console.warn(
-          `[Deposit Finalize] Merkle proof fetch returned ${merkleProofResponse.status}, attempt ${proofAttempts + 1}/${maxProofAttempts}`
-        );
+        // console.warn(
+        //   `[Deposit Finalize] Merkle proof fetch returned ${merkleProofResponse.status}, attempt ${proofAttempts + 1}/${maxProofAttempts}`
+        // );
         
         proofAttempts++;
         if (proofAttempts < maxProofAttempts) {
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       } catch (error) {
-        console.error('[Deposit Finalize] Error fetching Merkle proof:', error);
+        // console.error('[Deposit Finalize] Error fetching Merkle proof:', error);
         proofAttempts++;
         
         if (proofAttempts < maxProofAttempts) {
@@ -284,7 +284,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const errorText = merkleProofResponse
         ? await merkleProofResponse.text()
         : 'No response';
-      console.error('[Deposit Finalize] Merkle proof fetch failed:', errorText);
+      // console.error('[Deposit Finalize] Merkle proof fetch failed:', errorText);
       
       return NextResponse.json(
         {
@@ -296,7 +296,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     const merkleProofData = await merkleProofResponse.json();
-    console.log('[Deposit Finalize] ✅ Merkle proof fetched');
+    // console.log('[Deposit Finalize] ✅ Merkle proof fetched');
 
     const merkleProof = {
       path_elements: merkleProofData.pathElements ?? merkleProofData.path_elements,
@@ -305,7 +305,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Step 4: Return success with all data
     const totalTime = Date.now() - startTime;
-    console.log('[Deposit Finalize] ✅ Finalization complete in', totalTime, 'ms');
+    // console.log('[Deposit Finalize] ✅ Finalization complete in', totalTime, 'ms');
 
     const response: FinalizeDepositResponse = {
       success: true,
@@ -319,7 +319,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   } catch (error: any) {
     const totalTime = Date.now() - startTime;
-    console.error('[Deposit Finalize] Error:', error);
+    // console.error('[Deposit Finalize] Error:', error);
 
     // Handle timeout
     if (error.name === 'AbortError' || error.name === 'TimeoutError') {

@@ -56,7 +56,7 @@ export default function ScanNotes() {
         toast.info("No new notes found for your wallet");
       }
     } catch (error) {
-      console.error("Scan error:", error);
+      // console.error("Scan error:", error);
       setState("error");
       toast.error("Failed to scan notes: " + (error as Error).message);
     }

@@ -168,7 +168,7 @@ export async function GET() {
       activeSlotThreshold,
     });
   } catch (error) {
-    console.error('Error fetching miners:', error);
+    // console.error('Error fetching miners:', error);
     return NextResponse.json({ error: 'Failed to fetch miners' }, { status: 500 });
   }
 }

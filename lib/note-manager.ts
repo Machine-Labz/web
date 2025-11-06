@@ -236,7 +236,7 @@ export function getOrCreateWalletKeys(): CloakKeyPair {
     try {
       return importKeys(stored);
     } catch (e) {
-      console.error("Failed to load stored keys, generating new ones:", e);
+      // console.error("Failed to load stored keys, generating new ones:", e);
     }
   }
   

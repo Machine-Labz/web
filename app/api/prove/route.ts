@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const INDEXER_URL = process.env.NEXT_PUBLIC_INDEXER_URL || process.env.INDEXER_URL;
 
 if (!INDEXER_URL) {
-  console.error('[Prove API] Missing INDEXER_URL or NEXT_PUBLIC_INDEXER_URL environment variable');
+  // console.error('[Prove API] Missing INDEXER_URL or NEXT_PUBLIC_INDEXER_URL environment variable');
 }
 
 interface ProveRequestBody {
@@ -74,8 +74,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('[Prove API] Forwarding proof generation request to indexer');
-    console.log('[Prove API] Indexer URL:', INDEXER_URL);
+    // console.log('[Prove API] Forwarding proof generation request to indexer');
+    // console.log('[Prove API] Indexer URL:', INDEXER_URL);
 
     // Forward request to indexer
     const indexerResponse = await fetch(`${INDEXER_URL}/api/v1/prove`, {
@@ -92,10 +92,10 @@ export async function POST(request: NextRequest) {
     const responseData = await indexerResponse.json();
 
     if (!indexerResponse.ok) {
-      console.error('[Prove API] Indexer returned error:', {
-        status: indexerResponse.status,
-        data: responseData,
-      });
+      // console.error('[Prove API] Indexer returned error:', {
+      //   status: indexerResponse.status,
+      //   data: responseData,
+      // });
 
       return NextResponse.json(
         {
@@ -108,8 +108,8 @@ export async function POST(request: NextRequest) {
     }
 
     const totalTime = Date.now() - startTime;
-    console.log('[Prove API] Proof generation successful');
-    console.log('[Prove API] Total processing time:', totalTime, 'ms');
+    // console.log('[Prove API] Proof generation successful');
+    // console.log('[Prove API] Total processing time:', totalTime, 'ms');
 
     // Return successful response
     return NextResponse.json({
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     const totalTime = Date.now() - startTime;
-    console.error('[Prove API] Error:', error);
+    // console.error('[Prove API] Error:', error);
 
     // Handle timeout
     if (error.name === 'AbortError' || error.name === 'TimeoutError') {

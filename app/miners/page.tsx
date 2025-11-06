@@ -75,7 +75,7 @@ export default function MinersPage() {
         setCurrentSlot(data.currentSlot ?? null);
         setActiveSlotThreshold(data.activeSlotThreshold ?? null);
       } catch (fetchError) {
-        console.error(fetchError);
+        // console.error(fetchError);
         setError(
           fetchError instanceof Error
             ? fetchError.message

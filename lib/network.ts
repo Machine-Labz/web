@@ -29,7 +29,7 @@ export function detectNetworkFromRpcUrl(rpcUrl: string): SolanaNetwork {
   }
   
   // Default to mainnet if we can't determine (safer for production)
-  console.warn(`Could not determine network from RPC URL: ${rpcUrl}, defaulting to mainnet`);
+  // console.warn(`Could not determine network from RPC URL: ${rpcUrl}, defaulting to mainnet`);
   return "mainnet";
 }
 
@@ -40,7 +40,7 @@ export function getCurrentNetwork(): SolanaNetwork {
   const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL;
   
   if (!rpcUrl) {
-    console.warn("NEXT_PUBLIC_SOLANA_RPC_URL not set, defaulting to localnet");
+    // console.warn("NEXT_PUBLIC_SOLANA_RPC_URL not set, defaulting to localnet");
     return "localnet";
   }
   

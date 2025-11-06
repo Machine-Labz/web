@@ -86,14 +86,14 @@ export class SP1ProverClient {
    * });
    *
    * if (result.success) {
-   *   console.log("Proof generated:", result.proof);
-   *   console.log("Generation time:", result.generationTimeMs, "ms");
+   *   // console.log("Proof generated:", result.proof);
+   *   // console.log("Generation time:", result.generationTimeMs, "ms");
    * }
    * ```
    */
   async generateProof(inputs: SP1ProofInputs): Promise<SP1ProofResult> {
-    console.log("[SP1Prover] Starting proof generation...");
-    console.log("[SP1Prover] This may take 30-180 seconds");
+    // console.log("[SP1Prover] Starting proof generation...");
+    // console.log("[SP1Prover] This may take 30-180 seconds");
 
     const startTime = Date.now();
 
@@ -105,20 +105,20 @@ export class SP1ProverClient {
         outputs: JSON.stringify(inputs.outputs),
       };
 
-      console.log(
-        "[SP1Prover] Sending request to:",
-        this.config.apiUrl,
-      );
-      console.log("[SP1Prover] Request body details:", {
-        private_inputs_length: requestBody.private_inputs.length,
-        public_inputs_length: requestBody.public_inputs.length,
-        outputs_length: requestBody.outputs.length,
-        private_inputs_preview:
-          requestBody.private_inputs.substring(0, 200) + "...",
-        public_inputs_preview:
-          requestBody.public_inputs.substring(0, 200) + "...",
-        outputs_preview: requestBody.outputs.substring(0, 200) + "...",
-      });
+      // console.log(
+      //   "[SP1Prover] Sending request to:",
+      //   this.config.apiUrl,
+      // );
+      // console.log("[SP1Prover] Request body details:", {
+      //   private_inputs_length: requestBody.private_inputs.length,
+      //   public_inputs_length: requestBody.public_inputs.length,
+      //   outputs_length: requestBody.outputs.length,
+      //   private_inputs_preview:
+      //     requestBody.private_inputs.substring(0, 200) + "...",
+      //   public_inputs_preview:
+      //     requestBody.public_inputs.substring(0, 200) + "...",
+      //   outputs_preview: requestBody.outputs.substring(0, 200) + "...",
+      // });
 
       // Parse and log the actual data being sent
       try {
@@ -126,31 +126,31 @@ export class SP1ProverClient {
         const publicData = JSON.parse(requestBody.public_inputs);
         const outputsData = JSON.parse(requestBody.outputs);
 
-        console.log("[SP1Prover] Parsed request data:", {
-          privateInputs: {
-            amount: privateData.amount,
-            r: privateData.r?.substring(0, 16) + "...",
-            sk_spend: privateData.sk_spend?.substring(0, 16) + "...",
-            leaf_index: privateData.leaf_index,
-            merkle_path_elements_count:
-              privateData.merkle_path?.path_elements?.length,
-            merkle_path_indices_count:
-              privateData.merkle_path?.path_indices?.length,
-          },
-          publicInputs: {
-            root: publicData.root,
-            nf: publicData.nf,
-            outputs_hash: publicData.outputs_hash,
-            amount: publicData.amount,
-          },
-          outputs: outputsData,
-          outputsCount: outputsData?.length,
-        });
+        // console.log("[SP1Prover] Parsed request data:", {
+        //   privateInputs: {
+        //     amount: privateData.amount,
+        //     r: privateData.r?.substring(0, 16) + "...",
+        //     sk_spend: privateData.sk_spend?.substring(0, 16) + "...",
+        //     leaf_index: privateData.leaf_index,
+        //     merkle_path_elements_count:
+        //       privateData.merkle_path?.path_elements?.length,
+        //     merkle_path_indices_count:
+        //       privateData.merkle_path?.path_indices?.length,
+        //   },
+        //   publicInputs: {
+        //     root: publicData.root,
+        //     nf: publicData.nf,
+        //     outputs_hash: publicData.outputs_hash,
+        //     amount: publicData.amount,
+        //   },
+        //   outputs: outputsData,
+        //   outputsCount: outputsData?.length,
+        // });
       } catch (parseError) {
-        console.error(
-          "[SP1Prover] Failed to parse request data for logging:",
-          parseError,
-        );
+        // console.error(
+        //   "[SP1Prover] Failed to parse request data for logging:",
+        //   parseError,
+        // );
       }
 
       // Create abort controller for timeout
@@ -174,11 +174,11 @@ export class SP1ProverClient {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("[SP1Prover] HTTP Error Response:", {
-          status: response.status,
-          statusText: response.statusText,
-          errorBody: errorText,
-        });
+        // console.error("[SP1Prover] HTTP Error Response:", {
+        //   status: response.status,
+        //   statusText: response.statusText,
+        //   errorBody: errorText,
+        // });
         throw new Error(
           `Proof generation failed: ${response.status} ${response.statusText}\n${errorText}`,
         );
@@ -196,25 +196,25 @@ export class SP1ProverClient {
       };
 
       const totalTime = Date.now() - startTime;
-      console.log("[SP1Prover] Proof generation completed");
-      console.log(
-        "[SP1Prover] Total time (including network):",
-        totalTime,
-        "ms",
-      );
-      console.log(
-        "[SP1Prover] Backend generation time:",
-        data.generationTimeMs,
-        "ms",
-      );
+      // console.log("[SP1Prover] Proof generation completed");
+      // console.log(
+      //   "[SP1Prover] Total time (including network):",
+      //   totalTime,
+      //   "ms",
+      // );
+      // console.log(
+      //   "[SP1Prover] Backend generation time:",
+      //   data.generationTimeMs,
+      //   "ms",
+      // );
 
       if (data.success && data.proof && data.publicInputs) {
-        console.log("[SP1Prover] Proof size:", data.proof.length / 2, "bytes");
-        console.log(
-          "[SP1Prover] Public inputs size:",
-          data.publicInputs.length / 2,
-          "bytes",
-        );
+        // console.log("[SP1Prover] Proof size:", data.proof.length / 2, "bytes");
+        // console.log(
+        //   "[SP1Prover] Public inputs size:",
+        //   data.publicInputs.length / 2,
+        //   "bytes",
+        // );
       }
 
       return {
@@ -223,7 +223,7 @@ export class SP1ProverClient {
       };
     } catch (error) {
       const totalTime = Date.now() - startTime;
-      console.error("[SP1Prover] Proof generation failed:", error);
+      // console.error("[SP1Prover] Proof generation failed:", error);
 
       if (error instanceof Error && error.name === "AbortError") {
         return {

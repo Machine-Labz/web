@@ -284,7 +284,7 @@ export default function WithdrawFlow() {
       const isSingleRecipient = parsedOutputs.length === 1;
       if (isSingleRecipient) {
         parsedOutputs[0].amountLamports = distributableAmount;
-        console.log(`ℹ️ Single recipient: adjusted output to distributable amount (${distributableAmount} = ${note.amount} - ${fee})`);
+        // console.log(`ℹ️ Single recipient: adjusted output to distributable amount (${distributableAmount} = ${note.amount} - ${fee})`);
       } else {
         // For multiple recipients, proportionally scale outputs to sum to distributableAmount
         if (totalOutputs <= 0) {
@@ -312,11 +312,11 @@ export default function WithdrawFlow() {
         });
         
         const finalSum = parsedOutputs.reduce((sum, output) => sum + (output.amountLamports ?? 0), 0);
-        console.log(`ℹ️ Multiple recipients: proportionally scaled outputs from ${totalOutputs} to ${finalSum} lamports (distributable: ${distributableAmount}, scale ratio: ${scaleRatio.toFixed(6)})`);
+        // console.log(`ℹ️ Multiple recipients: proportionally scaled outputs from ${totalOutputs} to ${finalSum} lamports (distributable: ${distributableAmount}, scale ratio: ${scaleRatio.toFixed(6)})`);
         
         // Final verification (should always pass due to last recipient adjustment)
         if (Math.abs(finalSum - distributableAmount) > 1) {
-          console.warn(`⚠️ Scaling adjustment error: final sum (${finalSum}) != distributable (${distributableAmount}), difference: ${Math.abs(finalSum - distributableAmount)}`);
+          // console.warn(`⚠️ Scaling adjustment error: final sum (${finalSum}) != distributable (${distributableAmount}), difference: ${Math.abs(finalSum - distributableAmount)}`);
         }
       }
 
@@ -413,7 +413,7 @@ export default function WithdrawFlow() {
       setState("success");
       toast.success("Withdraw completed!");
     } catch (error: any) {
-      console.error("Withdraw failed:", error);
+      // console.error("Withdraw failed:", error);
       
       // Parse error and show user-friendly message
       const friendlyMessage = parseTransactionError(error);
@@ -872,17 +872,17 @@ async function submitWithdrawViaRelay(params: {
   let attempts = 0;
   const maxAttempts = 120; // 10 minutes (120 * 5s = 600s)
 
-  console.log(`[Relay] Starting to poll for completion of request ${requestId}`);
+  // console.log(`[Relay] Starting to poll for completion of request ${requestId}`);
 
   while (attempts < maxAttempts) {
     await sleep(5000);
     attempts++;
 
     try {
-      console.log(`[Relay] Polling attempt ${attempts}/${maxAttempts} for request ${requestId}`);
+      // console.log(`[Relay] Polling attempt ${attempts}/${maxAttempts} for request ${requestId}`);
       const statusResp = await fetch(`${RELAY_URL}/status/${requestId}`);
       if (!statusResp.ok) {
-        console.warn(`[Relay] Status check failed with status ${statusResp.status}`);
+        // console.warn(`[Relay] Status check failed with status ${statusResp.status}`);
         continue;
       }
 
@@ -890,7 +890,7 @@ async function submitWithdrawViaRelay(params: {
       const statusData = statusJson.data;
       const status: string | undefined = statusData?.status;
 
-      console.log(`[Relay] Status for request ${requestId}: ${status}`);
+      // console.log(`[Relay] Status for request ${requestId}: ${status}`);
       params.onStatusUpdate?.(status ?? "unknown");
 
       if (status === "completed") {
@@ -898,7 +898,7 @@ async function submitWithdrawViaRelay(params: {
         if (!txId) {
           throw new Error("Relay completed without tx_id");
         }
-        console.log(`[Relay] Withdraw completed successfully! Transaction: ${txId}`);
+        // console.log(`[Relay] Withdraw completed successfully! Transaction: ${txId}`);
         return txId;
       }
 
@@ -906,7 +906,7 @@ async function submitWithdrawViaRelay(params: {
         throw new Error(statusData?.error || "Relay job failed");
       }
     } catch (error) {
-      console.warn("[Relay] Status polling failed", error);
+      // console.warn("[Relay] Status polling failed", error);
     }
   }
 

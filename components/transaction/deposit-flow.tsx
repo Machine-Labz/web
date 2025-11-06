@@ -89,7 +89,7 @@ export default function DepositFlow() {
         return;
       }
     } catch (balanceError) {
-      console.warn("Failed to check balance:", balanceError);
+      // console.warn("Failed to check balance:", balanceError);
       // Continue anyway - the transaction will fail if insufficient
     }
 
@@ -97,17 +97,17 @@ export default function DepositFlow() {
 
     const { pool: poolPubkey, commitments: commitmentsPubkey } = getShieldPoolPDAs();
     
-    console.log("=".repeat(60));
-    console.log("🚀 STARTING DEPOSIT FLOW");
-    console.log("=".repeat(60));
-    console.log("Configuration:", {
-      programId: PROGRAM_ID,
-      pool: poolPubkey.toBase58(),
-      commitments: commitmentsPubkey.toBase58(),
-      indexerUrl: INDEXER_URL,
-      amount: note.amount,
-      commitment: note.commitment,
-    });
+    // console.log("=".repeat(60));
+    // console.log("🚀 STARTING DEPOSIT FLOW");
+    // console.log("=".repeat(60));
+    // console.log("Configuration:", {
+    //   programId: PROGRAM_ID,
+    //   pool: poolPubkey.toBase58(),
+    //   commitments: commitmentsPubkey.toBase58(),
+    //   indexerUrl: INDEXER_URL,
+    //   amount: note.amount,
+    //   commitment: note.commitment,
+    // });
 
     try {
       // Build deposit instruction
@@ -135,20 +135,20 @@ export default function DepositFlow() {
       }).add(depositIx);
 
       // Log transaction details for debugging
-      console.log("Transaction details:", {
-        feePayer: publicKey.toBase58(),
-        programId: programId.toBase58(),
-        pool: poolPubkey.toBase58(),
-        commitments: commitmentsPubkey.toBase58(),
-        amount: note.amount,
-        commitmentLength: commitmentBytes.length,
-      });
+      // console.log("Transaction details:", {
+      //   feePayer: publicKey.toBase58(),
+      //   programId: programId.toBase58(),
+      //   pool: poolPubkey.toBase58(),
+      //   commitments: commitmentsPubkey.toBase58(),
+      //   amount: note.amount,
+      //   commitmentLength: commitmentBytes.length,
+      // });
       
       // Simulate transaction first to catch errors early
       try {
         const simulation = await connection.simulateTransaction(depositTx);
-        console.log("Simulation result:", simulation);
-        console.log("Simulation logs:", simulation.value.logs);
+        // console.log("Simulation result:", simulation);
+        // console.log("Simulation logs:", simulation.value.logs);
         
         if (simulation.value.err) {
           // Create detailed error object for better parsing
@@ -156,15 +156,15 @@ export default function DepositFlow() {
             message: `Transaction simulation failed: ${JSON.stringify(simulation.value.err)}`,
             logs: simulation.value.logs,
           };
-          console.error("Simulation failed with logs:", simulation.value.logs?.join('\n'));
+          // console.error("Simulation failed with logs:", simulation.value.logs?.join('\n'));
           throw errorObj;
         }
       } catch (simError: any) {
-        console.error("Simulation error:", simError);
+        // console.error("Simulation error:", simError);
         throw simError; // Pass through the original error for better parsing
       }
       
-      console.log("✅ Simulation passed! Sending transaction...");
+      // console.log("✅ Simulation passed! Sending transaction...");
       toast.info("Please approve the transaction...");
       
       const signature = await sendTransaction(depositTx, connection, {
@@ -173,7 +173,7 @@ export default function DepositFlow() {
         maxRetries: 3,
       });
       
-      console.log("✅ Transaction sent! Signature:", signature);
+      // console.log("✅ Transaction sent! Signature:", signature);
       toast.info("Confirming transaction...");
 
       // Poll for confirmation
@@ -181,25 +181,25 @@ export default function DepositFlow() {
       let attempts = 0;
       const maxAttempts = 30;
       
-      console.log("🔄 Polling for confirmation...");
+      // console.log("🔄 Polling for confirmation...");
 
       while (!confirmed && attempts < maxAttempts) {
         const status = await connection.getSignatureStatus(signature);
-        console.log(`Attempt ${attempts + 1}/${maxAttempts}:`, {
-          confirmationStatus: status?.value?.confirmationStatus,
-          err: status?.value?.err,
-        });
+        // console.log(`Attempt ${attempts + 1}/${maxAttempts}:`, {
+        //   confirmationStatus: status?.value?.confirmationStatus,
+        //   err: status?.value?.err,
+        // });
         
         if (
           status?.value?.confirmationStatus === "confirmed" ||
           status?.value?.confirmationStatus === "finalized"
         ) {
           confirmed = true;
-          console.log(`✅ Transaction confirmed! Status: ${status.value.confirmationStatus}`);
+          // console.log(`✅ Transaction confirmed! Status: ${status.value.confirmationStatus}`);
           break;
         }
         if (status?.value?.err) {
-          console.error("❌ Transaction failed on-chain:", status.value.err);
+          // console.error("❌ Transaction failed on-chain:", status.value.err);
           throw new Error(`Transaction failed: ${JSON.stringify(status.value.err)}`);
         }
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -207,7 +207,7 @@ export default function DepositFlow() {
       }
 
       if (!confirmed) {
-        console.error("❌ Transaction confirmation timeout after", attempts, "attempts");
+        // console.error("❌ Transaction confirmation timeout after", attempts, "attempts");
         throw new Error("Transaction confirmation timeout");
       }
 
@@ -215,10 +215,10 @@ export default function DepositFlow() {
       // We MUST complete the registration even if the client disconnects.
       // Use server-side endpoint to ensure reliability.
       
-      console.log("=".repeat(60));
-      console.log("🔒 POINT OF NO RETURN: Transaction confirmed on-chain");
-      console.log("📡 Calling server-side finalization endpoint...");
-      console.log("=".repeat(60));
+      // console.log("=".repeat(60));
+      // console.log("🔒 POINT OF NO RETURN: Transaction confirmed on-chain");
+      // console.log("📡 Calling server-side finalization endpoint...");
+      // console.log("=".repeat(60));
 
       // Get wallet's public view key for self-encryption
       const publicViewKey = getPublicViewKey();
@@ -245,7 +245,7 @@ export default function DepositFlow() {
         encrypted_output: encryptedOutput,
       };
 
-      console.log("📡 Finalizing deposit via server-side endpoint...");
+      // console.log("📡 Finalizing deposit via server-side endpoint...");
       toast.info("Registering deposit...");
 
       const finalizeResponse = await fetch("/api/deposit/finalize", {
@@ -256,16 +256,16 @@ export default function DepositFlow() {
 
       if (!finalizeResponse.ok) {
         const errorText = await finalizeResponse.text();
-        console.error("❌ Finalization error:", errorText);
+        // console.error("❌ Finalization error:", errorText);
         
         // Save the signature for manual recovery
-        console.warn("⚠️ Deposit may need manual recovery. Transaction:", signature);
+        // console.warn("⚠️ Deposit may need manual recovery. Transaction:", signature);
         
         throw new Error(`Failed to finalize deposit: ${errorText}\n\nTransaction signature: ${signature}\n\nYou can recover this deposit later using the transaction signature.`);
       }
 
       const finalizeData = await finalizeResponse.json();
-      console.log("✅ Finalization response:", finalizeData);
+      // console.log("✅ Finalization response:", finalizeData);
 
       if (!finalizeData.success) {
         throw new Error(`Finalization failed: ${finalizeData.error}`);
@@ -279,21 +279,21 @@ export default function DepositFlow() {
         pathIndices: finalizeData.merkle_proof.path_indices,
       };
       
-      console.log("✅ Server-side finalization complete:", {
-        leafIndex,
-        slot: depositSlot,
-        root: historicalRoot,
-      });
+      // console.log("✅ Server-side finalization complete:", {
+      //   leafIndex,
+      //   slot: depositSlot,
+      //   root: historicalRoot,
+      // });
 
       // Update note with deposit details (update existing saved note)
-      console.log("💾 Updating note with deposit details:", {
-        commitment: note.commitment,
-        signature,
-        slot: depositSlot,
-        leafIndex,
-        root: historicalRoot,
-        merkleProof: historicalMerkleProof,
-      });
+      // console.log("💾 Updating note with deposit details:", {
+      //   commitment: note.commitment,
+      //   signature,
+      //   slot: depositSlot,
+      //   leafIndex,
+      //   root: historicalRoot,
+      //   merkleProof: historicalMerkleProof,
+      // });
 
       updateNote(note.commitment, {
         depositSignature: signature,
@@ -305,7 +305,7 @@ export default function DepositFlow() {
       
       if (typeof window !== "undefined") {
         window.dispatchEvent(new Event("cloak-notes-updated"));
-        console.log("📢 Dispatched cloak-notes-updated event");
+        // console.log("📢 Dispatched cloak-notes-updated event");
       }
 
       const updatedNote: CloakNote = {
@@ -321,26 +321,26 @@ export default function DepositFlow() {
       setDepositSignature(signature);
 
       const rpcUrl = RPC_URL;
-      console.log("🎉 Deposit complete!", {
-        signature,
-        leafIndex,
-        slot: depositSlot,
-        explorerUrl: `https://explorer.solana.com/tx/${signature}${
-          rpcUrl ? `?cluster=custom&customUrl=${encodeURIComponent(rpcUrl)}` : ''
-        }`,
-      });
+      // console.log("🎉 Deposit complete!", {
+      //   signature,
+      //   leafIndex,
+      //   slot: depositSlot,
+      //   explorerUrl: `https://explorer.solana.com/tx/${signature}${
+      //     rpcUrl ? `?cluster=custom&customUrl=${encodeURIComponent(rpcUrl)}` : ''
+      //   }`,
+      // });
 
       setState("success");
       toast.success("Deposit successful!");
     } catch (error: any) {
-      console.error("Deposit failed:", error);
-      console.error("Error details:", {
-        name: error.name,
-        message: error.message,
-        logs: error.logs,
-        code: error.code,
-        cause: error.cause,
-      });
+      // console.error("Deposit failed:", error);
+      // console.error("Error details:", {
+      //   name: error.name,
+      //   message: error.message,
+      //   logs: error.logs,
+      //   code: error.code,
+      //   cause: error.cause,
+      // });
       
       // Parse error and show user-friendly message
       const friendlyMessage = parseTransactionError(error);
@@ -537,24 +537,24 @@ function createDepositInstruction(params: {
     data: Buffer.from(data),
   });
 
-  console.log("Deposit instruction:", {
-    programId: params.programId.toBase58(),
-    accountsCount: instruction.keys.length,
-    accounts: instruction.keys.map((k, i) => ({
-      index: i,
-      pubkey: k.pubkey.toBase58(),
-      isSigner: k.isSigner,
-      isWritable: k.isWritable,
-    })),
-    dataLength: data.length,
-    discriminant: discriminant[0],
-    amountBytesLength: amountBytes.length,
-    commitmentLength: params.commitment.length,
-    amount: params.amount,
-    discriminantHex: Array.from(discriminant).map(b => b.toString(16).padStart(2, '0')).join(''),
-    amountHex: Array.from(amountBytes).map(b => b.toString(16).padStart(2, '0')).join(''),
-    dataHex: Array.from(data).map(b => b.toString(16).padStart(2, '0')).join(''),
-  });
+  // console.log("Deposit instruction:", {
+  //   programId: params.programId.toBase58(),
+  //   accountsCount: instruction.keys.length,
+  //   accounts: instruction.keys.map((k, i) => ({
+  //     index: i,
+  //     pubkey: k.pubkey.toBase58(),
+  //     isSigner: k.isSigner,
+  //     isWritable: k.isWritable,
+  //   })),
+  //   dataLength: data.length,
+  //   discriminant: discriminant[0],
+  //   amountBytesLength: amountBytes.length,
+  //   commitmentLength: params.commitment.length,
+  //   amount: params.amount,
+  //   discriminantHex: Array.from(discriminant).map(b => b.toString(16).padStart(2, '0')).join(''),
+  //   amountHex: Array.from(amountBytes).map(b => b.toString(16).padStart(2, '0')).join(''),
+  //   dataHex: Array.from(data).map(b => b.toString(16).padStart(2, '0')).join(''),
+  // });
 
   return instruction;
 }

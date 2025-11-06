@@ -57,7 +57,7 @@ export default function WaitlistPage() {
           setRegistrationCount(data.count);
         }
       } catch (error) {
-        console.error("Failed to fetch registration count:", error);
+        // console.error("Failed to fetch registration count:", error);
       }
     };
     fetchCount();
@@ -100,7 +100,7 @@ export default function WaitlistPage() {
         description: "Please enter your email to complete the registration",
       });
     } catch (error: any) {
-      console.error("Error signing message:", error);
+      // console.error("Error signing message:", error);
       toast.error("Signing failed", {
         description: error.message || "Failed to sign message",
       });
@@ -177,10 +177,10 @@ export default function WaitlistPage() {
           setRegistrationCount(countData.count);
         }
       } catch (error) {
-        console.error("Failed to refresh count:", error);
+        // console.error("Failed to refresh count:", error);
       }
     } catch (error: any) {
-      console.error("Error submitting form:", error);
+      // console.error("Error submitting form:", error);
       const errorMsg = error.message || "Failed to submit interest form";
       setError(errorMsg);
       toast.error("Submission failed", {

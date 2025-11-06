@@ -91,7 +91,7 @@ export default function DepositRecovery() {
           }));
         }
       } catch (encryptError) {
-        console.warn("Could not encrypt output, proceeding anyway:", encryptError);
+        // console.warn("Could not encrypt output, proceeding anyway:", encryptError);
         encryptedOutput = btoa(JSON.stringify({
           amount: note.amount,
           r: note.r,
@@ -107,7 +107,7 @@ export default function DepositRecovery() {
         encrypted_output: encryptedOutput,
       };
 
-      console.log("📡 Recovering deposit via server-side endpoint...");
+      // console.log("📡 Recovering deposit via server-side endpoint...");
 
       const finalizeResponse = await fetch("/api/deposit/finalize", {
         method: "POST",
@@ -117,12 +117,12 @@ export default function DepositRecovery() {
 
       if (!finalizeResponse.ok) {
         const errorText = await finalizeResponse.text();
-        console.error("❌ Recovery failed:", errorText);
+        // console.error("❌ Recovery failed:", errorText);
         throw new Error(`Recovery failed: ${errorText}`);
       }
 
       const finalizeData = await finalizeResponse.json();
-      console.log("✅ Recovery response:", finalizeData);
+      // console.log("✅ Recovery response:", finalizeData);
 
       if (!finalizeData.success) {
         throw new Error(`Recovery failed: ${finalizeData.error}`);
@@ -158,7 +158,7 @@ export default function DepositRecovery() {
       setState("success");
       toast.success("Deposit recovered successfully!");
     } catch (err: any) {
-      console.error("Recovery error:", err);
+      // console.error("Recovery error:", err);
       setError(err.message || "Recovery failed");
       setState("error");
       toast.error("Recovery failed", {

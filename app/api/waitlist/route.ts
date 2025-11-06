@@ -96,7 +96,7 @@ function verifySignature(
       publicKeyBytes
     );
   } catch (error) {
-    console.error('Signature verification error:', error);
+    // console.error('Signature verification error:', error);
     return false;
   }
 }
@@ -176,11 +176,11 @@ export async function POST(request: Request) {
     // Verify the signature
     const isValid = verifySignature(message, signature, publicKey);
     if (!isValid) {
-      console.warn('Invalid signature attempt:', {
-        wallet,
-        email: email.toLowerCase().trim(),
-        timestamp,
-      });
+      // console.warn('Invalid signature attempt:', {
+      //   wallet,
+      //   email: email.toLowerCase().trim(),
+      //   timestamp,
+      // });
       return NextResponse.json(
         { error: 'Invalid signature. Please sign the message again.' },
         { status: 401, headers: corsHeaders(origin) }
@@ -226,16 +226,16 @@ export async function POST(request: Request) {
       );
 
       // Enhanced logging for recovery purposes - includes all data needed to reconstruct
-      console.log('Waitlist registration successful:', JSON.stringify({
-        wallet,
-        email,
-        signature,
-        signatureVerified: true,
-        ip_address: ip,
-        user_agent: userAgent,
-        timestamp: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-      }));
+      // console.log('Waitlist registration successful:', JSON.stringify({
+      //   wallet,
+      //   email,
+      //   signature,
+      //   signatureVerified: true,
+      //   ip_address: ip,
+      //   user_agent: userAgent,
+      //   timestamp: new Date().toISOString(),
+      //   created_at: new Date().toISOString(),
+      // }));
 
       return NextResponse.json({
         success: true,
@@ -245,11 +245,11 @@ export async function POST(request: Request) {
       });
     } catch (dbError: any) {
       // Handle any other database errors
-      console.error('Database error:', dbError);
+      // console.error('Database error:', dbError);
       throw dbError;
     }
   } catch (error: any) {
-    console.error('Error processing beta interest form:', error);
+    // console.error('Error processing beta interest form:', error);
     
     // Don't expose internal error details to the client
     return NextResponse.json(
@@ -287,7 +287,7 @@ export async function GET(request: Request) {
       headers: corsHeaders(origin),
     });
   } catch (error) {
-    console.error('Error retrieving beta interest count:', error);
+    // console.error('Error retrieving beta interest count:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500, headers: corsHeaders(origin) }

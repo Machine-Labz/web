@@ -386,7 +386,7 @@ export default function TransactionPage() {
         .getBalance(publicKey)
         .then((balance) => setBalance(balance))
         .catch((err) => {
-          console.error("Failed to fetch balance:", err);
+          // console.error("Failed to fetch balance:", err);
           setBalance(null);
         });
     } else {
@@ -533,18 +533,18 @@ export default function TransactionPage() {
 
   const prover = useSP1Prover({
     onStart: () => {
-      console.log("🔐 Starting proof generation...");
+      // console.log("🔐 Starting proof generation...");
       setTransactionStatus("generating_proof");
     },
     onSuccess: (result) => {
-      console.log(
-        `✅ Proof generated in ${(result.generationTimeMs / 1000).toFixed(1)}s`
-      );
+      // console.log(
+    //     `✅ Proof generated in ${(result.generationTimeMs / 1000).toFixed(1)}s`
+    //   );
       setTransactionStatus("proof_generated");
       toast.success("Proof generated successfully!");
     },
     onError: (error) => {
-      console.error("❌ Proof generation failed:", error);
+      // console.error("❌ Proof generation failed:", error);
       toast.error("Proof generation failed", { description: error });
     },
   });
@@ -592,7 +592,7 @@ export default function TransactionPage() {
           throw new Error(`Invalid output for note ${i + 1}`);
         }
 
-        console.log(`🔐 Withdrawing note ${i + 1}/${selectedNotesForWithdraw.length}: ${note.commitment.slice(0, 16)}...`);
+        // console.log(`🔐 Withdrawing note ${i + 1}/${selectedNotesForWithdraw.length}: ${note.commitment.slice(0, 16)}...`);
 
         // Each note gets withdrawn to its corresponding single recipient
         const withdrawOutput = {
@@ -608,7 +608,7 @@ export default function TransactionPage() {
 
         // Delete the note after successful withdrawal
         deleteNote(note.commitment);
-        console.log(`✅ Note ${i + 1} withdrawn and deleted: ${note.commitment.slice(0, 16)}...`);
+        // console.log(`✅ Note ${i + 1} withdrawn and deleted: ${note.commitment.slice(0, 16)}...`);
       }
 
       toast.success("All selected notes withdrawn successfully!");
@@ -616,7 +616,7 @@ export default function TransactionPage() {
       refreshNotes();
       setTransactionStatus("sent");
     } catch (error: any) {
-      console.error("Withdrawal failed:", error);
+      // console.error("Withdrawal failed:", error);
       setTransactionStatus("error");
 
       const friendlyMessage = parseTransactionError(error);
@@ -718,13 +718,13 @@ export default function TransactionPage() {
           amountLamports: output.amountLamports ?? 0,
         };
       });
-      console.log(
-        `⚠️ Corrected single recipient output from ${totalAssignedLamports} to ${distributableLamports} lamports to satisfy amount conservation`
-      );
+      // console.log(
+    //     `⚠️ Corrected single recipient output from ${totalAssignedLamports} to ${distributableLamports} lamports to satisfy amount conservation`
+    //   );
     } else if (amountMismatch > 1) {
       // For multiple recipients or when correction isn't possible, validate strictly
       const errorMsg = `Amount conservation failed: outputs (${totalAssignedLamports}) + fee (${fee}) = ${totalAssignedWithFee} != amount (${parsedAmountLamports}). Difference: ${amountMismatch} lamports`;
-      console.error(errorMsg);
+      // console.error(errorMsg);
       toast.error("Amount mismatch", {
         description: `Total outputs + fee must equal the deposit amount. Adjust by ${formatAmount(
           amountMismatch
@@ -743,13 +743,13 @@ export default function TransactionPage() {
     setShowStatusModal(true);
 
     try {
-      console.log("🚀 Starting private transaction flow", {
-        amount,
-        outputs: preparedOutputs,
-        token: selectedToken,
-        connected,
-        publicKey: publicKey?.toBase58(),
-      });
+      // console.log("🚀 Starting private transaction flow", {
+    //     amount,
+    //     outputs: preparedOutputs,
+    //     token: selectedToken,
+    //     connected,
+    //     publicKey: publicKey?.toBase58(),
+    //   });
 
       const note = generateNoteFromWallet(parsedAmountLamports);
       saveNote(note);
@@ -812,7 +812,7 @@ export default function TransactionPage() {
           message: `Transaction simulation failed: ${JSON.stringify(simulation.value.err)}`,
           logs: simulation.value.logs,
         };
-        console.error("❌ Simulation failed:", errorObj);
+        // console.error("❌ Simulation failed:", errorObj);
         throw errorObj;
       }
 
@@ -838,10 +838,10 @@ export default function TransactionPage() {
       // We MUST complete the registration even if the client disconnects.
       // Use server-side endpoint to ensure reliability.
       
-      console.log("=".repeat(60));
-      console.log("🔒 POINT OF NO RETURN: Transaction confirmed on-chain");
-      console.log("📡 Calling server-side finalization endpoint...");
-      console.log("=".repeat(60));
+      // console.log("=".repeat(60));
+      // console.log("🔒 POINT OF NO RETURN: Transaction confirmed on-chain");
+      // console.log("📡 Calling server-side finalization endpoint...");
+      // console.log("=".repeat(60));
 
       // Encrypt note data using proper encryption (v2.0 with view/spend keys)
       const publicViewKey = getPublicViewKey();
@@ -866,7 +866,7 @@ export default function TransactionPage() {
         encrypted_output: encryptedOutput,
       };
 
-      console.log("📡 Finalizing deposit via server-side endpoint...");
+      // console.log("📡 Finalizing deposit via server-side endpoint...");
       toast.info("Registering deposit...");
 
       const finalizeResponse = await fetch("/api/deposit/finalize", {
@@ -877,16 +877,16 @@ export default function TransactionPage() {
 
       if (!finalizeResponse.ok) {
         const errorText = await finalizeResponse.text();
-        console.error("❌ Finalization error:", errorText);
+        // console.error("❌ Finalization error:", errorText);
         
         // Save the signature for manual recovery
-        console.warn("⚠️ Deposit may need manual recovery. Transaction:", signature);
+        // console.warn("⚠️ Deposit may need manual recovery. Transaction:", signature);
         
         throw new Error(`Failed to finalize deposit: ${errorText}\n\nTransaction signature: ${signature}\n\nYou can recover this deposit later using the transaction signature.`);
       }
 
       const finalizeData = await finalizeResponse.json();
-      console.log("✅ Finalization response:", finalizeData);
+      // console.log("✅ Finalization response:", finalizeData);
 
       if (!finalizeData.success) {
         throw new Error(`Finalization failed: ${finalizeData.error}`);
@@ -900,11 +900,11 @@ export default function TransactionPage() {
         pathIndices: finalizeData.merkle_proof.path_indices,
       };
       
-      console.log("✅ Server-side finalization complete:", {
-        leafIndex,
-        slot: depositSlot,
-        root: historicalRoot,
-      });
+      // console.log("✅ Server-side finalization complete:", {
+    //     leafIndex,
+    //     slot: depositSlot,
+    //     root: historicalRoot,
+    //   });
 
       // Create updated note with root and proof
       const updatedNote = {
@@ -941,12 +941,12 @@ export default function TransactionPage() {
         try {
           deleteNote(updatedNote.commitment);
         } catch (e) {
-          console.warn("Failed to delete used note", e);
+          // console.warn("Failed to delete used note", e);
         }
         toast.success("Transaction completed successfully!");
       }
     } catch (error: any) {
-      console.error("Transaction failed:", error);
+      // console.error("Transaction failed:", error);
       setTransactionStatus("error");
       
       // Parse error and show user-friendly message
@@ -968,7 +968,7 @@ export default function TransactionPage() {
   ) => {
     try {
       setTransactionStatus("generating_proof");
-      console.log("🔐 Starting withdraw process...");
+      // console.log("🔐 Starting withdraw process...");
 
       // Use the saved historical root and Merkle proof from when the note was deposited
       // This is critical because the Merkle tree may have grown since then,
@@ -982,16 +982,16 @@ export default function TransactionPage() {
         historicalRoot = note.root;
         merklePathElements = note.merkleProof.pathElements;
         merklePathIndices = note.merkleProof.pathIndices;
-        console.log("📊 Using saved historical root and proof");
-        console.log("   Root:", historicalRoot);
-        console.log("   Path elements:", merklePathElements.length, "levels");
+        // console.log("📊 Using saved historical root and proof");
+        // console.log("   Root:", historicalRoot);
+        // console.log("   Path elements:", merklePathElements.length, "levels");
       } else {
         // Fallback: fetch current Merkle proof (for old notes without saved data)
-        console.warn(
-          "⚠️ Note doesn't have saved root/proof - using current tree state"
-        );
-        console.warn("   This may fail if the tree has grown since deposit!");
-        console.log("📡 Fetching Merkle proof...");
+        // console.warn(
+        //   "⚠️ Note doesn't have saved root/proof - using current tree state"
+        // );
+        // console.warn("   This may fail if the tree has grown since deposit!");
+        // console.log("📡 Fetching Merkle proof...");
 
         const merkleProof: MerkleProof = await indexerClient.getMerkleProof(
           leafIndex
@@ -1026,7 +1026,7 @@ export default function TransactionPage() {
         }
 
         historicalRoot = Buffer.from(currentHash).toString("hex");
-        console.log("📊 Recomputed root:", historicalRoot);
+        // console.log("📊 Recomputed root:", historicalRoot);
       }
 
       const fee = calculateFee(note.amount);
@@ -1042,7 +1042,7 @@ export default function TransactionPage() {
         const errorMsg = `Amount conservation failed: outputs (${totalOutputs}) + fee (${fee}) = ${totalWithFee} != note amount (${
           note.amount
         }). Difference: ${Math.abs(totalWithFee - note.amount)} lamports`;
-        console.error(errorMsg);
+        // console.error(errorMsg);
         throw new Error(errorMsg);
       }
 
@@ -1097,7 +1097,7 @@ export default function TransactionPage() {
         })),
       };
 
-      console.log("🔐 Generating zero-knowledge proof...");
+      // console.log("🔐 Generating zero-knowledge proof...");
       const proofResult: SP1ProofResult = await generateProof(sp1Inputs);
 
       if (
@@ -1108,10 +1108,10 @@ export default function TransactionPage() {
         throw new Error(proofResult.error || "Proof generation failed");
       }
 
-      console.log("✅ Proof generated");
+      // console.log("✅ Proof generated");
       setTransactionStatus("queued");
 
-      console.log("📤 Submitting to relay...");
+      // console.log("📤 Submitting to relay...");
       const withdrawSig = await submitWithdrawViaRelay(
         {
           proof: proofResult.proof,
@@ -1133,12 +1133,12 @@ export default function TransactionPage() {
         }
       );
 
-      console.log("✅ Withdraw completed:", withdrawSig);
+      // console.log("✅ Withdraw completed:", withdrawSig);
       setTransactionSignature(withdrawSig);
       setLastOutputs(outputsForWithdraw);
       setTransactionStatus("sent");
     } catch (error: any) {
-      console.error("❌ Withdraw failed:", error);
+      // console.error("❌ Withdraw failed:", error);
       
       // Re-throw with better error message
       const friendlyMessage = parseTransactionError(error);
@@ -2349,7 +2349,7 @@ async function submitWithdrawViaRelay(
         throw new Error(statusJson.data?.error || "Relay job failed");
       }
     } catch (error) {
-      console.warn("[Relay] Status polling failed", error);
+      // console.warn("[Relay] Status polling failed", error);
     }
   }
 

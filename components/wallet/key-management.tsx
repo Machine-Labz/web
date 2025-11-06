@@ -25,7 +25,7 @@ export default function KeyManagement() {
       const pvk = getPublicViewKey();
       setPublicViewKey(pvk);
     } catch (e) {
-      console.error("Failed to load public view key:", e);
+      // console.error("Failed to load public view key:", e);
     }
   }, []);
 

@@ -93,7 +93,7 @@ export function parseTransactionError(error: any): string {
         return `Transaction failed with error code ${errorCode} (0x${errorCode.toString(16)}) at instruction ${instructionIndex}`;
       }
     } catch (parseError) {
-      console.warn("Failed to parse error:", parseError);
+      // console.warn("Failed to parse error:", parseError);
     }
   }
 

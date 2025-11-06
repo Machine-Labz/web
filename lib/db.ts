@@ -26,7 +26,7 @@ export function getPool(): Pool {
 
     // Log pool errors
     pool.on('error', (err) => {
-      console.error('Unexpected error on idle PostgreSQL client', err);
+      // console.error('Unexpected error on idle PostgreSQL client', err);
     });
   }
 
@@ -74,7 +74,7 @@ export async function checkConnection(): Promise<boolean> {
     await pool.query('SELECT 1');
     return true;
   } catch (error) {
-    console.error('Database connection check failed:', error);
+    // console.error('Database connection check failed:', error);
     return false;
   }
 }

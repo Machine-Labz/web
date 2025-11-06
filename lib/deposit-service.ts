@@ -61,11 +61,10 @@ export function buildDepositInstruction(params: DepositTransactionParams): Trans
       { pubkey: new PublicKey("11111111111111111111111111111111"), isSigner: false, isWritable: false },
       { pubkey: commitmentsPubkey, isSigner: false, isWritable: true },
     ],
-    programId: new PublicKey(programId),
+    programId: new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!),
     data: instructionData,
   });
 }
-
 /**
  * Encrypt note data for storage in the indexer
  * Uses the wallet's own public view key for self-encryption
@@ -152,7 +151,7 @@ export async function executeDeposit(
   indexerUrl: string
 ): Promise<DepositResult> {
   // 1. Simulate transaction
-  console.log("🔍 Simulating transaction...");
+  // console.log("🔍 Simulating transaction...");
   const simulation = await connection.simulateTransaction(transaction);
   
   if (simulation.value.err) {
@@ -162,7 +161,7 @@ export async function executeDeposit(
     );
   }
   
-  console.log("✅ Simulation passed! Sending transaction...");
+  // console.log("✅ Simulation passed! Sending transaction...");
 
   // 2. Send transaction
   const signature = await sendTransaction(transaction, connection, {
@@ -170,10 +169,10 @@ export async function executeDeposit(
     maxRetries: 3,
   });
   
-  console.log("📝 Transaction sent:", signature);
+  // console.log("📝 Transaction sent:", signature);
 
   // 3. Confirm transaction
-  console.log("⏳ Confirming transaction...");
+  // console.log("⏳ Confirming transaction...");
   const latestBlockhash = await connection.getLatestBlockhash();
   const confirmation = await connection.confirmTransaction({
     signature,
@@ -185,7 +184,7 @@ export async function executeDeposit(
     throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
   }
 
-  console.log("✅ Transaction confirmed!");
+  // console.log("✅ Transaction confirmed!");
 
   // 4. Get transaction details for slot
   const txDetails = await connection.getTransaction(signature, {
@@ -195,11 +194,11 @@ export async function executeDeposit(
   const slot = txDetails?.slot ?? 0;
 
   // 5. Encrypt note for indexer
-  console.log("🔐 Encrypting note data...");
+  // console.log("🔐 Encrypting note data...");
   const encryptedOutput = encryptNoteForIndexer(note);
 
   // 6. Register with indexer
-  console.log("📡 Registering with indexer...");
+  // console.log("📡 Registering with indexer...");
   const { leafIndex, root } = await registerDepositWithIndexer(
     indexerUrl,
     note.commitment,
@@ -208,13 +207,13 @@ export async function executeDeposit(
     slot
   );
 
-  console.log("✅ Deposit registered:", { leafIndex, root });
+  // console.log("✅ Deposit registered:", { leafIndex, root });
 
   // 7. Fetch Merkle proof
-  console.log("📡 Fetching Merkle proof...");
+  // console.log("📡 Fetching Merkle proof...");
   const merkleProof = await fetchMerkleProof(indexerUrl, leafIndex);
 
-  console.log("✅ Deposit flow complete!");
+  // console.log("✅ Deposit flow complete!");
 
   return {
     signature,
@@ -224,4 +223,3 @@ export async function executeDeposit(
     merkleProof,
   };
 }
-
