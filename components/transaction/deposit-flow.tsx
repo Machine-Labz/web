@@ -20,14 +20,12 @@ import {
   updateNote,
   formatAmount,
   calculateFee,
+  getPublicViewKey,
   type CloakNote,
 } from "@/lib/note-manager";
 import { getShieldPoolPDAs } from "@/lib/pda";
-import {
-  buildDepositInstruction,
-  executeDeposit,
-  type DepositTransactionParams,
-} from "@/lib/deposit-service";
+import { encryptNoteForRecipient, type NoteData } from "@/lib/keys";
+import { parseTransactionError, hasSufficientBalance } from "@/lib/program-errors";
 
 const PROGRAM_ID = process.env.NEXT_PUBLIC_PROGRAM_ID;
 if (!PROGRAM_ID) {
@@ -79,6 +77,22 @@ export default function DepositFlow() {
       return;
     }
 
+    // Check balance before proceeding
+    try {
+      const balance = await connection.getBalance(publicKey);
+      const balanceCheck = hasSufficientBalance(balance, note.amount);
+      
+      if (!balanceCheck.sufficient) {
+        toast.error("Insufficient Balance", {
+          description: balanceCheck.message,
+        });
+        return;
+      }
+    } catch (balanceError) {
+      console.warn("Failed to check balance:", balanceError);
+      // Continue anyway - the transaction will fail if insufficient
+    }
+
     setState("depositing");
 
     const { pool: poolPubkey, commitments: commitmentsPubkey } = getShieldPoolPDAs();
@@ -97,15 +111,10 @@ export default function DepositFlow() {
 
     try {
       // Build deposit instruction
-      const depositParams: DepositTransactionParams = {
-        note,
-        poolPubkey,
-        commitmentsPubkey,
-        userPubkey: publicKey,
-        programId: PROGRAM_ID!,
-      };
-      
-      const depositIx = buildDepositInstruction(depositParams);
+      if (!PROGRAM_ID) {
+        throw new Error("PROGRAM_ID not configured");
+      }
+      const programId = new PublicKey(PROGRAM_ID);
       const commitmentBytes = Buffer.from(note.commitment, "hex");
 
       const depositIx = createDepositInstruction({
@@ -142,14 +151,17 @@ export default function DepositFlow() {
         console.log("Simulation logs:", simulation.value.logs);
         
         if (simulation.value.err) {
-          const errorMsg = `Simulation failed: ${JSON.stringify(simulation.value.err)}`;
-          const logs = simulation.value.logs?.join('\n') || 'No logs';
-          console.error("Simulation failed with logs:", logs);
-          throw new Error(`${errorMsg}\nLogs:\n${logs}`);
+          // Create detailed error object for better parsing
+          const errorObj = {
+            message: `Transaction simulation failed: ${JSON.stringify(simulation.value.err)}`,
+            logs: simulation.value.logs,
+          };
+          console.error("Simulation failed with logs:", simulation.value.logs?.join('\n'));
+          throw errorObj;
         }
       } catch (simError: any) {
         console.error("Simulation error:", simError);
-        throw new Error(`Transaction simulation failed: ${simError.message}`);
+        throw simError; // Pass through the original error for better parsing
       }
       
       console.log("✅ Simulation passed! Sending transaction...");
@@ -199,18 +211,15 @@ export default function DepositFlow() {
         throw new Error("Transaction confirmation timeout");
       }
 
-      // Get transaction details
-      console.log("📝 Fetching transaction details...");
-      const txDetails = await connection.getTransaction(signature, {
-        commitment: "confirmed",
-        maxSupportedTransactionVersion: 0,
-      });
-      const depositSlot = txDetails?.slot ?? 0;
-      console.log("Transaction details:", { slot: depositSlot, blockTime: txDetails?.blockTime });
-
-      // Submit to indexer with proper encryption
-      console.log("📡 Submitting to indexer at:", INDEXER_URL);
+      // 🚨 CRITICAL: After this point, SOL is locked on-chain!
+      // We MUST complete the registration even if the client disconnects.
+      // Use server-side endpoint to ensure reliability.
       
+      console.log("=".repeat(60));
+      console.log("🔒 POINT OF NO RETURN: Transaction confirmed on-chain");
+      console.log("📡 Calling server-side finalization endpoint...");
+      console.log("=".repeat(60));
+
       // Get wallet's public view key for self-encryption
       const publicViewKey = getPublicViewKey();
       const pvkBytes = Buffer.from(publicViewKey, "hex");
@@ -229,45 +238,52 @@ export default function DepositFlow() {
       // Encode encrypted note as base64 JSON
       const encryptedOutput = btoa(JSON.stringify(encryptedNote));
 
-      const depositPayload = {
-        leaf_commit: note.commitment,
-        encrypted_output: encryptedOutput,
+      // Call server-side finalization endpoint (handles all critical operations)
+      const finalizePayload = {
         tx_signature: signature,
-        slot: depositSlot,
+        commitment: note.commitment,
+        encrypted_output: encryptedOutput,
       };
-      console.log("Indexer payload:", depositPayload);
 
-      const depositResponse = await fetch(`${INDEXER_URL}/api/v1/deposit`, {
+      console.log("📡 Finalizing deposit via server-side endpoint...");
+      toast.info("Registering deposit...");
+
+      const finalizeResponse = await fetch("/api/deposit/finalize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(depositPayload),
+        body: JSON.stringify(finalizePayload),
       });
 
-      console.log("Indexer response status:", depositResponse.status);
-
-      if (!depositResponse.ok) {
-        const errorText = await depositResponse.text();
-        console.error("❌ Indexer error:", errorText);
-        throw new Error(`Failed to register deposit with indexer: ${errorText}`);
+      if (!finalizeResponse.ok) {
+        const errorText = await finalizeResponse.text();
+        console.error("❌ Finalization error:", errorText);
+        
+        // Save the signature for manual recovery
+        console.warn("⚠️ Deposit may need manual recovery. Transaction:", signature);
+        
+        throw new Error(`Failed to finalize deposit: ${errorText}\n\nTransaction signature: ${signature}\n\nYou can recover this deposit later using the transaction signature.`);
       }
 
-      const depositData = await depositResponse.json();
-      console.log("✅ Indexer response:", depositData);
-      const leafIndex = depositData.leafIndex ?? depositData.leaf_index;
-      const historicalRoot = depositData.root;
+      const finalizeData = await finalizeResponse.json();
+      console.log("✅ Finalization response:", finalizeData);
 
-      // Fetch the Merkle proof for this leaf (needed for future withdrawals)
-      console.log("📡 Fetching Merkle proof for leaf index:", leafIndex);
-      const merkleProofResponse = await fetch(`${INDEXER_URL}/api/v1/merkle/proof/${leafIndex}`);
-      if (!merkleProofResponse.ok) {
-        throw new Error(`Failed to fetch Merkle proof: ${merkleProofResponse.statusText}`);
+      if (!finalizeData.success) {
+        throw new Error(`Finalization failed: ${finalizeData.error}`);
       }
-      const merkleProofData = await merkleProofResponse.json();
+
+      const leafIndex = finalizeData.leaf_index;
+      const historicalRoot = finalizeData.root;
+      const depositSlot = finalizeData.slot;
       const historicalMerkleProof = {
-        pathElements: merkleProofData.pathElements ?? merkleProofData.path_elements,
-        pathIndices: merkleProofData.pathIndices ?? merkleProofData.path_indices,
+        pathElements: finalizeData.merkle_proof.path_elements,
+        pathIndices: finalizeData.merkle_proof.path_indices,
       };
-      console.log("✅ Merkle proof fetched:", historicalMerkleProof);
+      
+      console.log("✅ Server-side finalization complete:", {
+        leafIndex,
+        slot: depositSlot,
+        root: historicalRoot,
+      });
 
       // Update note with deposit details (update existing saved note)
       console.log("💾 Updating note with deposit details:", {
@@ -326,19 +342,12 @@ export default function DepositFlow() {
         cause: error.cause,
       });
       
-      // Extract more meaningful error messages
-      let errorMsg = error.message || "Unknown error";
-      if (error.logs && error.logs.length > 0) {
-        const relevantLog = error.logs.find((log: string) => 
-          log.includes("Error") || log.includes("failed")
-        );
-        if (relevantLog) {
-          errorMsg = relevantLog;
-        }
-      }
+      // Parse error and show user-friendly message
+      const friendlyMessage = parseTransactionError(error);
       
-      toast.error("Deposit failed", {
-        description: errorMsg,
+      toast.error("Deposit Failed", {
+        description: friendlyMessage,
+        duration: 6000, // Show longer for important errors
       });
       setState("idle");
     }

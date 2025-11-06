@@ -30,6 +30,7 @@ import {
   getDistributableAmount,
   type CloakNote,
 } from "@/lib/note-manager";
+import { parseTransactionError } from "@/lib/program-errors";
 
 const RELAY_URL = process.env.NEXT_PUBLIC_RELAY_URL;
 if (!RELAY_URL) {
@@ -413,8 +414,13 @@ export default function WithdrawFlow() {
       toast.success("Withdraw completed!");
     } catch (error: any) {
       console.error("Withdraw failed:", error);
-      toast.error("Withdraw failed", {
-        description: error.message || "Unknown error",
+      
+      // Parse error and show user-friendly message
+      const friendlyMessage = parseTransactionError(error);
+      
+      toast.error("Withdraw Failed", {
+        description: friendlyMessage,
+        duration: 6000, // Show longer for important errors
       });
       setState("idle");
     }

@@ -7,7 +7,7 @@ import {
 } from '@/lib/sp1-prover';
 
 export interface UseProverOptions {
-  indexerUrl?: string;
+  apiUrl?: string; // Optional API URL override (defaults to /api/prove)
   timeout?: number;
   onStart?: () => void;
   onSuccess?: (result: SP1ProofResult) => void;
@@ -45,8 +45,8 @@ export interface UseProverState {
  */
 export function useSP1Prover(options: UseProverOptions = {}) {
   const [prover] = useState(() => 
-    options.indexerUrl 
-      ? new SP1ProverClient({ indexerUrl: options.indexerUrl, timeout: options.timeout })
+    options.apiUrl 
+      ? new SP1ProverClient({ apiUrl: options.apiUrl, timeout: options.timeout })
       : defaultProver
   );
 
@@ -156,7 +156,7 @@ export function useSP1Prover(options: UseProverOptions = {}) {
     error: state.error,
     
     // Config
-    indexerUrl: prover.getIndexerUrl(),
+    apiUrl: prover.getApiUrl(),
     timeout: prover.getTimeout(),
   };
 }

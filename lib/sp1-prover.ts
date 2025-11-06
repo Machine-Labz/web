@@ -2,7 +2,8 @@
  * SP1 Proof Generation Client
  *
  * This module provides a TypeScript client for generating SP1 ZK proofs
- * via the backend indexer API using the direct /prove endpoint.
+ * via the Next.js server-side API route (/api/prove), which forwards requests
+ * to the backend indexer.
  *
  * ⚠️ PRIVACY WARNING: This implementation sends private inputs to the backend.
  * For production use with full privacy, consider client-side proof generation.
@@ -40,22 +41,22 @@ export interface SP1ProofResult {
 }
 
 export interface ProverConfig {
-  indexerUrl: string;
+  apiUrl?: string; // Optional API URL override (defaults to /api/prove)
   timeout?: number; // Optional timeout in milliseconds (default: 5 minutes)
 }
 
 /**
  * Default configuration
  */
-const DEFAULT_CONFIG: ProverConfig = {
-  indexerUrl: process.env.NEXT_PUBLIC_INDEXER_URL || "http://localhost:3001",
+const DEFAULT_CONFIG: Required<ProverConfig> = {
+  apiUrl: "/api/prove", // Use Next.js server-side API route
   timeout: 5 * 60 * 1000, // 5 minutes
 };
 
 /**
  * SP1 Prover Client
  *
- * Handles communication with the backend proof generation service
+ * Handles communication with the server-side proof generation API
  */
 export class SP1ProverClient {
   private config: Required<ProverConfig>;
@@ -64,7 +65,8 @@ export class SP1ProverClient {
     this.config = {
       ...DEFAULT_CONFIG,
       ...config,
-      timeout: config?.timeout ?? DEFAULT_CONFIG.timeout!,
+      apiUrl: config?.apiUrl ?? DEFAULT_CONFIG.apiUrl,
+      timeout: config?.timeout ?? DEFAULT_CONFIG.timeout,
     };
   }
 
@@ -105,7 +107,7 @@ export class SP1ProverClient {
 
       console.log(
         "[SP1Prover] Sending request to:",
-        `${this.config.indexerUrl}/api/v1/prove`,
+        this.config.apiUrl,
       );
       console.log("[SP1Prover] Request body details:", {
         private_inputs_length: requestBody.private_inputs.length,
@@ -158,8 +160,8 @@ export class SP1ProverClient {
         this.config.timeout,
       );
 
-      // Make API request
-      const response = await fetch(`${this.config.indexerUrl}/api/v1/prove`, {
+      // Make API request to Next.js server-side route
+      const response = await fetch(this.config.apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -247,7 +249,7 @@ export class SP1ProverClient {
    */
   async healthCheck(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.config.indexerUrl}/health`, {
+      const response = await fetch(this.config.apiUrl, {
         method: "GET",
       });
       return response.ok;
@@ -257,10 +259,10 @@ export class SP1ProverClient {
   }
 
   /**
-   * Get the current indexer URL
+   * Get the current API URL
    */
-  getIndexerUrl(): string {
-    return this.config.indexerUrl;
+  getApiUrl(): string {
+    return this.config.apiUrl;
   }
 
   /**

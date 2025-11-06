@@ -59,6 +59,7 @@ import {
   type CloakNote,
 } from "@/lib/note-manager";
 import { encryptNoteForRecipient } from "@/lib/keys";
+import { parseTransactionError, hasSufficientBalance } from "@/lib/program-errors";
 import {
   ComputeBudgetProgram,
   LAMPORTS_PER_SOL,
@@ -528,6 +529,17 @@ export default function TransactionPage() {
       return;
     }
 
+    // Check if user has sufficient balance
+    if (balance !== null && parsedAmountLamports !== null) {
+      const balanceCheck = hasSufficientBalance(balance, parsedAmountLamports);
+      if (!balanceCheck.sufficient) {
+        toast.error("Insufficient Balance", {
+          description: balanceCheck.message,
+        });
+        return;
+      }
+    }
+
     // Enforce amount conservation: outputs + fee == amount
     const fee = calculateFee(parsedAmountLamports);
     const totalAssignedWithFee = totalAssignedLamports + fee;
@@ -641,12 +653,13 @@ export default function TransactionPage() {
 
       const simulation = await connection.simulateTransaction(depositTx);
       if (simulation.value.err) {
-        const logs = simulation.value.logs?.join("\n") || "No logs";
-        throw new Error(
-          `Transaction simulation failed: ${JSON.stringify(
-            simulation.value.err
-          )}\nLogs:\n${logs}`
-        );
+        // Create detailed error object for better parsing
+        const errorObj = {
+          message: `Transaction simulation failed: ${JSON.stringify(simulation.value.err)}`,
+          logs: simulation.value.logs,
+        };
+        console.error("❌ Simulation failed:", errorObj);
+        throw errorObj;
       }
 
       const signature = await sendTransaction(depositTx, connection);
@@ -667,12 +680,14 @@ export default function TransactionPage() {
 
       setTransactionSignature(signature);
 
-      // Submit deposit to indexer
-      console.log("📡 Submitting deposit to indexer...");
-      const INDEXER_URL = process.env.NEXT_PUBLIC_INDEXER_URL;
-      if (!INDEXER_URL) {
-        throw new Error("NEXT_PUBLIC_INDEXER_URL not set");
-      }
+      // 🚨 CRITICAL: After this point, SOL is locked on-chain!
+      // We MUST complete the registration even if the client disconnects.
+      // Use server-side endpoint to ensure reliability.
+      
+      console.log("=".repeat(60));
+      console.log("🔒 POINT OF NO RETURN: Transaction confirmed on-chain");
+      console.log("📡 Calling server-side finalization endpoint...");
+      console.log("=".repeat(60));
 
       // Encrypt note data using proper encryption (v2.0 with view/spend keys)
       const publicViewKey = getPublicViewKey();
@@ -690,54 +705,58 @@ export default function TransactionPage() {
       
       const encryptedOutput = btoa(JSON.stringify(encryptedNote));
 
-      const depositResponse = await fetch(`${INDEXER_URL}/api/v1/deposit`, {
+      // Call server-side finalization endpoint (handles all critical operations)
+      const finalizePayload = {
+        tx_signature: signature,
+        commitment: note.commitment,
+        encrypted_output: encryptedOutput,
+      };
+
+      console.log("📡 Finalizing deposit via server-side endpoint...");
+      toast.info("Registering deposit...");
+
+      const finalizeResponse = await fetch("/api/deposit/finalize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          leaf_commit: note.commitment,
-          encrypted_output: encryptedOutput,
-          tx_signature: signature,
-          slot: confirmation?.context?.slot || 0,
-        }),
+        body: JSON.stringify(finalizePayload),
       });
 
-      if (!depositResponse.ok) {
-        const errorText = await depositResponse.text();
-        console.error("❌ Indexer error:", errorText);
-        throw new Error(
-          `Failed to register deposit with indexer: ${errorText}`
-        );
+      if (!finalizeResponse.ok) {
+        const errorText = await finalizeResponse.text();
+        console.error("❌ Finalization error:", errorText);
+        
+        // Save the signature for manual recovery
+        console.warn("⚠️ Deposit may need manual recovery. Transaction:", signature);
+        
+        throw new Error(`Failed to finalize deposit: ${errorText}\n\nTransaction signature: ${signature}\n\nYou can recover this deposit later using the transaction signature.`);
       }
 
-      const depositData = await depositResponse.json();
-      console.log("✅ Indexer response:", depositData);
-      const leafIndex = depositData.leafIndex ?? depositData.leaf_index;
-      const historicalRoot = depositData.root;
+      const finalizeData = await finalizeResponse.json();
+      console.log("✅ Finalization response:", finalizeData);
 
-      // Fetch the Merkle proof for this leaf (needed for future withdrawals)
-      console.log("📡 Fetching Merkle proof for leaf index:", leafIndex);
-      const merkleProofResponse = await fetch(
-        `${INDEXER_URL}/api/v1/merkle/proof/${leafIndex}`
-      );
-      if (!merkleProofResponse.ok) {
-        throw new Error(
-          `Failed to fetch Merkle proof: ${merkleProofResponse.statusText}`
-        );
+      if (!finalizeData.success) {
+        throw new Error(`Finalization failed: ${finalizeData.error}`);
       }
-      const merkleProofData = await merkleProofResponse.json();
+
+      const leafIndex = finalizeData.leaf_index;
+      const historicalRoot = finalizeData.root;
+      const depositSlot = finalizeData.slot;
       const historicalMerkleProof = {
-        pathElements:
-          merkleProofData.pathElements ?? merkleProofData.path_elements,
-        pathIndices:
-          merkleProofData.pathIndices ?? merkleProofData.path_indices,
+        pathElements: finalizeData.merkle_proof.path_elements,
+        pathIndices: finalizeData.merkle_proof.path_indices,
       };
-      console.log("✅ Merkle proof fetched");
+      
+      console.log("✅ Server-side finalization complete:", {
+        leafIndex,
+        slot: depositSlot,
+        root: historicalRoot,
+      });
 
       // Create updated note with root and proof
       const updatedNote = {
         ...note,
         depositSignature: signature,
-        depositSlot: confirmation?.context?.slot,
+        depositSlot,
         leafIndex,
         root: historicalRoot,
         merkleProof: historicalMerkleProof,
@@ -745,7 +764,7 @@ export default function TransactionPage() {
 
       updateNote(note.commitment, {
         depositSignature: signature,
-        depositSlot: confirmation?.context?.slot,
+        depositSlot,
         leafIndex,
         root: historicalRoot,
         merkleProof: historicalMerkleProof,
@@ -775,8 +794,13 @@ export default function TransactionPage() {
     } catch (error: any) {
       console.error("Transaction failed:", error);
       setTransactionStatus("error");
-      toast.error("Transaction failed", {
-        description: error.message || "Please try again.",
+      
+      // Parse error and show user-friendly message
+      const friendlyMessage = parseTransactionError(error);
+      
+      toast.error("Transaction Failed", {
+        description: friendlyMessage,
+        duration: 6000, // Show longer for important errors
       });
     } finally {
       setIsLoading(false);
@@ -961,7 +985,12 @@ export default function TransactionPage() {
       setTransactionStatus("sent");
     } catch (error: any) {
       console.error("❌ Withdraw failed:", error);
-      throw error;
+      
+      // Re-throw with better error message
+      const friendlyMessage = parseTransactionError(error);
+      const enhancedError = new Error(friendlyMessage);
+      (enhancedError as any).originalError = error;
+      throw enhancedError;
     }
   };
 
