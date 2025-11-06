@@ -1196,7 +1196,7 @@ export default function TransactionPage() {
                 </p>
 
                 {/* Testnet Info Banner */}
-                <div className="mt-4 max-w-xl mx-auto">
+                <div className="mt-4 max-w-xl mx-auto space-y-3">
                   <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-center">
                     <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400">
                       <strong>Testing on Solana Devnet:</strong> This uses test SOL with no real value.{" "}
@@ -1208,6 +1208,13 @@ export default function TransactionPage() {
                       >
                         Get free test SOL from the faucet
                       </a>
+                    </p>
+                  </div>
+
+                  {/* Launch Status Banner */}
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-center">
+                    <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-400">
+                      <strong>Recently Launched:</strong> We&apos;re actively monitoring system performance and making improvements. You may encounter occasional issues during this testing phase. Your feedback helps us build a more robust system!
                     </p>
                   </div>
                 </div>

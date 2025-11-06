@@ -328,11 +328,11 @@ export default function CloakLandingPage() {
                   Private execution on Solana
                 </Badge>
                 <Badge
-                  className="rounded-full px-3 py-1 text-xs font-medium bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20"
+                  className="rounded-full px-4 py-1.5 text-sm font-medium bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 animate-pulse"
                   variant="outline"
                 >
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse"></span>
-                  Testnet Live
+                  <Rocket className="inline-block w-3.5 h-3.5 mr-1.5" />
+                  Just Launched on Testnet!
                 </Badge>
               </div>
 
@@ -344,7 +344,7 @@ export default function CloakLandingPage() {
 
               <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground mb-4 sm:mb-6 max-w-3xl mx-auto text-balance px-4">
                 Deposit into the shared privacy pool and withdraw without
-                revealing which deposit you own.
+                revealing which deposit you own. Try it now on testnet!
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
                 <motion.div
@@ -360,9 +360,9 @@ export default function CloakLandingPage() {
                     >
                       <Button
                         size="lg"
-                        className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base bg-primary hover:bg-primary/90 text-primary-foreground"
+                        className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 animate-bounce"
                       >
-                        Send Privately
+                        Try Testnet Now
                         <motion.div
                           animate={{ x: [0, 4, 0] }}
                           transition={{
