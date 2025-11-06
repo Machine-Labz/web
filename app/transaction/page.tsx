@@ -35,6 +35,8 @@ import {
   Download,
   Upload,
   Trash2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { SOLIcon, USDCIcon, OREIcon, ZCashIcon } from "@/components/icons/token-icons";
 import Link from "next/link";
@@ -99,8 +101,10 @@ export default function TransactionPage() {
   const [notes, setNotes] = useState<CloakNote[]>([]);
   const [noteInput, setNoteInput] = useState("");
   const [showImportSection, setShowImportSection] = useState(false);
-  const [selectedNoteForWithdraw, setSelectedNoteForWithdraw] =
-    useState<CloakNote | null>(null);
+  const [showNotesDropdown, setShowNotesDropdown] = useState(false);
+  const [selectedNotesForWithdraw, setSelectedNotesForWithdraw] = useState<
+    CloakNote[]
+  >([]);
 
   const parsedAmountLamports = parseSolToLamports(amount);
   const amountLamports = parsedAmountLamports ?? 0;
@@ -387,18 +391,35 @@ export default function TransactionPage() {
   useEffect(() => {
     if (mode === "advanced") {
       refreshNotes();
+    } else {
+      // Clear selected notes when switching to Simple mode
+      setSelectedNotesForWithdraw([]);
     }
   }, [mode]);
 
   // Calculate private balance (sum of all notes with depositSignature)
-  const privateBalance = notes
-    .filter((note) => note.depositSignature && note.leafIndex !== undefined)
-    .reduce((sum, note) => sum + note.amount, 0);
+  const withdrawableNotes = notes.filter(
+    (note) => note.depositSignature && note.leafIndex !== undefined
+  );
+  const privateBalance = withdrawableNotes.reduce(
+    (sum, note) => sum + note.amount,
+    0
+  );
   const privateBalanceShort = (() => {
     const sol = privateBalance / 1_000_000_000;
     const short = sol.toFixed(3);
     return short.replace(/0+$/g, "").replace(/\.$/, "");
   })();
+
+  // Calculate total from selected notes
+  const selectedNotesTotalLamports = selectedNotesForWithdraw.reduce(
+    (sum, note) => sum + note.amount,
+    0
+  );
+  const selectedNotesDistributableLamports =
+    selectedNotesTotalLamports > 0
+      ? selectedNotesTotalLamports - calculateFee(selectedNotesTotalLamports)
+      : 0;
 
   // Handle note import from file
   const handleImportFromFile = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -457,9 +478,46 @@ export default function TransactionPage() {
     ) {
       deleteNote(commitment);
       refreshNotes();
+      setSelectedNotesForWithdraw((prev) =>
+        prev.filter((n) => n.commitment !== commitment)
+      );
       toast.success("Note deleted");
     }
   };
+
+  // Handle note selection for withdrawal
+  const handleNoteSelection = (note: CloakNote, selected: boolean) => {
+    if (selected) {
+      setSelectedNotesForWithdraw((prev) => [...prev, note]);
+    } else {
+      setSelectedNotesForWithdraw((prev) =>
+        prev.filter((n) => n.commitment !== note.commitment)
+      );
+    }
+  };
+
+  // Auto-update amounts when notes are selected
+  useEffect(() => {
+    if (mode === "advanced" && selectedNotesForWithdraw.length > 0) {
+      // Set the total amount from selected notes
+      setAmount(formatAmount(selectedNotesTotalLamports));
+
+      // Auto-distribute to recipients based on individual note amounts
+      const newOutputs = selectedNotesForWithdraw.map((note) => {
+        const withdrawableAmount = note.amount - calculateFee(note.amount);
+        return {
+          address: publicKey?.toBase58() || "",
+          amount: formatAmount(withdrawableAmount),
+        };
+      });
+
+      setOutputs(
+        newOutputs.length > 0
+          ? newOutputs
+          : [{ address: "", amount: "" }]
+      );
+    }
+  }, [selectedNotesForWithdraw, mode, publicKey]);
 
   const prover = useSP1Prover({
     onStart: () => {
@@ -481,12 +539,96 @@ export default function TransactionPage() {
 
   const { generateProof, isGenerating, progress } = prover;
 
+  // Handle withdrawal of selected notes in Pro mode
+  const handleWithdrawSelectedNotes = async () => {
+    if (!connected || !publicKey) {
+      toast.error("Please connect your wallet first");
+      return;
+    }
+
+    if (selectedNotesForWithdraw.length === 0) {
+      toast.error("Please select at least one note to withdraw");
+      return;
+    }
+
+    // Validate all selected notes are withdrawable
+    const allWithdrawable = selectedNotesForWithdraw.every(
+      (note) => note.depositSignature && note.leafIndex !== undefined
+    );
+    if (!allWithdrawable) {
+      toast.error("Some selected notes are not ready for withdrawal");
+      return;
+    }
+
+    // Validate outputs
+    if (!outputsValid) {
+      toast.error("Please enter valid recipient information");
+      return;
+    }
+
+    setIsLoading(true);
+    setTransactionStatus("generating_proof");
+    setShowStatusModal(true);
+
+    try {
+      // Process each note sequentially, matching each note to its corresponding output
+      for (let i = 0; i < selectedNotesForWithdraw.length; i++) {
+        const note = selectedNotesForWithdraw[i];
+        const output = parsedOutputs[i];
+
+        if (!output || !output.address || !output.amountLamports) {
+          throw new Error(`Invalid output for note ${i + 1}`);
+        }
+
+        console.log(`🔐 Withdrawing note ${i + 1}/${selectedNotesForWithdraw.length}: ${note.commitment.slice(0, 16)}...`);
+
+        // Each note gets withdrawn to its corresponding single recipient
+        const withdrawOutput = {
+          address: output.address,
+          amountLamports: output.amountLamports,
+        };
+
+        await performWithdraw(
+          note,
+          note.leafIndex!,
+          [withdrawOutput] // Single output per note
+        );
+
+        // Delete the note after successful withdrawal
+        deleteNote(note.commitment);
+        console.log(`✅ Note ${i + 1} withdrawn and deleted: ${note.commitment.slice(0, 16)}...`);
+      }
+
+      toast.success("All selected notes withdrawn successfully!");
+      setSelectedNotesForWithdraw([]);
+      refreshNotes();
+      setTransactionStatus("sent");
+    } catch (error: any) {
+      console.error("Withdrawal failed:", error);
+      setTransactionStatus("error");
+
+      const friendlyMessage = parseTransactionError(error);
+      toast.error("Withdrawal Failed", {
+        description: friendlyMessage,
+        duration: 6000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSendTokens = async () => {
     if (!connected || !publicKey) {
       toast.error("Please connect your wallet first");
       return;
     }
 
+    // In Pro mode with selected notes, we're doing a withdrawal
+    if (mode === "advanced" && selectedNotesForWithdraw.length > 0) {
+      return handleWithdrawSelectedNotes();
+    }
+
+    // Otherwise, proceed with deposit flow
     if (!amount) {
       toast.error("Please enter an amount");
       return;
@@ -1040,43 +1182,90 @@ export default function TransactionPage() {
                 <p className="text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed">
                   Send tokens with complete privacy using zero-knowledge proofs
                 </p>
+
+                {/* Testnet Info Banner */}
+                <div className="mt-4 max-w-xl mx-auto">
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-center">
+                    <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400">
+                      <strong>Testing on Solana Devnet:</strong> This uses test SOL with no real value.{" "}
+                      <a
+                        href="https://faucet.solana.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline hover:no-underline font-semibold"
+                      >
+                        Get free test SOL from the faucet
+                      </a>
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <Card className="w-full shadow-lg border-border/50">
                 <CardContent className="space-y-8 p-6 sm:p-8">
                   {/* Advanced Mode: Private Balance Display */}
                   {mode === "advanced" && (
-                    <div className="border-2 border-primary/30 rounded-xl p-4 bg-primary/5">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">
-                            Private Balance
+                    <div className="space-y-4">
+                      <div className="border-2 border-primary/30 rounded-xl p-4 bg-primary/5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-muted-foreground">
+                              Private Balance
+                            </p>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <p className="text-2xl font-bold text-foreground mt-1 cursor-help underline decoration-dotted hover:no-underline">
+                                    {privateBalanceShort} SOL
+                                  </p>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom">
+                                  {formatAmount(privateBalance)} SOL
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {withdrawableNotes.length} note(s) ready to withdraw
+                            </p>
+                          </div>
+                          <ShieldIcon className="w-8 h-8 text-primary opacity-50" />
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          type="button"
+                          onClick={() => setShowNotesDropdown(!showNotesDropdown)}
+                          className="w-full mt-4 hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors flex items-center justify-center gap-2"
+                        >
+                          {showNotesDropdown ? (
+                            <>
+                              <ChevronUp className="w-4 h-4" />
+                              Hide Notes Management
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="w-4 h-4" />
+                              Show Notes Management
+                            </>
+                          )}
+                        </Button>
+                      </div>
+
+                      {/* Selected Notes Summary */}
+                      {selectedNotesForWithdraw.length > 0 && (
+                        <div className="border-2 border-green-500/30 rounded-xl p-4 bg-green-500/5">
+                          <p className="text-sm font-medium text-muted-foreground mb-2">
+                            Selected for Withdrawal
                           </p>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <p className="text-2xl font-bold text-foreground mt-1 cursor-help underline decoration-dotted hover:no-underline">
-                                  {privateBalanceShort} SOL
-                                </p>
-                              </TooltipTrigger>
-                              <TooltipContent side="bottom">
-                                {formatAmount(privateBalance)} SOL
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <p className="text-xl font-bold text-foreground">
+                            {formatAmount(selectedNotesTotalLamports)} SOL
+                          </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {
-                              notes.filter(
-                                (n) =>
-                                  n.depositSignature &&
-                                  n.leafIndex !== undefined
-                              ).length
-                            }{" "}
-                            note(s) ready to withdraw
+                            {selectedNotesForWithdraw.length} note(s) selected •{" "}
+                            {formatAmount(selectedNotesDistributableLamports)} SOL after fees
                           </p>
                         </div>
-                        <ShieldIcon className="w-8 h-8 text-primary opacity-50" />
-                      </div>
+                      )}
                     </div>
                   )}
 
@@ -1191,7 +1380,15 @@ export default function TransactionPage() {
                         e.currentTarget.blur();
                         e.preventDefault();
                       }}
-                      className="text-base sm:text-lg md:text-xl h-12 sm:h-14 font-semibold"
+                      disabled={
+                        mode === "advanced" && selectedNotesForWithdraw.length > 0
+                      }
+                      className="text-base sm:text-lg md:text-xl h-12 sm:h-14 font-semibold disabled:opacity-70 disabled:cursor-not-allowed"
+                      title={
+                        mode === "advanced" && selectedNotesForWithdraw.length > 0
+                          ? "Amount is auto-calculated from selected notes"
+                          : ""
+                      }
                     />
 
                     {/* Amount percentage buttons */}
@@ -1201,7 +1398,12 @@ export default function TransactionPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleAmountPercentage(25)}
-                        disabled={!connected || balance === null}
+                        disabled={
+                          !connected ||
+                          balance === null ||
+                          (mode === "advanced" &&
+                            selectedNotesForWithdraw.length > 0)
+                        }
                         className="flex-1 h-9 text-xs font-semibold hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors"
                       >
                         25%
@@ -1211,7 +1413,12 @@ export default function TransactionPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleAmountPercentage(50)}
-                        disabled={!connected || balance === null}
+                        disabled={
+                          !connected ||
+                          balance === null ||
+                          (mode === "advanced" &&
+                            selectedNotesForWithdraw.length > 0)
+                        }
                         className="flex-1 h-9 text-xs font-semibold hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors"
                       >
                         50%
@@ -1221,7 +1428,12 @@ export default function TransactionPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleAmountPercentage(100)}
-                        disabled={!connected || balance === null}
+                        disabled={
+                          !connected ||
+                          balance === null ||
+                          (mode === "advanced" &&
+                            selectedNotesForWithdraw.length > 0)
+                        }
                         className="flex-1 h-9 text-xs font-semibold hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors"
                       >
                         Max
@@ -1231,7 +1443,11 @@ export default function TransactionPage() {
                         variant="outline"
                         size="sm"
                         onClick={handleResetAmount}
-                        disabled={!amount}
+                        disabled={
+                          !amount ||
+                          (mode === "advanced" &&
+                            selectedNotesForWithdraw.length > 0)
+                        }
                         className="flex-1 h-9 text-xs font-semibold hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50 transition-colors bg-transparent"
                       >
                         Reset
@@ -1248,19 +1464,46 @@ export default function TransactionPage() {
                           : "Connect wallet"}
                       </span>
                     </p>
+
+                    {/* Helper text for Pro mode when notes are selected */}
+                    {mode === "advanced" && selectedNotesForWithdraw.length > 0 && (
+                      <div className="text-xs text-primary bg-primary/10 border border-primary/20 p-3 rounded-lg">
+                        <strong>Note:</strong> Amount is calculated from{" "}
+                        {selectedNotesForWithdraw.length} selected note(s). Each note
+                        will be withdrawn to its corresponding recipient below.
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <Label className="text-sm font-semibold text-foreground">
-                        Recipients
-                      </Label>
+                      <div className="flex flex-col">
+                        <Label className="text-sm font-semibold text-foreground">
+                          Recipients
+                        </Label>
+                        {mode === "advanced" &&
+                          selectedNotesForWithdraw.length > 0 && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              One recipient per selected note
+                            </p>
+                          )}
+                      </div>
                       <Button
                         variant="outline"
                         size="sm"
                         type="button"
                         onClick={addRecipientRow}
+                        disabled={
+                          mode === "advanced" &&
+                          selectedNotesForWithdraw.length > 0
+                        }
                         className="h-9 hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors bg-transparent"
+                        title={
+                          mode === "advanced" &&
+                          selectedNotesForWithdraw.length > 0
+                            ? "Recipients match selected notes (cannot add more)"
+                            : ""
+                        }
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         Add Recipient
@@ -1288,17 +1531,28 @@ export default function TransactionPage() {
                             <div className="flex items-center justify-between">
                               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                 Recipient #{index + 1}
+                                {mode === "advanced" &&
+                                  selectedNotesForWithdraw.length > 0 &&
+                                  selectedNotesForWithdraw[index] && (
+                                    <span className="ml-2 text-primary">
+                                      (Note: {formatAmount(selectedNotesForWithdraw[index].amount)} SOL)
+                                    </span>
+                                  )}
                               </span>
-                              {outputs.length > 1 && (
-                                <button
-                                  type="button"
-                                  onClick={() => removeRecipientRow(index)}
-                                  className="text-muted-foreground hover:text-destructive transition-colors p-1 rounded hover:bg-destructive/10"
-                                  aria-label="Remove recipient"
-                                >
-                                  <XIcon />
-                                </button>
-                              )}
+                              {outputs.length > 1 &&
+                                !(
+                                  mode === "advanced" &&
+                                  selectedNotesForWithdraw.length > 0
+                                ) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removeRecipientRow(index)}
+                                    className="text-muted-foreground hover:text-destructive transition-colors p-1 rounded hover:bg-destructive/10"
+                                    aria-label="Remove recipient"
+                                  >
+                                    <XIcon />
+                                  </button>
+                                )}
                             </div>
 
                             <div className="grid gap-3 sm:grid-cols-2">
@@ -1343,7 +1597,9 @@ export default function TransactionPage() {
                                       disabled={
                                         outputs.length === 1 ||
                                         parseFloat(output.amount) <= 0.1 ||
-                                        isNaN(parseFloat(output.amount))
+                                        isNaN(parseFloat(output.amount)) ||
+                                        (mode === "advanced" &&
+                                          selectedNotesForWithdraw.length > 0)
                                       }
                                       tabIndex={-1}
                                     >
@@ -1358,7 +1614,11 @@ export default function TransactionPage() {
                                       spellCheck={false}
                                       placeholder="0.000 (SOL)"
                                       value={output.amount}
-                                      disabled={outputs.length === 1}
+                                      disabled={
+                                        outputs.length === 1 ||
+                                        (mode === "advanced" &&
+                                          selectedNotesForWithdraw.length > 0)
+                                      }
                                       onFocus={(e) => e.target.select()}
                                       onChange={(e) => {
                                         // Clean input to allow only decimals
@@ -1389,7 +1649,10 @@ export default function TransactionPage() {
                                       }
                                       className="font-mono text-sm h-11 flex-1 text-right disabled:bg-muted disabled:opacity-70 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                       title={
-                                        outputs.length === 1
+                                        mode === "advanced" &&
+                                        selectedNotesForWithdraw.length > 0
+                                          ? "Amount auto-calculated from selected note"
+                                          : outputs.length === 1
                                           ? "Amount matches your transaction total (disabled when single recipient)"
                                           : "Enter at least 0.001. Use ↑/↓ arrows to adjust by 0.1 SOL"
                                       }
@@ -1410,7 +1673,11 @@ export default function TransactionPage() {
                                           next.toFixed(3).replace(/\.?0+$/, "")
                                         );
                                       }}
-                                      disabled={outputs.length === 1}
+                                      disabled={
+                                        outputs.length === 1 ||
+                                        (mode === "advanced" &&
+                                          selectedNotesForWithdraw.length > 0)
+                                      }
                                       tabIndex={-1}
                                     >
                                       <PlusIcon className="w-4 h-4" />
@@ -1526,20 +1793,28 @@ export default function TransactionPage() {
                     onClick={handleSendTokens}
                     disabled={
                       !connected ||
-                      !amount ||
-                      (mode === "simple" && !outputsValid) ||
                       isLoading ||
+                      (mode === "simple" && (!amount || !outputsValid)) ||
                       (mode === "advanced" &&
-                        (parsedAmountLamports === null ||
+                        selectedNotesForWithdraw.length > 0 &&
+                        !outputsValid) ||
+                      (mode === "advanced" &&
+                        selectedNotesForWithdraw.length === 0 &&
+                        (!amount ||
+                          parsedAmountLamports === null ||
                           parsedAmountLamports <= 0))
                     }
                     className={`w-full h-14 text-base font-bold shadow-lg hover:shadow-xl transition-all ${
                       !connected ||
-                      !amount ||
-                      (mode === "simple" && !outputsValid) ||
                       isLoading ||
+                      (mode === "simple" && (!amount || !outputsValid)) ||
                       (mode === "advanced" &&
-                        (parsedAmountLamports === null ||
+                        selectedNotesForWithdraw.length > 0 &&
+                        !outputsValid) ||
+                      (mode === "advanced" &&
+                        selectedNotesForWithdraw.length === 0 &&
+                        (!amount ||
+                          parsedAmountLamports === null ||
                           parsedAmountLamports <= 0))
                         ? "opacity-50 cursor-not-allowed"
                         : ""
@@ -1554,7 +1829,9 @@ export default function TransactionPage() {
                     ) : (
                       <>
                         <SendIcon />
-                        {mode === "advanced"
+                        {mode === "advanced" && selectedNotesForWithdraw.length > 0
+                          ? `Withdraw ${selectedNotesForWithdraw.length} Note(s)`
+                          : mode === "advanced"
                           ? "Deposit Privately"
                           : "Send Privately"}
                       </>
@@ -1623,12 +1900,18 @@ export default function TransactionPage() {
                     </TooltipProvider>
                   </div>
 
-                  {/* Advanced Mode: Notes Management */}
-                  {mode === "advanced" && (
-                    <div className="space-y-4 mt-8 pt-6 border-t border-border">
+                  {/* Advanced Mode: Notes Management Dropdown */}
+                  {mode === "advanced" && showNotesDropdown && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-4 border-2 border-border rounded-xl p-6 bg-muted/20"
+                    >
                       <div className="flex items-center justify-between">
                         <Label className="text-sm font-semibold text-foreground">
-                          Your Notes
+                          Notes Management
                         </Label>
                         <div className="flex gap-2">
                           <Button
@@ -1708,206 +1991,118 @@ export default function TransactionPage() {
                         </Card>
                       )}
 
-                      {/* Notes List */}
-                      <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                        {notes.length === 0 ? (
-                          <div className="text-center p-6 bg-muted/30 rounded-xl border border-dashed border-border">
-                            <p className="text-sm text-muted-foreground">
-                              No notes found. Deposit tokens to create notes or
-                              import existing notes.
-                            </p>
-                          </div>
-                        ) : (
-                          notes.map((note) => {
-                            const isWithdrawable =
-                              note.depositSignature &&
-                              note.leafIndex !== undefined;
-                            return (
-                              <Card
-                                key={note.commitment}
-                                className="border-2 border-border"
-                              >
-                                <CardContent className="p-4">
-                                  <div className="flex items-start justify-between">
-                                    <div className="flex-1 space-y-2">
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-xs font-mono text-muted-foreground">
-                                          {note.commitment.slice(0, 8)}...
-                                          {note.commitment.slice(-8)}
-                                        </span>
-                                        {isWithdrawable && (
-                                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20">
-                                            Ready
+                      {/* Notes List with Selection */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs font-semibold text-muted-foreground uppercase">
+                            Select Notes to Withdraw
+                          </Label>
+                          {selectedNotesForWithdraw.length > 0 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedNotesForWithdraw([])}
+                              className="h-7 text-xs"
+                            >
+                              Clear Selection
+                            </Button>
+                          )}
+                        </div>
+                        <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                          {notes.length === 0 ? (
+                            <div className="text-center p-6 bg-muted/30 rounded-xl border border-dashed border-border">
+                              <p className="text-sm text-muted-foreground">
+                                No notes found. Deposit tokens to create notes or
+                                import existing notes.
+                              </p>
+                            </div>
+                          ) : (
+                            notes.map((note) => {
+                              const isWithdrawable =
+                                note.depositSignature &&
+                                note.leafIndex !== undefined;
+                              const isSelected = selectedNotesForWithdraw.some(
+                                (n) => n.commitment === note.commitment
+                              );
+                              return (
+                                <Card
+                                  key={note.commitment}
+                                  className={`border-2 transition-all ${
+                                    isSelected
+                                      ? "border-primary bg-primary/5"
+                                      : "border-border"
+                                  }`}
+                                >
+                                  <CardContent className="p-4">
+                                    <div className="flex items-start gap-3">
+                                      {/* Checkbox for withdrawable notes */}
+                                      {isWithdrawable && (
+                                        <input
+                                          type="checkbox"
+                                          checked={isSelected}
+                                          onChange={(e) =>
+                                            handleNoteSelection(
+                                              note,
+                                              e.target.checked
+                                            )
+                                          }
+                                          className="mt-1 w-4 h-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                                        />
+                                      )}
+                                      <div className="flex-1 space-y-2">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-xs font-mono text-muted-foreground">
+                                            {note.commitment.slice(0, 8)}...
+                                            {note.commitment.slice(-8)}
                                           </span>
+                                          {isWithdrawable && (
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20">
+                                              Ready
+                                            </span>
+                                          )}
+                                        </div>
+                                        <p className="text-sm font-semibold">
+                                          {formatAmount(note.amount)} SOL
+                                        </p>
+                                        {note.depositSignature && (
+                                          <p className="text-xs text-muted-foreground font-mono">
+                                            Deposit:{" "}
+                                            {note.depositSignature.slice(0, 8)}...
+                                          </p>
                                         )}
                                       </div>
-                                      <p className="text-sm font-semibold">
-                                        {formatAmount(note.amount)} SOL
-                                      </p>
-                                      {note.depositSignature && (
-                                        <p className="text-xs text-muted-foreground font-mono">
-                                          Deposit:{" "}
-                                          {note.depositSignature.slice(0, 8)}...
-                                        </p>
-                                      )}
-                                    </div>
-                                    <div className="flex gap-2">
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => downloadNote(note)}
-                                        className="h-8 w-8 p-0"
-                                        title="Download note"
-                                      >
-                                        <Download className="h-4 w-4" />
-                                      </Button>
-                                      {isWithdrawable && (
+                                      <div className="flex gap-2">
                                         <Button
-                                          variant="default"
+                                          variant="outline"
                                           size="sm"
-                                          onClick={() => {
-                                            setSelectedNoteForWithdraw(note);
-                                            const withdrawableAmount =
-                                              note.amount -
-                                              calculateFee(note.amount);
-                                            setAmount(
-                                              formatAmount(note.amount)
-                                            );
-                                            setOutputs([
-                                              {
-                                                address:
-                                                  publicKey?.toBase58() || "",
-                                                amount:
-                                                  formatAmount(
-                                                    withdrawableAmount
-                                                  ),
-                                              },
-                                            ]);
-                                            toast.info(
-                                              "Note selected. Enter recipient details below to withdraw."
-                                            );
-                                          }}
-                                          className="h-8"
-                                          title="Withdraw this note"
+                                          onClick={() => downloadNote(note)}
+                                          className="h-8 w-8 p-0"
+                                          title="Download note"
                                         >
-                                          Withdraw
+                                          <Download className="h-4 w-4" />
                                         </Button>
-                                      )}
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() =>
-                                          handleDeleteNote(note.commitment)
-                                        }
-                                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                                        title="Delete note"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() =>
+                                            handleDeleteNote(note.commitment)
+                                          }
+                                          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                                          title="Delete note"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </div>
                                     </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            );
-                          })
-                        )}
+                                  </CardContent>
+                                </Card>
+                              );
+                            })
+                          )}
+                        </div>
                       </div>
 
-                      {/* Withdraw Section for Selected Note */}
-                      {selectedNoteForWithdraw && mode === "advanced" && (
-                        <Card className="border-2 border-primary/30 bg-primary/5">
-                          <CardContent className="p-4 space-y-4">
-                            <div className="flex items-center justify-between">
-                              <Label className="text-sm font-semibold">
-                                Withdraw Note
-                              </Label>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedNoteForWithdraw(null);
-                                  setAmount("");
-                                  setOutputs([{ address: "", amount: "" }]);
-                                }}
-                                className="h-8 w-8 p-0"
-                              >
-                                <XIcon className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              Note:{" "}
-                              {formatAmount(selectedNoteForWithdraw.amount)} SOL
-                              (Fee:{" "}
-                              {formatAmount(
-                                calculateFee(selectedNoteForWithdraw.amount)
-                              )}{" "}
-                              SOL)
-                            </p>
-                            <Button
-                              onClick={async () => {
-                                if (
-                                  !selectedNoteForWithdraw.leafIndex ||
-                                  !selectedNoteForWithdraw.depositSignature
-                                ) {
-                                  toast.error(
-                                    "Note is not ready for withdrawal"
-                                  );
-                                  return;
-                                }
-
-                                if (!outputsValid) {
-                                  toast.error(
-                                    "Please enter valid recipient information"
-                                  );
-                                  return;
-                                }
-
-                                setIsLoading(true);
-                                setTransactionStatus("generating_proof");
-                                setShowStatusModal(true);
-
-                                try {
-                                  const withdrawOutputs = parsedOutputs.map(
-                                    (output) => ({
-                                      address: output.address,
-                                      amountLamports:
-                                        output.amountLamports ?? 0,
-                                    })
-                                  );
-                                  await performWithdraw(
-                                    selectedNoteForWithdraw,
-                                    selectedNoteForWithdraw.leafIndex,
-                                    withdrawOutputs
-                                  );
-                                  toast.success(
-                                    "Withdrawal completed successfully!"
-                                  );
-                                  setSelectedNoteForWithdraw(null);
-                                  refreshNotes();
-                                } catch (error: any) {
-                                  console.error("Withdraw failed:", error);
-                                  setTransactionStatus("error");
-                                  toast.error("Withdrawal failed", {
-                                    description: error.message,
-                                  });
-                                } finally {
-                                  setIsLoading(false);
-                                }
-                              }}
-                              disabled={
-                                !connected ||
-                                !outputsValid ||
-                                isLoading ||
-                                !selectedNoteForWithdraw
-                              }
-                              className="w-full"
-                            >
-                              {isLoading ? "Processing..." : "Confirm Withdraw"}
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </div>
+                    </motion.div>
                   )}
 
                   {!connected && (
