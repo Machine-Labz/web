@@ -38,7 +38,12 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { SOLIcon, USDCIcon, OREIcon, ZCashIcon } from "@/components/icons/token-icons";
+import {
+  SOLIcon,
+  USDCIcon,
+  OREIcon,
+  ZCashIcon,
+} from "@/components/icons/token-icons";
 import Link from "next/link";
 import { toast } from "sonner";
 import { DappHeader } from "@/components/dapp-header";
@@ -106,6 +111,8 @@ export default function TransactionPage() {
     CloakNote[]
   >([]);
 
+  const MAX_RECIPIENTS = 5;
+
   const parsedAmountLamports = parseSolToLamports(amount);
   const amountLamports = parsedAmountLamports ?? 0;
   // Distribution must account for fees: sum(outputs) + fee == amount
@@ -162,6 +169,7 @@ export default function TransactionPage() {
     parsedAmountLamports > 0 &&
     distributableLamports > 0 &&
     parsedOutputs.length > 0 &&
+    parsedOutputs.length <= MAX_RECIPIENTS &&
     allAddressesProvided &&
     allAddressesValid &&
     allAmountsProvided &&
@@ -270,6 +278,10 @@ export default function TransactionPage() {
 
   const addRecipientRow = () => {
     setOutputs((prev) => {
+      if (prev.length >= MAX_RECIPIENTS) {
+        toast.error(`Maximum of ${MAX_RECIPIENTS} recipients reached`);
+        return prev;
+      }
       const newOutputs = [...prev, { address: "", amount: "" }];
 
       // Re-distribute amounts evenly among all recipients, preserving addresses
@@ -834,7 +846,7 @@ export default function TransactionPage() {
       // Encrypt note data using proper encryption (v2.0 with view/spend keys)
       const publicViewKey = getPublicViewKey();
       const pvkBytes = Buffer.from(publicViewKey, "hex");
-      
+
       const encryptedNote = encryptNoteForRecipient(
         {
           amount: note.amount,
@@ -844,7 +856,7 @@ export default function TransactionPage() {
         },
         pvkBytes
       );
-      
+
       const encryptedOutput = btoa(JSON.stringify(encryptedNote));
 
       // Call server-side finalization endpoint (handles all critical operations)
