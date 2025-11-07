@@ -12,6 +12,7 @@ import {
   SolflareWalletAdapter,
   TorusWalletAdapter,
   LedgerWalletAdapter,
+  UnsafeBurnerWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl } from "@solana/web3.js";
 import {
@@ -59,6 +60,7 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({
     () => [
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter(),
+      new UnsafeBurnerWalletAdapter(),
     ],
     []
   );
