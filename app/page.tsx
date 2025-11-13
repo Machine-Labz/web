@@ -162,16 +162,15 @@ export default function CloakLandingPage() {
       <SiteHeader />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="w-full py-12 md:py-20 lg:py-32 xl:py-40 overflow-hidden">
+        <section className="w-full py-12 md:py-20 lg:py-32 xl:py-40 overflow-hidden relative">
           {/* Responsive Full-Width Animated Lines Background */}
           <div
             className="
-              fixed inset-0 top-0 left-0 w-full h-full -z-20 pointer-events-none
-              max-h-[300vw]
+              absolute inset-0 top-0 left-0 w-full h-full -z-10 pointer-events-none
               "
             style={{
-              minHeight: "100dvh",
-              width: "100vw",
+              minHeight: "100%",
+              width: "100%",
             }}
           >
             <div
@@ -508,9 +507,7 @@ export default function CloakLandingPage() {
         </section>
 
         {/* Differentiation Section */}
-        <section className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-gradient-to-br from-muted/30 via-background to-muted/20 relative overflow-hidden">
-          {/* Background Pattern */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff10_1px,transparent_1px),linear-gradient(to_bottom,#ffffff10_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
+        <section className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-gradient-to-b from-background via-muted/20 to-background relative overflow-hidden">
           <div className="absolute -top-12 sm:-top-24 -right-12 sm:-right-24 w-48 sm:w-72 md:w-96 h-48 sm:h-72 md:h-96 bg-primary/5 rounded-full blur-3xl"></div>
           <div className="absolute -bottom-12 sm:-bottom-24 -left-12 sm:-left-24 w-48 sm:w-72 md:w-96 h-48 sm:h-72 md:h-96 bg-accent/5 rounded-full blur-3xl"></div>
 
@@ -626,10 +623,7 @@ export default function CloakLandingPage() {
         </section>
 
         {/* TypeScript SDK Section (moved just below Differentiation) */}
-        <section className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-gradient-to-br from-primary/5 via-background to-accent/5 relative overflow-hidden">
-          {/* Background decoration */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:3rem_3rem]" />
-
+        <section className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-gradient-to-b from-background via-primary/5 to-background relative overflow-hidden">
           <div className="container px-4 md:px-6 relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -880,7 +874,7 @@ export default function CloakLandingPage() {
         </section>
 
         {/* Developer Tools Section (restored) */}
-        <section className="w-full py-12 sm:py-16 md:py-24 lg:py-32">
+        <section className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-gradient-to-b from-background via-muted/10 to-background relative overflow-hidden">
           <div className="container px-4 md:px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -1127,7 +1121,7 @@ export default function CloakLandingPage() {
         </section>
 
         {/* Trust Indicators */}
-        <section className="w-full py-12 border-y bg-muted/30">
+        <section className="w-full py-12 border-y bg-white dark:bg-black">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <p className="text-sm font-medium text-muted-foreground">
@@ -1158,7 +1152,7 @@ export default function CloakLandingPage() {
         {/* Features Section */}
         <section
           id="features"
-          className="w-full py-12 sm:py-16 md:py-24 lg:py-32"
+          className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-gradient-to-b from-background via-muted/10 to-background relative overflow-hidden"
         >
           <div className="container px-4 md:px-6">
             <motion.div
@@ -1232,10 +1226,8 @@ export default function CloakLandingPage() {
         {/* How It Works Section */}
         <section
           id="how-it-works"
-          className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-muted/30 relative overflow-hidden"
+          className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-white dark:bg-black relative overflow-hidden"
         >
-          <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-black bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1f1f1f_1px,transparent_1px),linear-gradient(to_bottom,#1f1f1f_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,#000_40%,transparent_100%)]"></div>
-
           <div className="container px-4 md:px-6 relative">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -1332,7 +1324,7 @@ export default function CloakLandingPage() {
         {/* Security Section */}
         <section
           id="security"
-          className="w-full py-12 sm:py-16 md:py-24 lg:py-32"
+          className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-gradient-to-b from-background via-primary/5 to-background relative overflow-hidden"
         >
           <div className="container px-4 md:px-6">
             <motion.div
@@ -1409,8 +1401,7 @@ export default function CloakLandingPage() {
 
         {/* Documentation Section */}
         <section className="w-full py-12 sm:py-16 md:py-24 lg:py-32 relative overflow-hidden">
-          {/* Background Pattern */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-muted/10" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/20 to-background" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.1),transparent_50%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
 
@@ -1471,7 +1462,7 @@ export default function CloakLandingPage() {
                         href="https://cloak-eqpl.vercel.app/"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center w-full px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors group-hover:scale-[1.02] transition-transform"
+                        className="inline-flex items-center justify-center w-full px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-all group-hover:scale-[1.02]"
                       >
                         <ExternalLink className="mr-2 h-4 w-4" />
                         View Full Documentation
@@ -1621,8 +1612,7 @@ export default function CloakLandingPage() {
         {/* Developer Tools Section removed (redundant with SDK section) */}
 
         {/* Partners Section */}
-        <section className="w-full py-12 bg-muted/30 relative">
-          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm"></div>
+        <section className="w-full py-12 bg-white relative">
           <div className="container px-4 md:px-6 relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -1652,7 +1642,6 @@ export default function CloakLandingPage() {
 
         {/* CTA Section */}
         <section className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground relative overflow-hidden">
-          <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#ffffff10_1px,transparent_1px),linear-gradient(to_bottom,#ffffff10_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
           <div className="absolute -top-12 sm:-top-24 -left-12 sm:-left-24 w-32 sm:w-48 md:w-64 h-32 sm:h-48 md:h-64 bg-white/10 rounded-full blur-3xl"></div>
           <div className="absolute -bottom-12 sm:-bottom-24 -right-12 sm:-right-24 w-32 sm:w-48 md:w-64 h-32 sm:h-48 md:h-64 bg-white/10 rounded-full blur-3xl"></div>
 
@@ -1727,7 +1716,7 @@ export default function CloakLandingPage() {
         {/* FAQ Section */}
         <section
           id="faq"
-          className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-muted/30"
+          className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-gradient-to-b from-background via-muted/20 to-background relative overflow-hidden"
         >
           <div className="container px-4 md:px-6">
             <motion.div
