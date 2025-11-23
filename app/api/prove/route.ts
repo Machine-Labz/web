@@ -17,6 +17,8 @@ interface ProveRequestBody {
   private_inputs: string;
   public_inputs: string;
   outputs: string;
+  // Optional swap parameters, forwarded verbatim to the indexer
+  swap_params?: unknown;
 }
 
 export async function POST(request: NextRequest) {
@@ -64,6 +66,7 @@ export async function POST(request: NextRequest) {
       JSON.parse(body.private_inputs);
       JSON.parse(body.public_inputs);
       JSON.parse(body.outputs);
+      // swap_params, if present, is already JSON-valued; no extra validation needed here
     } catch (error) {
       return NextResponse.json(
         {

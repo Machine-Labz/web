@@ -32,10 +32,8 @@ interface WalletContextProviderProps {
 export const WalletContextProvider: FC<WalletContextProviderProps> = ({
   children,
 }) => {
-  const endpoint = process.env.NEXT_PUBLIC_SOLANA_RPC_URL;
-  if (!endpoint) {
-    throw new Error("NEXT_PUBLIC_SOLANA_RPC_URL not set");
-  }
+  const endpoint =
+    process.env.NEXT_PUBLIC_SOLANA_RPC_URL || clusterApiUrl("devnet");
 
   // Register Mobile Wallet Adapter for Android users
   useEffect(() => {
@@ -47,9 +45,7 @@ export const WalletContextProvider: FC<WalletContextProviderProps> = ({
       },
       authorizationCache: createDefaultAuthorizationCache(),
       chains: [
-        // "solana:mainnet", 
-        // "solana:devnet", 
-        "solana:testnet"
+        "solana:devnet",
       ],
       chainSelector: createDefaultChainSelector(),
       onWalletNotFound: createDefaultWalletNotFoundHandler(),

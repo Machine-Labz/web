@@ -30,6 +30,18 @@ export interface SP1ProofInputs {
     address: string;
     amount: number;
   }>;
+  /**
+   * Optional swap parameters (for SOL -> SPL swaps)
+   * This is forwarded as `swap_params` to the indexer /api/v1/prove endpoint.
+   * Shape must stay compatible with the Rust `swap_params` expectations.
+   */
+  swapParams?: {
+    output_mint: string;
+    recipient_ata: string;
+    min_output_amount: number;
+    // slippage and other fields are handled on the relay side; we keep this
+    // minimal here and can extend if needed.
+  } | null;
 }
 
 export interface SP1ProofResult {
@@ -99,11 +111,17 @@ export class SP1ProverClient {
 
     try {
       // Prepare request body
-      const requestBody = {
+      const requestBody: any = {
         private_inputs: JSON.stringify(inputs.privateInputs),
         public_inputs: JSON.stringify(inputs.publicInputs),
         outputs: JSON.stringify(inputs.outputs),
       };
+      
+      // Pass through optional swap params (must be a JSON object, not stringified)
+      // The indexer expects swap_params as Option<serde_json::Value>
+      if (inputs.swapParams) {
+        requestBody.swap_params = inputs.swapParams;
+      }
 
       // console.log(
       //   "[SP1Prover] Sending request to:",

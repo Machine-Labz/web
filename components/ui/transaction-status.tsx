@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import { SOLIcon, USDCIcon } from "@/components/icons/token-icons";
 
 const LAMPORTS_PER_SOL = 1_000_000_000;
 
@@ -39,6 +40,8 @@ interface TransactionStatusProps {
   amount?: string;
   recipients?: Array<{ address: string; amountLamports?: number }>;
   signature?: string;
+  mode?: "transfer" | "swap";
+  swapOutputAmount?: string; // For swap mode: USDC amount to display
 }
 
 // Animated Icons for each status
@@ -210,8 +213,20 @@ export function TransactionStatus({
   amount,
   recipients,
   signature,
+  mode = "transfer",
+  swapOutputAmount,
 }: TransactionStatusProps) {
-  const config = statusConfig[status];
+  const baseConfig = statusConfig[status];
+  // Override descriptions for swap mode
+  const config = {
+    ...baseConfig,
+    description:
+      mode === "swap" && status === "deposited"
+        ? "SOL deposited privately"
+        : mode === "swap" && status === "sent"
+        ? "Swap completed successfully"
+        : baseConfig.description,
+  };
   const Icon = config.icon;
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
 
@@ -359,16 +374,22 @@ export function TransactionStatus({
         {status !== "idle" && status !== "error" && (
           <div className="bg-muted/30 rounded-lg p-4">
             <div className="flex items-center justify-center space-x-8 py-4">
-              {/* Source Wallet */}
+              {/* Source Wallet / SOL (for swap) */}
               <motion.div
                 className="flex flex-col items-center space-y-2"
                 animate={{ opacity: animationState.showSource ? 1 : 0.3 }}
                 transition={{ duration: 0.5 }}
               >
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Wallet className="w-6 h-6 text-primary" />
+                  {mode === "swap" ? (
+                    <SOLIcon className="w-6 h-6" />
+                  ) : (
+                    <Wallet className="w-6 h-6 text-primary" />
+                  )}
                 </div>
-                <span className="text-xs text-muted-foreground">Source</span>
+                <span className="text-xs text-muted-foreground">
+                  {mode === "swap" ? `${amount} SOL` : "Source"}
+                </span>
               </motion.div>
 
               {/* Connection Line */}
@@ -472,7 +493,7 @@ export function TransactionStatus({
                 />
               </motion.div>
 
-              {/* Destination Wallet */}
+              {/* Destination Wallet / USDC (for swap) */}
               <motion.div
                 className="flex flex-col items-center space-y-2"
                 animate={{
@@ -482,11 +503,20 @@ export function TransactionStatus({
                 transition={{ duration: 0.5 }}
               >
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Wallet className="w-6 h-6 text-primary" />
+                  {mode === "swap" ? (
+                    <USDCIcon className="w-6 h-6" />
+                  ) : (
+                    <Wallet className="w-6 h-6 text-primary" />
+                  )}
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  Destination
+                  {mode === "swap" ? `USDC` : "Destination"}
                 </span>
+                {mode === "swap" && swapOutputAmount && animationState.showDestination && (
+                  <span className="text-xs font-medium text-primary mt-1">
+                    {swapOutputAmount}
+                  </span>
+                )}
               </motion.div>
             </div>
           </div>
@@ -495,14 +525,32 @@ export function TransactionStatus({
         {amount && recipients && recipients.length > 0 && (
           <div className="bg-muted/50 rounded-lg p-4 space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Amount:</span>
-              <span className="font-medium">{amount} SOL</span>
+              <span className="text-muted-foreground">
+                {mode === "swap" ? "Swapping:" : "Amount:"}
+              </span>
+              <span className="font-medium">
+                {amount} {mode === "swap" ? "SOL → USDC" : "SOL"}
+              </span>
             </div>
+            {mode === "swap" && swapOutputAmount && (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Receiving:</span>
+                <span className="font-medium text-green-600 dark:text-green-400">
+                  {swapOutputAmount} USDC
+                </span>
+              </div>
+            )}
             <div className="space-y-2">
               <span className="text-muted-foreground text-xs uppercase">Recipients</span>
               <div className="space-y-2">
                 {recipients.map((entry, idx) => {
-                  const formatted = entry.amountLamports !== undefined
+                  // For swap mode, always show USDC amount (or calculating); never show SOL
+                  // For transfer mode, show SOL amount
+                  const formatted = mode === "swap"
+                    ? swapOutputAmount
+                      ? `${swapOutputAmount} USDC`
+                      : "Calculating..."
+                    : entry.amountLamports !== undefined
                     ? `${(entry.amountLamports / LAMPORTS_PER_SOL).toFixed(9)} SOL`
                     : undefined;
                   const display = `${entry.address.slice(0, 8)}...${entry.address.slice(-8)}`;
@@ -533,7 +581,17 @@ export function TransactionStatus({
                           )}
                         </button>
                       </div>
-                      {formatted && <span>{formatted}</span>}
+                      {formatted && (
+                        <span className={
+                          mode === "swap"
+                            ? swapOutputAmount
+                              ? "text-green-600 dark:text-green-400 font-medium"
+                              : "text-muted-foreground italic"
+                            : ""
+                        }>
+                          {formatted}
+                        </span>
+                      )}
                     </div>
                   );
                 })}

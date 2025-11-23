@@ -18,38 +18,48 @@ export interface ShieldPoolPDAs {
 /**
  * Derive all Shield Pool PDAs from the program ID
  *
- * Seeds must match the on-chain program:
- * - pool: b"pool"
- * - commitments: b"commitments"
- * - roots_ring: b"roots_ring"
- * - nullifier_shard: b"nullifier_shard"
- * - treasury: b"treasury"
+ * Seeds must match the on-chain program and Rust helper:
+ * - pool: b"pool", mint
+ * - commitments: b"commitments", mint
+ * - roots_ring: b"roots_ring", mint
+ * - nullifier_shard: b"nullifier_shard", mint
+ * - treasury: b"treasury", mint
+ *
+ * For native SOL, the Rust tests use `Pubkey::default()` (32 zero bytes) as the
+ * mint. We mirror that here by accepting an optional mint and defaulting to a
+ * zeroed public key to stay in sync with `tooling/test/src/shared.rs`.
  */
-export function getShieldPoolPDAs(): ShieldPoolPDAs {
+export function getShieldPoolPDAs(mint?: PublicKey): ShieldPoolPDAs {
   const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!);
+  const mintKey =
+    mint ??
+    new PublicKey(
+      // 32 zero bytes, matching Rust `Pubkey::default()`
+      new Uint8Array(32)
+    );
 
   const [pool] = PublicKey.findProgramAddressSync(
-    [Buffer.from("pool")],
+    [Buffer.from("pool"), mintKey.toBytes()],
     programId
   );
 
   const [commitments] = PublicKey.findProgramAddressSync(
-    [Buffer.from("commitments")],
+    [Buffer.from("commitments"), mintKey.toBytes()],
     programId
   );
 
   const [rootsRing] = PublicKey.findProgramAddressSync(
-    [Buffer.from("roots_ring")],
+    [Buffer.from("roots_ring"), mintKey.toBytes()],
     programId
   );
 
   const [nullifierShard] = PublicKey.findProgramAddressSync(
-    [Buffer.from("nullifier_shard")],
+    [Buffer.from("nullifier_shard"), mintKey.toBytes()],
     programId
   );
 
   const [treasury] = PublicKey.findProgramAddressSync(
-    [Buffer.from("treasury")],
+    [Buffer.from("treasury"), mintKey.toBytes()],
     programId
   );
 

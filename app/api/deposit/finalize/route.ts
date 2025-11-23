@@ -194,6 +194,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           break;
         }
 
+        // Check for duplicate key error - don't retry on duplicates
+        if (depositResponse.status === 500) {
+          const errorText = await depositResponse.text().catch(() => '');
+          if (errorText.includes('duplicate key') || errorText.includes('duplicate')) {
+            // Duplicate detected - stop retrying and return error immediately
+            return NextResponse.json(
+              {
+                success: false,
+                error: 'Deposit already registered. This commitment was already processed.',
+                duplicate: true,
+              },
+              { status: 409 } // 409 Conflict
+            );
+          }
+        }
+
         // console.warn(
         //   `[Deposit Finalize] Indexer returned ${depositResponse.status}, attempt ${depositAttempts + 1}/${maxDepositAttempts}`
         // );
@@ -214,6 +230,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (!depositResponse || !depositResponse.ok) {
       const errorText = depositResponse ? await depositResponse.text() : 'No response';
+      
+      // Check if this is a duplicate key error (commitment already exists)
+      if (depositResponse && depositResponse.status === 500 && 
+          (errorText.includes('duplicate key') || errorText.includes('duplicate'))) {
+        // Deposit already exists - this is idempotent, so we should fetch existing data
+        // Try to get the Merkle root and find the leaf index
+        // For now, return a clear error that the deposit was already processed
+        // The client should handle this by checking if the note already has deposit info
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Deposit already registered. This commitment was already processed. If you are retrying, please check if your note already has deposit information.',
+            duplicate: true,
+          },
+          { status: 409 } // 409 Conflict
+        );
+      }
+      
       // console.error('[Deposit Finalize] Indexer registration failed:', errorText);
       
       return NextResponse.json(

@@ -40,8 +40,8 @@ export function getCurrentNetwork(): SolanaNetwork {
   const rpcUrl = process.env.NEXT_PUBLIC_SOLANA_RPC_URL;
   
   if (!rpcUrl) {
-    // console.warn("NEXT_PUBLIC_SOLANA_RPC_URL not set, defaulting to localnet");
-    return "localnet";
+    // Default to devnet if not configured
+    return "devnet";
   }
   
   return detectNetworkFromRpcUrl(rpcUrl);
