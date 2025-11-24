@@ -131,7 +131,8 @@ export default function SwapPage() {
         setIsQuoteLoading(true);
         const url = new URL("/api/swap-quote", window.location.origin);
         url.searchParams.set("amount", swapLamports.toString());
-        url.searchParams.set("wallet", publicKey.toBase58());
+        // Don't pass wallet parameter - Orca may check for USDC ATA which might not exist
+        // The swap will be executed by the relay, not the user's wallet
         url.searchParams.set(
           "slippageBps",
           String(DEFAULT_SWAP_SLIPPAGE_BPS)
@@ -169,6 +170,16 @@ export default function SwapPage() {
     } catch {
       return false;
     }
+  })();
+
+  // Check if balance is sufficient for the amount + fees
+  const hasInsufficientBalance = (() => {
+    if (!connected || !publicKey || solBalance === null) return false;
+    const lamports = parseAmountToLamports(amount);
+    if (lamports <= 0) return false;
+    const totalFee = calculateFee(lamports);
+    const requiredBalance = lamports + 5000; // amount + estimated transaction fees
+    return solBalance < requiredBalance;
   })();
 
   const handleSwap = async () => {
@@ -219,7 +230,56 @@ export default function SwapPage() {
       const { pool: poolPubkey, commitments: commitmentsPubkey } =
         getShieldPoolPDAs();
 
+      console.log("[Swap] Deposit transaction setup:", {
+        programId: programId.toBase58(),
+        pool: poolPubkey.toBase58(),
+        commitments: commitmentsPubkey.toBase58(),
+        payer: publicKey.toBase58(),
+        amount: note.amount,
+        commitment: note.commitment,
+      });
+
+      // Verify accounts exist before building transaction
+      console.log("[Swap] Verifying accounts exist...");
+      const [poolAccount, commitmentsAccount, payerBalance] = await Promise.all([
+        connection.getAccountInfo(poolPubkey).catch((e) => {
+          console.error("[Swap] Failed to fetch pool account:", e);
+          return null;
+        }),
+        connection.getAccountInfo(commitmentsPubkey).catch((e) => {
+          console.error("[Swap] Failed to fetch commitments account:", e);
+          return null;
+        }),
+        connection.getBalance(publicKey).catch((e) => {
+          console.error("[Swap] Failed to fetch payer balance:", e);
+          return 0;
+        }),
+      ]);
+
+      console.log("[Swap] Account verification:", {
+        poolExists: poolAccount !== null,
+        commitmentsExists: commitmentsAccount !== null,
+        payerBalance: payerBalance,
+        requiredBalance: note.amount + 5000, // amount + estimated fees
+      });
+
+      if (!poolAccount) {
+        throw new Error(`Pool account not found: ${poolPubkey.toBase58()}`);
+      }
+      if (!commitmentsAccount) {
+        throw new Error(`Commitments account not found: ${commitmentsPubkey.toBase58()}`);
+      }
+      if (payerBalance < note.amount + 5000) {
+        throw new Error(
+          `Insufficient balance: ${payerBalance} lamports, need at least ${note.amount + 5000} lamports (${(note.amount + 5000) / 1_000_000_000} SOL)`
+        );
+      }
+
       const commitmentBytes = Buffer.from(note.commitment, "hex");
+      if (commitmentBytes.length !== 32) {
+        throw new Error(`Invalid commitment length: ${commitmentBytes.length} bytes (expected 32)`);
+      }
+
       const depositIx = createDepositInstruction({
         programId,
         payer: publicKey,
@@ -227,6 +287,16 @@ export default function SwapPage() {
         commitments: commitmentsPubkey,
         amount: note.amount,
         commitment: commitmentBytes,
+      });
+
+      console.log("[Swap] Deposit instruction created:", {
+        keys: depositIx.keys.map((k) => ({
+          pubkey: k.pubkey.toBase58(),
+          isSigner: k.isSigner,
+          isWritable: k.isWritable,
+        })),
+        programId: depositIx.programId.toBase58(),
+        dataLength: depositIx.data.length,
       });
 
       const computeUnitLimitIx = ComputeBudgetProgram.setComputeUnitLimit({
@@ -244,10 +314,36 @@ export default function SwapPage() {
         lastValidBlockHeight,
       }).add(computeUnitPriceIx, computeUnitLimitIx, depositIx);
 
+      console.log("[Swap] Transaction built, simulating...");
       const simulation = await connection.simulateTransaction(depositTx);
+
+      console.log("[Swap] Simulation result:", {
+        err: simulation.value.err,
+        logs: simulation.value.logs?.slice(0, 10), // First 10 logs
+        unitsConsumed: simulation.value.unitsConsumed,
+      });
+
       if (simulation.value.err) {
-        const err = JSON.stringify(simulation.value.err);
-        throw new Error(`Simulation failed: ${err}`);
+        const err = simulation.value.err;
+        const errStr = typeof err === "string" ? err : JSON.stringify(err);
+        console.error("[Swap] Simulation failed:", {
+          error: err,
+          errorString: errStr,
+          logs: simulation.value.logs,
+        });
+        
+        // Try to extract account key from error if it's an AccountNotFound
+        let errorMessage = `Simulation failed: ${errStr}`;
+        if (errStr.includes("AccountNotFound")) {
+          errorMessage += "\n\nThis usually means one of the required accounts doesn't exist. Check:";
+          errorMessage += `\n- Pool: ${poolPubkey.toBase58()}`;
+          errorMessage += `\n- Commitments: ${commitmentsPubkey.toBase58()}`;
+          errorMessage += `\n- Payer: ${publicKey.toBase58()}`;
+          if (simulation.value.logs) {
+            errorMessage += "\n\nSimulation logs:\n" + simulation.value.logs.slice(0, 20).join("\n");
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const sig = await sendTransaction(depositTx, connection);
@@ -332,7 +428,8 @@ export default function SwapPage() {
       // Orca quote (server-side)
       const quoteUrl = new URL("/api/swap-quote", window.location.origin);
       quoteUrl.searchParams.set("amount", withdrawAmountLamports.toString());
-      quoteUrl.searchParams.set("wallet", publicKey.toBase58());
+      // Don't pass wallet parameter - Orca may check for USDC ATA which might not exist
+      // The swap will be executed by the relay, not the user's wallet
       quoteUrl.searchParams.set("slippageBps", String(DEFAULT_SWAP_SLIPPAGE_BPS));
       const quoteResp = await fetch(quoteUrl.toString(), { method: "GET" });
       const quoteJson = await quoteResp.json();
@@ -438,8 +535,15 @@ export default function SwapPage() {
       setTransactionStatus("sent");
       toast.success("Swap completed successfully!", { description: `Transaction: ${txSig}` });
     } catch (e: any) {
+      console.error("[Swap] Error in handleSwap:", {
+        error: e,
+        message: e?.message,
+        stack: e?.stack,
+        name: e?.name,
+      });
       setTransactionStatus("error");
-      toast.error("Swap failed", { description: e?.message || String(e) });
+      const errorMessage = e?.message || String(e);
+      toast.error("Swap failed", { description: errorMessage });
     } finally {
       setIsLoading(false);
       isProcessingRef.current = false;
@@ -549,13 +653,31 @@ export default function SwapPage() {
                           onChange={(e) => setAmount(e.target.value)}
                           placeholder="0.00"
                           disabled={!connected || isLoading}
-                          className="flex-1 text-xl font-semibold border-none bg-transparent px-0 focus-visible:ring-0"
+                          className={`flex-1 text-xl font-semibold border-none bg-transparent px-0 focus-visible:ring-0 ${
+                            hasInsufficientBalance ? "text-destructive" : ""
+                          }`}
                         />
                         <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium">
                           <SOLIcon className="w-4 h-4" />
                           <span className="font-medium">SOL</span>
                         </div>
                       </div>
+                      {hasInsufficientBalance && (
+                        <p className="text-xs text-destructive font-medium flex items-center gap-1 mt-1">
+                          <span className="inline-block w-1 h-1 rounded-full bg-destructive"></span>
+                          Insufficient balance. You have{" "}
+                          {solBalance !== null
+                            ? `${(solBalance / 1_000_000_000).toFixed(6)} SOL`
+                            : "0 SOL"}
+                          , but need{" "}
+                          {(() => {
+                            const lamports = parseAmountToLamports(amount);
+                            const required = lamports + 5000;
+                            return `${(required / 1_000_000_000).toFixed(6)} SOL`;
+                          })()}{" "}
+                          (amount + fees)
+                        </p>
+                      )}
                     </div>
 
                     {/* Swap hint */}
@@ -655,7 +777,8 @@ export default function SwapPage() {
                       isLoading ||
                       !amount ||
                       !recipientAddress.trim() ||
-                      !isValidRecipient
+                      !isValidRecipient ||
+                      hasInsufficientBalance
                     }
                     className="w-full h-12 text-base font-bold"
                   >

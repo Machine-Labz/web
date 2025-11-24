@@ -562,7 +562,7 @@ export function TransactionStatus({
                     >
                       <div className="flex items-center gap-2">
                         <a
-                          href={`https://solscan.io/account/${entry.address}?cluster=${getCluster()}`}
+                          href={`https://orb.helius.dev/address/${entry.address}/program-authority?cluster=${getCluster()}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-primary hover:underline"
@@ -602,7 +602,7 @@ export function TransactionStatus({
                 <span className="text-muted-foreground">Signature:</span>
                 <div className="flex items-center gap-2">
                   <a
-                    href={`https://solscan.io/tx/${signature}?cluster=${getCluster()}`}
+                    href={`https://orb.helius.dev/tx/${signature}?cluster=${getCluster()}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-mono text-xs text-primary hover:underline"
@@ -642,13 +642,13 @@ export function TransactionStatus({
                 </div>
               </div>
               <a
-                href={`https://solscan.io/tx/${signature}?cluster=${getCluster()}`}
+                href={`https://orb.helius.dev/tx/${signature}?cluster=${getCluster()}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium"
               >
                 <ExternalLink className="w-4 h-4" />
-                View on Solscan
+                View on Orb
               </a>
             </div>
           </div>
