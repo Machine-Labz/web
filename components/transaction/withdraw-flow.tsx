@@ -20,8 +20,7 @@ import { toast } from "sonner";
 import { Buffer } from "buffer";
 import { blake3 } from "@noble/hashes/blake3.js";
 import { indexerClient, type MerkleProof } from "@/lib/indexer-client";
-import { SP1ProofInputs, type SP1ProofResult } from "@/lib/sp1-prover";
-import { useSP1Prover } from "@/hooks/use-sp1-prover";
+import { SP1ProofInputs, type SP1ProofResult, SP1ArtifactProverClient } from "@/lib/artifact-prover";
 import {
   parseNote,
   loadAllNotes,
@@ -60,19 +59,31 @@ export default function WithdrawFlow() {
     Array<{ address: string; amountLamports: number }>
   >([]);
 
-  const prover = useSP1Prover({
-    onStart: () => toast.info("Starting proof generation..."),
-    onSuccess: (result) =>
-      toast.success("Proof generated!", {
-        description: `Generated in ${(result.generationTimeMs / 1000).toFixed(1)}s`,
-      }),
-    onError: (error) =>
-      toast.error("Proof generation failed", {
-        description: error,
-      }),
-  });
-
-  const { generateProof, isGenerating, progress } = prover;
+  // Use artifact-based prover (replaces old useSP1Prover hook)
+  const artifactProver = new SP1ArtifactProverClient();
+  
+  const generateProof = async (inputs: SP1ProofInputs): Promise<SP1ProofResult> => {
+    toast.info("Starting proof generation...");
+    try {
+      const result = await artifactProver.generateProof(inputs);
+      if (result.success) {
+        toast.success("Proof generated!", {
+          description: `Generated in ${(result.generationTimeMs / 1000).toFixed(1)}s`,
+        });
+      } else {
+        toast.error("Proof generation failed", { description: result.error });
+      }
+      return result;
+    } catch (error) {
+      toast.error("Proof generation failed", { 
+        description: error instanceof Error ? error.message : "Unknown error" 
+      });
+      throw error;
+    }
+  };
+  
+  const isGenerating = false; // TODO: Add state management for artifact prover
+  const progress = null; // TODO: Add progress tracking for artifact prover
 
   const parsedOutputs = outputs.map((entry) => {
     const address = entry.address.trim();

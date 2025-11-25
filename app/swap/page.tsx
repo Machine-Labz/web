@@ -30,8 +30,7 @@ import {
   type CloakNote,
 } from "@/lib/note-manager";
 import { getShieldPoolPDAs } from "@/lib/pda";
-import { useSP1Prover } from "@/hooks/use-sp1-prover";
-import { SP1ProofInputs, SP1ProofResult } from "@/lib/sp1-prover";
+import { SP1ProofInputs, SP1ProofResult, SP1ArtifactProverClient } from "@/lib/artifact-prover";
 import { blake3 } from "@noble/hashes/blake3.js";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
 import { Buffer } from "buffer";
@@ -58,20 +57,29 @@ export default function SwapPage() {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const isProcessingRef = useRef(false);
 
-  const prover = useSP1Prover({
-    onStart: () => {
-      setTransactionStatus("generating_proof");
-    },
-    onSuccess: () => {
-      setTransactionStatus("proof_generated");
-      toast.success("Proof generated successfully!");
-    },
-    onError: (e) => {
+  // Use artifact-based prover (replaces old useSP1Prover hook)
+  const artifactProver = new SP1ArtifactProverClient();
+  
+  const generateProof = async (inputs: SP1ProofInputs): Promise<SP1ProofResult> => {
+    setTransactionStatus("generating_proof");
+    try {
+      const result = await artifactProver.generateProof(inputs);
+      if (result.success) {
+        setTransactionStatus("proof_generated");
+        toast.success("Proof generated successfully!");
+      } else {
+        setTransactionStatus("error");
+        toast.error("Proof generation failed", { description: result.error });
+      }
+      return result;
+    } catch (error) {
       setTransactionStatus("error");
-      toast.error("Proof generation failed", { description: e });
-    },
-  });
-  const { generateProof } = prover;
+      toast.error("Proof generation failed", { 
+        description: error instanceof Error ? error.message : "Unknown error" 
+      });
+      throw error;
+    }
+  };
 
   // Fetch balances when wallet/connection changes
   useEffect(() => {

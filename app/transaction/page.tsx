@@ -78,8 +78,8 @@ import {
 import { Buffer } from "buffer";
 import { blake3 } from "@noble/hashes/blake3.js";
 import { indexerClient, type MerkleProof } from "@/lib/indexer-client";
-import { SP1ProofInputs, type SP1ProofResult } from "@/lib/sp1-prover";
-import { useSP1Prover } from "@/hooks/use-sp1-prover";
+import { SP1ProofInputs, type SP1ProofResult } from "@/lib/artifact-prover";
+import { SP1ArtifactProverClient } from "@/lib/artifact-prover";
 import { getShieldPoolPDAs } from "@/lib/pda";
 
 type TransactionMode = "simple" | "advanced";
@@ -531,25 +531,33 @@ export default function TransactionPage() {
     }
   }, [selectedNotesForWithdraw, mode, publicKey]);
 
-  const prover = useSP1Prover({
-    onStart: () => {
-      // console.log("🔐 Starting proof generation...");
+  // Use artifact-based prover (replaces old useSP1Prover hook)
+  const artifactProver = new SP1ArtifactProverClient();
+  
+  // Wrapper to handle status updates
+  const generateProof = async (inputs: SP1ProofInputs): Promise<SP1ProofResult> => {
       setTransactionStatus("generating_proof");
-    },
-    onSuccess: (result) => {
-      // console.log(
-    //     `✅ Proof generated in ${(result.generationTimeMs / 1000).toFixed(1)}s`
-    //   );
+    try {
+      const result = await artifactProver.generateProof(inputs);
+      if (result.success) {
       setTransactionStatus("proof_generated");
       toast.success("Proof generated successfully!");
-    },
-    onError: (error) => {
-      // console.error("❌ Proof generation failed:", error);
-      toast.error("Proof generation failed", { description: error });
-    },
-  });
-
-  const { generateProof, isGenerating, progress } = prover;
+      } else {
+        setTransactionStatus("error");
+        toast.error("Proof generation failed", { description: result.error });
+      }
+      return result;
+    } catch (error) {
+      setTransactionStatus("error");
+      toast.error("Proof generation failed", { 
+        description: error instanceof Error ? error.message : "Unknown error" 
+      });
+      throw error;
+    }
+  };
+  
+  const isGenerating = false; // TODO: Add state management for artifact prover
+  const progress = null; // TODO: Add progress tracking for artifact prover
 
   // Handle withdrawal of selected notes in Pro mode
   const handleWithdrawSelectedNotes = async () => {
@@ -760,19 +768,50 @@ export default function TransactionPage() {
       }
 
       const programId = new PublicKey(PROGRAM_ID);
+      
+      const EXPECTED_PROGRAM_ID = "c1oak6tetxYnNfvXKFkpn1d98FxtK7B68vBQLYQpWKp";
 
       // Derive PDAs instead of using hardcoded addresses
       const { pool: poolPubkey, commitments: commitmentsPubkey } =
         getShieldPoolPDAs();
 
-      const [poolAccount, commitmentsAccount] = await Promise.all([
+      const [poolAccount, commitmentsAccount, programAccount] = await Promise.all([
         connection.getAccountInfo(poolPubkey),
         connection.getAccountInfo(commitmentsPubkey),
+        connection.getAccountInfo(programId),
       ]);
+
+      const actualProgramId = programAccount ? programId.toBase58() : null;
+      const hardcodedProgramId = "c1oak6tetxYnNfvXKFkpn1d98FxtK7B68vBQLYQpWKp";
+      
+      const poolOwnerMatches = poolAccount?.owner.toBase58() === programId.toBase58();
+      const commitmentsOwnerMatches = commitmentsAccount?.owner.toBase58() === programId.toBase58();
+      
+      if (actualProgramId && actualProgramId !== hardcodedProgramId) {
+        throw new Error(
+          `Program ID mismatch! The program at ${actualProgramId} on testnet has a different ID than the hardcoded ID (${hardcodedProgramId}) in the program code. ` +
+          `This means the program was deployed with a different keypair. ` +
+          `You need to either: 1) Use the correct program ID (${actualProgramId}) in NEXT_PUBLIC_PROGRAM_ID, or 2) Redeploy the program with the keypair that matches ${hardcodedProgramId}.`
+        );
+      }
 
       if (!poolAccount) throw new Error("Pool account not initialized");
       if (!commitmentsAccount)
         throw new Error("Commitments account not initialized");
+      if (!programAccount) {
+        throw new Error(`Program ${programId.toBase58()} not found on this network. Make sure the program is deployed.`);
+      }
+      if (!programAccount.executable) {
+        throw new Error(`Program ${programId.toBase58()} is not executable. This is not a valid program account.`);
+      }
+      
+      if (poolAccount.owner.toBase58() !== programId.toBase58()) {
+        throw new Error(`Pool account owner (${poolAccount.owner.toBase58()}) does not match program ID (${programId.toBase58()}). Pool may not be initialized or is using wrong program.`);
+      }
+      
+      if (commitmentsAccount.owner.toBase58() !== programId.toBase58()) {
+        throw new Error(`Commitments account owner (${commitmentsAccount.owner.toBase58()}) does not match program ID (${programId.toBase58()}). Commitments may not be initialized or is using wrong program.`);
+      }
 
       const computeUnitLimitIx = ComputeBudgetProgram.setComputeUnitLimit({
         units: 200_000,
@@ -797,6 +836,7 @@ export default function TransactionPage() {
         commitment: commitmentBytes,
       });
 
+
       const { blockhash, lastValidBlockHeight } =
         await connection.getLatestBlockhash();
       const depositTx = new Transaction({
@@ -805,18 +845,30 @@ export default function TransactionPage() {
         lastValidBlockHeight,
       }).add(computeUnitPriceIx, computeUnitLimitIx, depositIx);
 
+
       const simulation = await connection.simulateTransaction(depositTx);
       if (simulation.value.err) {
-        // Create detailed error object for better parsing
-        const errorObj = {
+        throw {
           message: `Transaction simulation failed: ${JSON.stringify(simulation.value.err)}`,
           logs: simulation.value.logs,
+          err: simulation.value.err,
         };
-        // console.error("❌ Simulation failed:", errorObj);
-        throw errorObj;
       }
 
-      const signature = await sendTransaction(depositTx, connection);
+      try {
+        depositTx.serialize({
+          requireAllSignatures: false,
+          verifySignatures: false,
+        });
+      } catch (serializeError: any) {
+        throw new Error(`Failed to serialize transaction: ${serializeError.message}`);
+      }
+
+      const signature = await sendTransaction(depositTx, connection, {
+        skipPreflight: false,
+        preflightCommitment: "confirmed",
+        maxRetries: 3,
+      });
 
       const confirmation = await connection.confirmTransaction({
         signature,
@@ -847,16 +899,14 @@ export default function TransactionPage() {
       const publicViewKey = getPublicViewKey();
       const pvkBytes = Buffer.from(publicViewKey, "hex");
 
-      const encryptedNote = encryptNoteForRecipient(
-        {
+      const noteData = {
           amount: note.amount,
           r: note.r,
           sk_spend: note.sk_spend,
           commitment: note.commitment,
-        },
-        pvkBytes
-      );
+      };
 
+      const encryptedNote = encryptNoteForRecipient(noteData, pvkBytes);
       const encryptedOutput = btoa(JSON.stringify(encryptedNote));
 
       // Call server-side finalization endpoint (handles all critical operations)
@@ -2301,10 +2351,7 @@ async function submitWithdrawViaRelay(
   const proofBytes = hexToBytes(params.proof);
   const proofBase64 = Buffer.from(proofBytes).toString("base64");
 
-  const response = await fetch(`${RELAY_URL}/withdraw`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+  const requestBody = {
       outputs: params.outputs,
       policy: { fee_bps: params.feeBps },
       public_inputs: {
@@ -2315,7 +2362,13 @@ async function submitWithdrawViaRelay(
         outputs_hash: params.publicInputs.outputs_hash,
       },
       proof_bytes: proofBase64,
-    }),
+  };
+
+
+  const response = await fetch(`${RELAY_URL}/withdraw`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {

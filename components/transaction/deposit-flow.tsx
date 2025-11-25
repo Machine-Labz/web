@@ -115,6 +115,10 @@ export default function DepositFlow() {
         throw new Error("PROGRAM_ID not configured");
       }
       const programId = new PublicKey(PROGRAM_ID);
+      
+      // Debug: Log program ID details
+      const EXPECTED_PROGRAM_ID = "c1oak6tetxYnNfvXKFkpn1d98FxtK7B68vBQLYQpWKp";
+      
       const commitmentBytes = Buffer.from(note.commitment, "hex");
 
       const depositIx = createDepositInstruction({
@@ -125,6 +129,7 @@ export default function DepositFlow() {
         amount: note.amount,
         commitment: commitmentBytes,
       });
+
 
       const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
 
@@ -144,6 +149,7 @@ export default function DepositFlow() {
       //   commitmentLength: commitmentBytes.length,
       // });
       
+
       // Simulate transaction first to catch errors early
       try {
         const simulation = await connection.simulateTransaction(depositTx);
@@ -151,17 +157,14 @@ export default function DepositFlow() {
         // console.log("Simulation logs:", simulation.value.logs);
         
         if (simulation.value.err) {
-          // Create detailed error object for better parsing
-          const errorObj = {
+          throw {
             message: `Transaction simulation failed: ${JSON.stringify(simulation.value.err)}`,
             logs: simulation.value.logs,
+            err: simulation.value.err,
           };
-          // console.error("Simulation failed with logs:", simulation.value.logs?.join('\n'));
-          throw errorObj;
         }
       } catch (simError: any) {
-        // console.error("Simulation error:", simError);
-        throw simError; // Pass through the original error for better parsing
+        throw simError;
       }
       
       // console.log("✅ Simulation passed! Sending transaction...");

@@ -15,11 +15,11 @@ import { Connection, PublicKey } from '@solana/web3.js';
  * This is idempotent - can be safely retried if the client loses connection.
  */
 
-const INDEXER_URL = process.env.INDEXER_URL;
+const INDEXER_URL = process.env.INDEXER_URL || process.env.NEXT_PUBLIC_INDEXER_URL;
 if (!INDEXER_URL) {
     // console.error('[Deposit Finalize] Missing INDEXER_URL environment variable');
 }
-const RPC_URL = process.env.SOLANA_RPC_URL;
+const RPC_URL = process.env.SOLANA_RPC_URL || process.env.NEXT_PUBLIC_SOLANA_RPC_URL;
 if (!RPC_URL) {
   // console.error('[Deposit Finalize] Missing RPC_URL environment variable');
 }
@@ -93,6 +93,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     const { tx_signature, commitment, encrypted_output } = body;
+
 
     // console.log('[Deposit Finalize] Starting finalization for tx:', tx_signature);
 
