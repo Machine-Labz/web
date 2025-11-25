@@ -187,7 +187,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(depositPayload),
-          signal: AbortSignal.timeout(30000), // 30 second timeout
+          signal: AbortSignal.timeout(60000), // 60 second timeout (Merkle tree insertion can take time)
         });
 
         if (depositResponse.ok) {
@@ -288,7 +288,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         merkleProofResponse = await fetch(
           `${INDEXER_URL}/api/v1/merkle/proof/${leafIndex}`,
           {
-            signal: AbortSignal.timeout(10000), // 10 second timeout
+            signal: AbortSignal.timeout(60000), // 60 second timeout (Merkle proof generation can take time)
           }
         );
 

@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getTokenBySymbol } from '@/lib/tokens';
 
 // Orca devnet pools API endpoint
 const ORCA_POOLS_API = 'https://pools-api.devnet.orca.so/swap-quote';
 const SOL_MINT = 'So11111111111111111111111111111111111111112';
-const DEVNET_USDC = 'BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k';
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const amount = searchParams.get('amount'); // lamports (string)
+    const outputToken = searchParams.get('outputToken') || 'USDC'; // USDC or ZEC
     const wallet = searchParams.get('wallet') || ''; // optional, base58
     const slippageBpsParam = searchParams.get('slippageBps');
 
@@ -19,13 +20,22 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Get output token mint
+    const token = getTokenBySymbol(outputToken);
+    if (!token) {
+      return NextResponse.json(
+        { success: false, error: `Invalid output token: ${outputToken}` },
+        { status: 400 }
+      );
+    }
+
     const slippageBps = Number.isFinite(Number(slippageBpsParam))
       ? Number(slippageBpsParam)
       : 100; // default 1%
 
     const url = new URL(ORCA_POOLS_API);
     url.searchParams.set('from', SOL_MINT);
-    url.searchParams.set('to', DEVNET_USDC);
+    url.searchParams.set('to', token.mint.toString());
     url.searchParams.set('amount', amount);
     url.searchParams.set('isLegacy', 'false');
     url.searchParams.set('amountIsInput', 'true');
@@ -86,6 +96,8 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+
+
 
 
 
