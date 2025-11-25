@@ -37,7 +37,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { SiteHeader } from "@/components/site-header";
+import { Navbar } from "@/components/navbar";
 import SvgIcon from "@/components/ui/logo";
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
@@ -165,159 +165,10 @@ export default function CloakLandingPage() {
 
   return (
     <div className="flex min-h-[100dvh] flex-col">
-      <SiteHeader />
+      <Navbar />
       <main className="flex-1">
         {/* Hero Section */}
         <section className="w-full py-12 md:py-20 lg:py-32 xl:py-40 overflow-hidden relative">
-          {/* Responsive Full-Width Animated Lines Background */}
-          <div
-            className="
-              absolute inset-0 top-0 left-0 w-full h-full -z-10 pointer-events-none
-              "
-            style={{
-              minHeight: "100%",
-              width: "100%",
-            }}
-          >
-            <div
-              className="
-                absolute inset-0 h-full w-full
-                bg-white dark:bg-black
-                [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]
-              "
-            >
-              {/* Horizontal scanning lines */}
-              {[...Array(12)].map((_, i) => (
-                <motion.div
-                  key={`h-${i}`}
-                  className="absolute left-0 w-full h-px bg-gradient-to-r from-transparent via-primary to-transparent"
-                  style={{
-                    top: `calc(${8 + i * 8}% * (min(100vw,100dvh)/100vw))`,
-                  }}
-                  animate={{
-                    opacity: [0, 0.8, 0],
-                    scaleX: [0, 1, 0],
-                  }}
-                  transition={{
-                    duration: 2.5,
-                    repeat: Infinity,
-                    delay: i * 0.3,
-                    ease: "easeInOut",
-                  }}
-                />
-              ))}
-              {/* Vertical scanning lines */}
-              {[...Array(8)].map((_, i) => (
-                <motion.div
-                  key={`v-${i}`}
-                  className="absolute top-0 w-px h-full bg-gradient-to-b from-transparent via-primary to-transparent"
-                  style={{
-                    left: `calc(${
-                      12.5 + i * 12.5
-                    }% * (min(100vw,100dvh)/100vw))`,
-                  }}
-                  animate={{
-                    opacity: [0, 0.6, 0],
-                    scaleY: [0, 1, 0],
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    delay: i * 0.4,
-                    ease: "easeInOut",
-                  }}
-                />
-              ))}
-              {/* Additional diagonal lines */}
-              {[...Array(6)].map((_, i) => (
-                <motion.div
-                  key={`d1-${i}`}
-                  className="absolute w-full h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent"
-                  style={{
-                    top: `calc(${15 + i * 15}% * (min(100vw,100dvh)/100vw))`,
-                    transform: `rotate(${15 + i * 10}deg)`,
-                    transformOrigin: "left center",
-                  }}
-                  animate={{
-                    opacity: [0, 0.7, 0],
-                    scaleX: [0, 1, 0],
-                  }}
-                  transition={{
-                    duration: 2.8,
-                    repeat: Infinity,
-                    delay: i * 0.6,
-                    ease: "easeInOut",
-                  }}
-                />
-              ))}
-              {/* Reverse diagonal lines */}
-              {[...Array(6)].map((_, i) => (
-                <motion.div
-                  key={`d2-${i}`}
-                  className="absolute w-full h-px bg-gradient-to-l from-transparent via-primary/60 to-transparent"
-                  style={{
-                    top: `calc(${20 + i * 12}% * (min(100vw,100dvh)/100vw))`,
-                    transform: `rotate(${-15 - i * 8}deg)`,
-                    transformOrigin: "right center",
-                  }}
-                  animate={{
-                    opacity: [0, 0.5, 0],
-                    scaleX: [0, 1, 0],
-                  }}
-                  transition={{
-                    duration: 3.2,
-                    repeat: Infinity,
-                    delay: i * 0.5,
-                    ease: "easeInOut",
-                  }}
-                />
-              ))}
-              {/* Diagonal scan effect */}
-              <motion.div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "linear-gradient(45deg, transparent 48%, #3D146E 50%, transparent 52%)",
-                  backgroundSize: "4rem 4rem",
-                }}
-                animate={{
-                  backgroundPosition: ["0% 0%", "100% 100%"],
-                  opacity: [0, 0.2, 0],
-                }}
-                transition={{
-                  duration: 10,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-              />
-
-              {/* Floating particles */}
-              {[...Array(8)].map((_, i) => (
-                <motion.div
-                  key={`p-${i}`}
-                  className="absolute w-1 h-1 bg-primary/60 rounded-full"
-                  style={{
-                    left: `calc(${10 + i * 12}% * (min(100vw,100dvh)/100vw))`,
-                    top: `calc(${
-                      20 + (i % 4) * 20
-                    }% * (min(100vw,100dvh)/100vw))`,
-                  }}
-                  animate={{
-                    y: [-30, 30, -30],
-                    opacity: [0.2, 0.8, 0.2],
-                    scale: [0.5, 1.5, 0.5],
-                  }}
-                  transition={{
-                    duration: 4 + i * 0.3,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: i * 0.4,
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-
           <div className="container px-4 md:px-6 relative">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -337,7 +188,7 @@ export default function CloakLandingPage() {
                   variant="outline"
                 >
                   <Rocket className="inline-block w-3.5 h-3.5 mr-1.5" />
-                  Just Launched on Testnet!
+                  Just Launched on Devnet!
                 </Badge>
               </div>
 
@@ -348,8 +199,8 @@ export default function CloakLandingPage() {
               </h1>
 
               <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground mb-4 sm:mb-6 max-w-3xl mx-auto text-balance px-4">
-                Deposit into the shared privacy pool and withdraw or swap tokens without
-                revealing which deposit you own. Try it now on testnet!
+                Deposit into the shared privacy pool and withdraw or swap tokens
+                without revealing which deposit you own. Try it now on testnet!
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
                 <motion.div
@@ -359,26 +210,13 @@ export default function CloakLandingPage() {
                   className="w-full sm:w-auto"
                 >
                   {DAPP_AVAILABLE ? (
-                    <Link
-                      href="/swap"
-                      className="block w-full sm:w-auto"
-                    >
+                    <Link href="/swap" className="block w-full sm:w-auto">
                       <Button
                         size="lg"
-                        className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 animate-bounce"
+                        className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25"
                       >
                         <Shuffle className="mr-2 size-4" />
                         Swap Privately
-                        <motion.div
-                          animate={{ x: [0, 4, 0] }}
-                          transition={{
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                          }}
-                        >
-                          <ArrowRight className="ml-2 size-4" />
-                        </motion.div>
                       </Button>
                     </Link>
                   ) : (
@@ -1158,108 +996,7 @@ export default function CloakLandingPage() {
           </div>
         </section>
 
-        {/* Trust Indicators */}
-        <section className="w-full py-12 border-y bg-white dark:bg-black">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <p className="text-sm font-medium text-muted-foreground">
-                Built on Solana for maximum performance
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12 lg:gap-16">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Shield className="size-5" />
-                  <span className="text-sm font-medium">
-                    Zero-Knowledge Architecture
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Zap className="size-5" />
-                  <span className="text-sm font-medium">
-                    On-Chain Verification
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Receipt className="size-5" />
-                  <span className="text-sm font-medium">Merkle Proofs</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Features Section */}
-        <section
-          id="features"
-          className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-gradient-to-b from-background via-muted/10 to-background relative overflow-hidden"
-        >
-          <div className="container px-4 md:px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="flex flex-col items-center justify-center space-y-4 text-center mb-8 sm:mb-12"
-            >
-              <Badge
-                className="rounded-full px-4 py-1.5 text-xs sm:text-sm font-medium bg-accent text-accent-foreground border-0"
-                variant="secondary"
-              >
-                Features
-              </Badge>
-              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight font-space-grotesk text-foreground px-4">
-                Complete Privacy Solution
-              </h2>
-              <p className="max-w-[800px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
-                Deposit SOL privately using commitments, then withdraw to any
-                address with cryptographically guaranteed privacy through
-                zero-knowledge proofs.
-              </p>
-            </motion.div>
-
-            <motion.div
-              variants={container}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true }}
-              className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3"
-            >
-              {features.map((feature, i) => (
-                <motion.div
-                  key={i}
-                  variants={item}
-                  whileHover={{
-                    y: -8,
-                    scale: 1.02,
-                    transition: { duration: 0.2, ease: "easeOut" },
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Card className="h-full overflow-hidden border-border/40 bg-gradient-to-b from-card to-card/50 backdrop-blur transition-all hover:shadow-lg hover:shadow-primary/10 hover:border-primary/20">
-                    <CardContent className="p-4 sm:p-6 flex flex-col h-full">
-                      <motion.div
-                        className="size-8 sm:size-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary mb-3 sm:mb-4"
-                        whileHover={{
-                          scale: 1.1,
-                          rotate: 5,
-                          backgroundColor: "hsl(var(--primary) / 0.2)",
-                        }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        {feature.icon}
-                      </motion.div>
-                      <h3 className="text-lg sm:text-xl font-bold mb-2 font-space-grotesk text-card-foreground">
-                        {feature.title}
-                      </h3>
-                      <p className="text-muted-foreground">
-                        {feature.description}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
 
         {/* How It Works Section */}
         <section
@@ -1353,84 +1090,6 @@ export default function CloakLandingPage() {
                     {step.title}
                   </motion.h3>
                   <p className="text-muted-foreground">{step.description}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Security Section */}
-        <section
-          id="security"
-          className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-gradient-to-b from-background via-primary/5 to-background relative overflow-hidden"
-        >
-          <div className="container px-4 md:px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="flex flex-col items-center justify-center space-y-4 text-center mb-8 sm:mb-12"
-            >
-              <Badge
-                className="rounded-full px-4 py-1.5 text-xs sm:text-sm font-medium bg-accent text-accent-foreground border-0"
-                variant="secondary"
-              >
-                Security & Trust
-              </Badge>
-              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight font-space-grotesk text-foreground px-4">
-                Built for Maximum Security
-              </h2>
-              <p className="max-w-[800px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
-                Your privacy and security are our top priorities. Every aspect
-                of Cloak is designed with security-first principles and complete
-                transparency.
-              </p>
-            </motion.div>
-
-            <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {[
-                {
-                  title: "Zero-Knowledge Architecture",
-                  /* Improved description to be clearer about no identifiable data storage */
-                  description:
-                    "Our system never stores identifiable transaction data and every operation can be verified independently without revealing your identity.",
-                  icon: <Eye className="size-5" />,
-                },
-                {
-                  title: "Merkle Tree Proofs",
-                  description:
-                    "Every deposit creates a verifiable commitment in the Merkle tree. Prove inclusion without revealing which commitment you control.",
-                  icon: <Receipt className="size-5" />,
-                },
-                {
-                  /* Changed "Solana Security" to "Blockchain Infrastructure" */
-                  title: "Blockchain Infrastructure",
-                  description:
-                    "Built on Solana's proven blockchain infrastructure with industry-leading security standards and audited smart contracts.",
-                  icon: <Shield className="size-5" />,
-                },
-              ].map((feature, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.1 }}
-                >
-                  <Card className="h-full overflow-hidden border-border/40 bg-gradient-to-b from-card to-card/50 backdrop-blur transition-all hover:shadow-md hover:border-primary/20">
-                    <CardContent className="p-4 sm:p-6 flex flex-col h-full">
-                      <div className="size-8 sm:size-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary mb-3 sm:mb-4">
-                        {feature.icon}
-                      </div>
-                      <h3 className="text-lg sm:text-xl font-bold mb-2 font-space-grotesk text-card-foreground">
-                        {feature.title}
-                      </h3>
-                      <p className="text-muted-foreground">
-                        {feature.description}
-                      </p>
-                    </CardContent>
-                  </Card>
                 </motion.div>
               ))}
             </div>
@@ -1713,16 +1372,6 @@ export default function CloakLandingPage() {
                       >
                         <Shuffle className="mr-2 size-4" />
                         Swap Privately
-                        <motion.div
-                          animate={{ x: [0, 4, 0] }}
-                          transition={{
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                          }}
-                        >
-                          <ArrowRight className="ml-2 size-4" />
-                        </motion.div>
                       </Button>
                     </Link>
                   ) : (
@@ -1928,32 +1577,6 @@ export default function CloakLandingPage() {
                 Product
               </h4>
               <ul className="space-y-2 text-sm">
-                <li>
-                  <motion.div
-                    whileHover={{ x: 4 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Link
-                      href="#features"
-                      className="text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      Features
-                    </Link>
-                  </motion.div>
-                </li>
-                <li>
-                  <motion.div
-                    whileHover={{ x: 4 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Link
-                      href="#how-it-works"
-                      className="text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      How It Works
-                    </Link>
-                  </motion.div>
-                </li>
                 <li>
                   <motion.div
                     whileHover={{ x: 4 }}

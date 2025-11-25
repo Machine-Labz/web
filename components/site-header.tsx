@@ -13,9 +13,6 @@ import { ClientOnly } from "@/components/client-only";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 
 const navItems = [
-  { label: "Features", href: "/#features" },
-  { label: "How It Works", href: "/#how-it-works" },
-  { label: "Security", href: "/#security" },
   {
     label: "Documentation",
     href: "https://cloak-eqpl.vercel.app/",

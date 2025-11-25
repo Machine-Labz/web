@@ -133,10 +133,7 @@ export default function SwapPage() {
         url.searchParams.set("amount", swapLamports.toString());
         // Don't pass wallet parameter - Orca may check for USDC ATA which might not exist
         // The swap will be executed by the relay, not the user's wallet
-        url.searchParams.set(
-          "slippageBps",
-          String(DEFAULT_SWAP_SLIPPAGE_BPS)
-        );
+        url.searchParams.set("slippageBps", String(DEFAULT_SWAP_SLIPPAGE_BPS));
         const resp = await fetch(url.toString(), { method: "GET" });
         const json = await resp.json();
         if (!resp.ok || !json.success || cancelled) {
@@ -241,20 +238,22 @@ export default function SwapPage() {
 
       // Verify accounts exist before building transaction
       console.log("[Swap] Verifying accounts exist...");
-      const [poolAccount, commitmentsAccount, payerBalance] = await Promise.all([
-        connection.getAccountInfo(poolPubkey).catch((e) => {
-          console.error("[Swap] Failed to fetch pool account:", e);
-          return null;
-        }),
-        connection.getAccountInfo(commitmentsPubkey).catch((e) => {
-          console.error("[Swap] Failed to fetch commitments account:", e);
-          return null;
-        }),
-        connection.getBalance(publicKey).catch((e) => {
-          console.error("[Swap] Failed to fetch payer balance:", e);
-          return 0;
-        }),
-      ]);
+      const [poolAccount, commitmentsAccount, payerBalance] = await Promise.all(
+        [
+          connection.getAccountInfo(poolPubkey).catch((e) => {
+            console.error("[Swap] Failed to fetch pool account:", e);
+            return null;
+          }),
+          connection.getAccountInfo(commitmentsPubkey).catch((e) => {
+            console.error("[Swap] Failed to fetch commitments account:", e);
+            return null;
+          }),
+          connection.getBalance(publicKey).catch((e) => {
+            console.error("[Swap] Failed to fetch payer balance:", e);
+            return 0;
+          }),
+        ]
+      );
 
       console.log("[Swap] Account verification:", {
         poolExists: poolAccount !== null,
@@ -267,17 +266,23 @@ export default function SwapPage() {
         throw new Error(`Pool account not found: ${poolPubkey.toBase58()}`);
       }
       if (!commitmentsAccount) {
-        throw new Error(`Commitments account not found: ${commitmentsPubkey.toBase58()}`);
+        throw new Error(
+          `Commitments account not found: ${commitmentsPubkey.toBase58()}`
+        );
       }
       if (payerBalance < note.amount + 5000) {
         throw new Error(
-          `Insufficient balance: ${payerBalance} lamports, need at least ${note.amount + 5000} lamports (${(note.amount + 5000) / 1_000_000_000} SOL)`
+          `Insufficient balance: ${payerBalance} lamports, need at least ${
+            note.amount + 5000
+          } lamports (${(note.amount + 5000) / 1_000_000_000} SOL)`
         );
       }
 
       const commitmentBytes = Buffer.from(note.commitment, "hex");
       if (commitmentBytes.length !== 32) {
-        throw new Error(`Invalid commitment length: ${commitmentBytes.length} bytes (expected 32)`);
+        throw new Error(
+          `Invalid commitment length: ${commitmentBytes.length} bytes (expected 32)`
+        );
       }
 
       const depositIx = createDepositInstruction({
@@ -331,23 +336,30 @@ export default function SwapPage() {
           errorString: errStr,
           logs: simulation.value.logs,
         });
-        
+
         // Try to extract account key from error if it's an AccountNotFound
         let errorMessage = `Simulation failed: ${errStr}`;
         if (errStr.includes("AccountNotFound")) {
-          errorMessage += "\n\nThis usually means one of the required accounts doesn't exist. Check:";
+          errorMessage +=
+            "\n\nThis usually means one of the required accounts doesn't exist. Check:";
           errorMessage += `\n- Pool: ${poolPubkey.toBase58()}`;
           errorMessage += `\n- Commitments: ${commitmentsPubkey.toBase58()}`;
           errorMessage += `\n- Payer: ${publicKey.toBase58()}`;
           if (simulation.value.logs) {
-            errorMessage += "\n\nSimulation logs:\n" + simulation.value.logs.slice(0, 20).join("\n");
+            errorMessage +=
+              "\n\nSimulation logs:\n" +
+              simulation.value.logs.slice(0, 20).join("\n");
           }
         }
         throw new Error(errorMessage);
       }
 
       const sig = await sendTransaction(depositTx, connection);
-      await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight });
+      await connection.confirmTransaction({
+        signature: sig,
+        blockhash,
+        lastValidBlockHeight,
+      });
       setTransactionSignature(sig);
       setTransactionStatus("deposited");
 
@@ -386,16 +398,21 @@ export default function SwapPage() {
             finalizeError = { error: text };
           }
           // Check if it's a duplicate error (409 Conflict)
-          if (finalizeResponse.status === 409 || 
-              (finalizeResponse.status === 500 && finalizeError.error?.includes("duplicate"))) {
+          if (
+            finalizeResponse.status === 409 ||
+            (finalizeResponse.status === 500 &&
+              finalizeError.error?.includes("duplicate"))
+          ) {
             // Note was already registered - this shouldn't happen if ref guard works,
             // but if it does, tell user to refresh and check their notes
             throw new Error(
               `Deposit already registered. This may happen if you clicked the button multiple times. ` +
-              `Please refresh the page and check if the transaction completed. If not, try again with a new amount.`
+                `Please refresh the page and check if the transaction completed. If not, try again with a new amount.`
             );
           }
-          throw new Error(finalizeError.error || `Finalize failed: ${finalizeResponse.status}`);
+          throw new Error(
+            finalizeError.error || `Finalize failed: ${finalizeResponse.status}`
+          );
         }
         finalizeData = await finalizeResponse.json();
         if (!finalizeData.success) {
@@ -430,7 +447,10 @@ export default function SwapPage() {
       quoteUrl.searchParams.set("amount", withdrawAmountLamports.toString());
       // Don't pass wallet parameter - Orca may check for USDC ATA which might not exist
       // The swap will be executed by the relay, not the user's wallet
-      quoteUrl.searchParams.set("slippageBps", String(DEFAULT_SWAP_SLIPPAGE_BPS));
+      quoteUrl.searchParams.set(
+        "slippageBps",
+        String(DEFAULT_SWAP_SLIPPAGE_BPS)
+      );
       const quoteResp = await fetch(quoteUrl.toString(), { method: "GET" });
       const quoteJson = await quoteResp.json();
       if (!quoteResp.ok || !quoteJson.success) {
@@ -456,7 +476,11 @@ export default function SwapPage() {
         true
       );
       const amountBytes = new Uint8Array(8);
-      new DataView(amountBytes.buffer).setBigUint64(0, BigInt(note.amount), true);
+      new DataView(amountBytes.buffer).setBigUint64(
+        0,
+        BigInt(note.amount),
+        true
+      );
       const concat = new Uint8Array(32 + 32 + 8 + 8);
       concat.set(DEVNET_USDC_MINT.toBytes(), 0);
       concat.set(recipientAta.toBytes(), 32);
@@ -517,7 +541,12 @@ export default function SwapPage() {
             outputs_hash: outputsHashHex,
             amount: note.amount,
           },
-          outputs: [{ recipient: recipientPubkey.toBase58(), amount: withdrawAmountLamports }],
+          outputs: [
+            {
+              recipient: recipientPubkey.toBase58(),
+              amount: withdrawAmountLamports,
+            },
+          ],
           feeBps: relayFeeBps,
           swap: {
             output_mint: DEVNET_USDC_MINT.toBase58(),
@@ -533,7 +562,9 @@ export default function SwapPage() {
 
       setTransactionSignature(txSig);
       setTransactionStatus("sent");
-      toast.success("Swap completed successfully!", { description: `Transaction: ${txSig}` });
+      toast.success("Swap completed successfully!", {
+        description: `Transaction: ${txSig}`,
+      });
     } catch (e: any) {
       console.error("[Swap] Error in handleSwap:", {
         error: e,
@@ -553,35 +584,10 @@ export default function SwapPage() {
   return (
     <WalletGuard>
       <div className="min-h-screen bg-background flex flex-col relative">
-        {/* Background overlay with animated horizontal lines (mirrors transaction page) */}
-        <div
-          className="fixed inset-0 z-0 pointer-events-none"
-          style={{ minHeight: "100dvh", width: "100vw" }}
-        >
-          <div className="absolute inset-0 h-full w-full bg-white dark:bg-black [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]">
-            {[...Array(12)].map((_, i) => (
-              <motion.div
-                key={`swap-h-${i}`}
-                className="absolute left-0 w-full h-px bg-gradient-to-r from-transparent via-primary to-transparent"
-                style={{
-                  top: `calc(${8 + i * 8}% * (min(100vw,100dvh)/100vw))`,
-                }}
-                animate={{ opacity: [0, 0.8, 0], scaleX: [0, 1, 0] }}
-                transition={{
-                  duration: 2.5,
-                  repeat: Infinity,
-                  delay: i * 0.3,
-                  ease: "easeInOut",
-                }}
-              />
-            ))}
-          </div>
-        </div>
-
         <div className="relative z-10">
           <DappHeader />
 
-          <main className="flex-1 flex items-center justify-center p-6">
+          <main className="flex-1 flex items-center justify-center p-6 pt-32">
             <div className="w-full max-w-2xl">
               <div className="text-center mb-10">
                 <div className="flex items-center justify-center mb-3">
@@ -673,7 +679,9 @@ export default function SwapPage() {
                           {(() => {
                             const lamports = parseAmountToLamports(amount);
                             const required = lamports + 5000;
-                            return `${(required / 1_000_000_000).toFixed(6)} SOL`;
+                            return `${(required / 1_000_000_000).toFixed(
+                              6
+                            )} SOL`;
                           })()}{" "}
                           (amount + fees)
                         </p>
@@ -684,7 +692,8 @@ export default function SwapPage() {
                     <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
                       <span>Swap via Orca Whirlpool</span>
                       <span>
-                        Slippage: {(DEFAULT_SWAP_SLIPPAGE_BPS / 100).toFixed(2)}%
+                        Slippage: {(DEFAULT_SWAP_SLIPPAGE_BPS / 100).toFixed(2)}
+                        %
                       </span>
                     </div>
 
@@ -717,16 +726,18 @@ export default function SwapPage() {
                     </div>
 
                     {/* Price info */}
-                    {quoteOutAmount !== null && parseFloat(amount || "0") > 0 && (
-                      <div className="text-xs text-muted-foreground px-1">
-                        1 SOL ≈{" "}
-                        {(
-                          (quoteOutAmount / 1_000_000) /
-                          parseFloat(amount || "1")
-                        ).toFixed(3)}{" "}
-                        devUSDC
-                      </div>
-                    )}
+                    {quoteOutAmount !== null &&
+                      parseFloat(amount || "0") > 0 && (
+                        <div className="text-xs text-muted-foreground px-1">
+                          1 SOL ≈{" "}
+                          {(
+                            quoteOutAmount /
+                            1_000_000 /
+                            parseFloat(amount || "1")
+                          ).toFixed(3)}{" "}
+                          devUSDC
+                        </div>
+                      )}
                   </div>
 
                   {/* Recipient Address Input */}
@@ -740,7 +751,9 @@ export default function SwapPage() {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => setRecipientAddress(publicKey.toBase58())}
+                          onClick={() =>
+                            setRecipientAddress(publicKey.toBase58())
+                          }
                           disabled={isLoading}
                           className="h-7 text-xs"
                         >
@@ -764,8 +777,8 @@ export default function SwapPage() {
                     )}
                     {recipientAddress.trim() && isValidRecipient && (
                       <p className="text-xs text-muted-foreground">
-                        USDC will be sent to this address privately. The recipient
-                        cannot see who sent the payment.
+                        USDC will be sent to this address privately. The
+                        recipient cannot see who sent the payment.
                       </p>
                     )}
                   </div>
@@ -782,9 +795,7 @@ export default function SwapPage() {
                     }
                     className="w-full h-12 text-base font-bold"
                   >
-                    {isLoading
-                      ? "Processing..."
-                      : "Swap SOL → USDC Privately"}
+                    {isLoading ? "Processing..." : "Swap SOL → USDC Privately"}
                   </Button>
 
                   {!connected && (
@@ -826,7 +837,9 @@ export default function SwapPage() {
                       recipients={[
                         {
                           address: recipientAddress,
-                          amountLamports: parseAmountToLamports(amount) - calculateFee(parseAmountToLamports(amount)),
+                          amountLamports:
+                            parseAmountToLamports(amount) -
+                            calculateFee(parseAmountToLamports(amount)),
                         },
                       ]}
                       signature={transactionSignature}
@@ -834,7 +847,8 @@ export default function SwapPage() {
                       swapOutputAmount={
                         quoteOutAmount !== null
                           ? `${(quoteOutAmount / 1_000_000).toFixed(6)}`
-                          : transactionStatus !== "deposited" && transactionStatus !== "idle"
+                          : transactionStatus !== "deposited" &&
+                            transactionStatus !== "idle"
                           ? "Calculating..."
                           : undefined
                       }
@@ -885,7 +899,9 @@ function createDepositInstruction(params: {
   const discriminant = new Uint8Array([0x00]);
   const amountBytes = new Uint8Array(8);
   new DataView(amountBytes.buffer).setBigUint64(0, BigInt(params.amount), true);
-  const data = new Uint8Array(1 + amountBytes.length + params.commitment.length);
+  const data = new Uint8Array(
+    1 + amountBytes.length + params.commitment.length
+  );
   data.set(discriminant, 0);
   data.set(amountBytes, 1);
   data.set(params.commitment, 1 + amountBytes.length);
@@ -1006,5 +1022,3 @@ function hexToBytes(hex: string): Uint8Array {
   }
   return bytes;
 }
-
-

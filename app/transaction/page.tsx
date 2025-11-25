@@ -66,7 +66,10 @@ import {
   type CloakNote,
 } from "@/lib/note-manager";
 import { encryptNoteForRecipient } from "@/lib/keys";
-import { parseTransactionError, hasSufficientBalance } from "@/lib/program-errors";
+import {
+  parseTransactionError,
+  hasSufficientBalance,
+} from "@/lib/program-errors";
 import {
   ComputeBudgetProgram,
   LAMPORTS_PER_SOL,
@@ -81,6 +84,11 @@ import { indexerClient, type MerkleProof } from "@/lib/indexer-client";
 import { SP1ProofInputs, type SP1ProofResult } from "@/lib/sp1-prover";
 import { useSP1Prover } from "@/hooks/use-sp1-prover";
 import { getShieldPoolPDAs } from "@/lib/pda";
+import {
+  getRecentWallets,
+  cacheWallets,
+  type CachedWallet,
+} from "@/lib/wallet-cache";
 
 type TransactionMode = "simple" | "advanced";
 
@@ -110,6 +118,12 @@ export default function TransactionPage() {
   const [selectedNotesForWithdraw, setSelectedNotesForWithdraw] = useState<
     CloakNote[]
   >([]);
+
+  // Recent wallets cache
+  const [recentWallets, setRecentWallets] = useState<CachedWallet[]>([]);
+  const [showWalletSuggestions, setShowWalletSuggestions] = useState<
+    Record<number, boolean>
+  >({});
 
   const MAX_RECIPIENTS = 5;
 
@@ -379,6 +393,11 @@ export default function TransactionPage() {
     }
   };
 
+  // Load recent wallets on mount
+  useEffect(() => {
+    setRecentWallets(getRecentWallets());
+  }, []);
+
   // Fetch balance when wallet is connected
   React.useEffect(() => {
     if (connected && publicKey && connection) {
@@ -524,9 +543,7 @@ export default function TransactionPage() {
       });
 
       setOutputs(
-        newOutputs.length > 0
-          ? newOutputs
-          : [{ address: "", amount: "" }]
+        newOutputs.length > 0 ? newOutputs : [{ address: "", amount: "" }]
       );
     }
   }, [selectedNotesForWithdraw, mode, publicKey]);
@@ -538,8 +555,8 @@ export default function TransactionPage() {
     },
     onSuccess: (result) => {
       // console.log(
-    //     `✅ Proof generated in ${(result.generationTimeMs / 1000).toFixed(1)}s`
-    //   );
+      //     `✅ Proof generated in ${(result.generationTimeMs / 1000).toFixed(1)}s`
+      //   );
       setTransactionStatus("proof_generated");
       toast.success("Proof generated successfully!");
     },
@@ -615,6 +632,12 @@ export default function TransactionPage() {
       setSelectedNotesForWithdraw([]);
       refreshNotes();
       setTransactionStatus("sent");
+      // Cache recipient addresses
+      const recipientAddresses = parsedOutputs
+        .map((o) => o.address)
+        .filter((addr) => addr && isValidSolanaAddress(addr));
+      cacheWallets(recipientAddresses);
+      setRecentWallets(getRecentWallets());
     } catch (error: any) {
       // console.error("Withdrawal failed:", error);
       setTransactionStatus("error");
@@ -719,8 +742,8 @@ export default function TransactionPage() {
         };
       });
       // console.log(
-    //     `⚠️ Corrected single recipient output from ${totalAssignedLamports} to ${distributableLamports} lamports to satisfy amount conservation`
-    //   );
+      //     `⚠️ Corrected single recipient output from ${totalAssignedLamports} to ${distributableLamports} lamports to satisfy amount conservation`
+      //   );
     } else if (amountMismatch > 1) {
       // For multiple recipients or when correction isn't possible, validate strictly
       const errorMsg = `Amount conservation failed: outputs (${totalAssignedLamports}) + fee (${fee}) = ${totalAssignedWithFee} != amount (${parsedAmountLamports}). Difference: ${amountMismatch} lamports`;
@@ -744,12 +767,12 @@ export default function TransactionPage() {
 
     try {
       // console.log("🚀 Starting private transaction flow", {
-    //     amount,
-    //     outputs: preparedOutputs,
-    //     token: selectedToken,
-    //     connected,
-    //     publicKey: publicKey?.toBase58(),
-    //   });
+      //     amount,
+      //     outputs: preparedOutputs,
+      //     token: selectedToken,
+      //     connected,
+      //     publicKey: publicKey?.toBase58(),
+      //   });
 
       const note = generateNoteFromWallet(parsedAmountLamports);
       saveNote(note);
@@ -809,7 +832,9 @@ export default function TransactionPage() {
       if (simulation.value.err) {
         // Create detailed error object for better parsing
         const errorObj = {
-          message: `Transaction simulation failed: ${JSON.stringify(simulation.value.err)}`,
+          message: `Transaction simulation failed: ${JSON.stringify(
+            simulation.value.err
+          )}`,
           logs: simulation.value.logs,
         };
         // console.error("❌ Simulation failed:", errorObj);
@@ -837,7 +862,7 @@ export default function TransactionPage() {
       // 🚨 CRITICAL: After this point, SOL is locked on-chain!
       // We MUST complete the registration even if the client disconnects.
       // Use server-side endpoint to ensure reliability.
-      
+
       // console.log("=".repeat(60));
       // console.log("🔒 POINT OF NO RETURN: Transaction confirmed on-chain");
       // console.log("📡 Calling server-side finalization endpoint...");
@@ -878,11 +903,13 @@ export default function TransactionPage() {
       if (!finalizeResponse.ok) {
         const errorText = await finalizeResponse.text();
         // console.error("❌ Finalization error:", errorText);
-        
+
         // Save the signature for manual recovery
         // console.warn("⚠️ Deposit may need manual recovery. Transaction:", signature);
-        
-        throw new Error(`Failed to finalize deposit: ${errorText}\n\nTransaction signature: ${signature}\n\nYou can recover this deposit later using the transaction signature.`);
+
+        throw new Error(
+          `Failed to finalize deposit: ${errorText}\n\nTransaction signature: ${signature}\n\nYou can recover this deposit later using the transaction signature.`
+        );
       }
 
       const finalizeData = await finalizeResponse.json();
@@ -899,12 +926,12 @@ export default function TransactionPage() {
         pathElements: finalizeData.merkle_proof.path_elements,
         pathIndices: finalizeData.merkle_proof.path_indices,
       };
-      
+
       // console.log("✅ Server-side finalization complete:", {
-    //     leafIndex,
-    //     slot: depositSlot,
-    //     root: historicalRoot,
-    //   });
+      //     leafIndex,
+      //     slot: depositSlot,
+      //     root: historicalRoot,
+      //   });
 
       // Create updated note with root and proof
       const updatedNote = {
@@ -944,14 +971,18 @@ export default function TransactionPage() {
           // console.warn("Failed to delete used note", e);
         }
         toast.success("Transaction completed successfully!");
+        // Cache recipient addresses
+        const recipientAddresses = preparedOutputs.map((o) => o.address);
+        cacheWallets(recipientAddresses);
+        setRecentWallets(getRecentWallets());
       }
     } catch (error: any) {
       // console.error("Transaction failed:", error);
       setTransactionStatus("error");
-      
+
       // Parse error and show user-friendly message
       const friendlyMessage = parseTransactionError(error);
-      
+
       toast.error("Transaction Failed", {
         description: friendlyMessage,
         duration: 6000, // Show longer for important errors
@@ -1137,9 +1168,13 @@ export default function TransactionPage() {
       setTransactionSignature(withdrawSig);
       setLastOutputs(outputsForWithdraw);
       setTransactionStatus("sent");
+      // Cache recipient addresses
+      const recipientAddresses = outputsForWithdraw.map((o) => o.address);
+      cacheWallets(recipientAddresses);
+      setRecentWallets(getRecentWallets());
     } catch (error: any) {
       // console.error("❌ Withdraw failed:", error);
-      
+
       // Re-throw with better error message
       const friendlyMessage = parseTransactionError(error);
       const enhancedError = new Error(friendlyMessage);
@@ -1151,41 +1186,16 @@ export default function TransactionPage() {
   return (
     <WalletGuard>
       <div className="min-h-screen bg-background flex flex-col relative">
-        {/* Background overlay with animated horizontal lines */}
-        <div
-          className="fixed inset-0 z-0 pointer-events-none"
-          style={{ minHeight: "100dvh", width: "100vw" }}
-        >
-          <div className="absolute inset-0 h-full w-full bg-white dark:bg-black [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]">
-            {[...Array(12)].map((_, i) => (
-              <motion.div
-                key={`tx-h-${i}`}
-                className="absolute left-0 w-full h-px bg-gradient-to-r from-transparent via-primary to-transparent"
-                style={{
-                  top: `calc(${8 + i * 8}% * (min(100vw,100dvh)/100vw))`,
-                }}
-                animate={{ opacity: [0, 0.8, 0], scaleX: [0, 1, 0] }}
-                transition={{
-                  duration: 2.5,
-                  repeat: Infinity,
-                  delay: i * 0.3,
-                  ease: "easeInOut",
-                }}
-              />
-            ))}
-          </div>
-        </div>
-
         <div className="relative z-10">
           <DappHeader />
 
-          <main className="flex-1 flex items-center justify-center p-6">
+          <main className="flex-1 flex items-center justify-center p-6 pt-32">
             <div className="w-full max-w-2xl">
               <div className="text-center mb-10">
                 <div className="flex items-center justify-center mb-3">
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20">
                     <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                    Testnet Live
+                    Devnet Live
                   </div>
                 </div>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-space-grotesk text-foreground mb-3 tracking-tight">
@@ -1195,11 +1205,12 @@ export default function TransactionPage() {
                   Send tokens with complete privacy using zero-knowledge proofs
                 </p>
 
-                {/* Testnet Info Banner */}
+                {/* Devnet Info Banner */}
                 <div className="mt-4 max-w-xl mx-auto space-y-3">
                   <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-center">
                     <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400">
-                      <strong>Testing on Solana Devnet:</strong> This uses test SOL with no real value.{" "}
+                      <strong>Testing on Solana Devnet:</strong> This uses test
+                      SOL with no real value.{" "}
                       <a
                         href="https://faucet.solana.com/"
                         target="_blank"
@@ -1214,7 +1225,10 @@ export default function TransactionPage() {
                   {/* Launch Status Banner */}
                   <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-center">
                     <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-400">
-                      <strong>Recently Launched:</strong> We&apos;re actively monitoring system performance and making improvements. You may encounter occasional issues during this testing phase. Your feedback helps us build a more robust system!
+                      <strong>Recently Launched:</strong> We&apos;re actively
+                      monitoring system performance and making improvements. You
+                      may encounter occasional issues during this testing phase.
+                      Your feedback helps us build a more robust system!
                     </p>
                   </div>
                 </div>
@@ -1244,7 +1258,8 @@ export default function TransactionPage() {
                               </Tooltip>
                             </TooltipProvider>
                             <p className="text-xs text-muted-foreground mt-1">
-                              {withdrawableNotes.length} note(s) ready to withdraw
+                              {withdrawableNotes.length} note(s) ready to
+                              withdraw
                             </p>
                           </div>
                           <ShieldIcon className="w-8 h-8 text-primary opacity-50" />
@@ -1253,7 +1268,9 @@ export default function TransactionPage() {
                           variant="outline"
                           size="sm"
                           type="button"
-                          onClick={() => setShowNotesDropdown(!showNotesDropdown)}
+                          onClick={() =>
+                            setShowNotesDropdown(!showNotesDropdown)
+                          }
                           className="w-full mt-4 hover:bg-primary/10 hover:text-primary hover:border-primary/50 transition-colors flex items-center justify-center gap-2"
                         >
                           {showNotesDropdown ? (
@@ -1281,7 +1298,8 @@ export default function TransactionPage() {
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
                             {selectedNotesForWithdraw.length} note(s) selected •{" "}
-                            {formatAmount(selectedNotesDistributableLamports)} SOL after fees
+                            {formatAmount(selectedNotesDistributableLamports)}{" "}
+                            SOL after fees
                           </p>
                         </div>
                       )}
@@ -1400,11 +1418,13 @@ export default function TransactionPage() {
                         e.preventDefault();
                       }}
                       disabled={
-                        mode === "advanced" && selectedNotesForWithdraw.length > 0
+                        mode === "advanced" &&
+                        selectedNotesForWithdraw.length > 0
                       }
                       className="text-base sm:text-lg md:text-xl h-12 sm:h-14 font-semibold disabled:opacity-70 disabled:cursor-not-allowed"
                       title={
-                        mode === "advanced" && selectedNotesForWithdraw.length > 0
+                        mode === "advanced" &&
+                        selectedNotesForWithdraw.length > 0
                           ? "Amount is auto-calculated from selected notes"
                           : ""
                       }
@@ -1485,13 +1505,15 @@ export default function TransactionPage() {
                     </p>
 
                     {/* Helper text for Pro mode when notes are selected */}
-                    {mode === "advanced" && selectedNotesForWithdraw.length > 0 && (
-                      <div className="text-xs text-primary bg-primary/10 border border-primary/20 p-3 rounded-lg">
-                        <strong>Note:</strong> Amount is calculated from{" "}
-                        {selectedNotesForWithdraw.length} selected note(s). Each note
-                        will be withdrawn to its corresponding recipient below.
-                      </div>
-                    )}
+                    {mode === "advanced" &&
+                      selectedNotesForWithdraw.length > 0 && (
+                        <div className="text-xs text-primary bg-primary/10 border border-primary/20 p-3 rounded-lg">
+                          <strong>Note:</strong> Amount is calculated from{" "}
+                          {selectedNotesForWithdraw.length} selected note(s).
+                          Each note will be withdrawn to its corresponding
+                          recipient below.
+                        </div>
+                      )}
                   </div>
 
                   <div className="space-y-4">
@@ -1554,7 +1576,11 @@ export default function TransactionPage() {
                                   selectedNotesForWithdraw.length > 0 &&
                                   selectedNotesForWithdraw[index] && (
                                     <span className="ml-2 text-primary">
-                                      (Note: {formatAmount(selectedNotesForWithdraw[index].amount)} SOL)
+                                      (Note:{" "}
+                                      {formatAmount(
+                                        selectedNotesForWithdraw[index].amount
+                                      )}{" "}
+                                      SOL)
                                     </span>
                                   )}
                               </span>
@@ -1575,18 +1601,71 @@ export default function TransactionPage() {
                             </div>
 
                             <div className="grid gap-3 sm:grid-cols-2">
-                              <div className="space-y-2">
+                              <div className="space-y-2 relative">
                                 <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                   Address
                                 </Label>
-                                <Input
-                                  placeholder="Enter wallet address"
-                                  value={output.address}
-                                  onChange={(e) =>
-                                    updateOutputAddress(index, e.target.value)
-                                  }
-                                  className="font-mono text-sm h-11"
-                                />
+                                <div className="relative">
+                                  <Input
+                                    placeholder="Enter wallet address"
+                                    value={output.address}
+                                    onChange={(e) =>
+                                      updateOutputAddress(index, e.target.value)
+                                    }
+                                    onFocus={() =>
+                                      setShowWalletSuggestions((prev) => ({
+                                        ...prev,
+                                        [index]: true,
+                                      }))
+                                    }
+                                    onBlur={() => {
+                                      // Delay to allow click on suggestion
+                                      setTimeout(() => {
+                                        setShowWalletSuggestions((prev) => ({
+                                          ...prev,
+                                          [index]: false,
+                                        }));
+                                      }, 200);
+                                    }}
+                                    className="font-mono text-sm h-11"
+                                  />
+                                  {showWalletSuggestions[index] &&
+                                    recentWallets.length > 0 &&
+                                    !output.address && (
+                                      <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                        {recentWallets.map((wallet) => (
+                                          <button
+                                            key={wallet.address}
+                                            type="button"
+                                            onClick={() => {
+                                              updateOutputAddress(
+                                                index,
+                                                wallet.address
+                                              );
+                                              setShowWalletSuggestions(
+                                                (prev) => ({
+                                                  ...prev,
+                                                  [index]: false,
+                                                })
+                                              );
+                                            }}
+                                            className="w-full text-left px-3 py-2 hover:bg-muted transition-colors border-b border-border last:border-b-0"
+                                          >
+                                            <div className="font-mono text-xs text-foreground">
+                                              {wallet.address.slice(0, 8)}...
+                                              {wallet.address.slice(-8)}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground">
+                                              Used {wallet.useCount}x •{" "}
+                                              {new Date(
+                                                wallet.lastUsed
+                                              ).toLocaleDateString()}
+                                            </div>
+                                          </button>
+                                        ))}
+                                      </div>
+                                    )}
+                                </div>
                                 {addressError && (
                                   <p className="text-xs text-destructive font-medium flex items-center gap-1">
                                     <span className="inline-block w-1 h-1 rounded-full bg-destructive"></span>
@@ -1848,7 +1927,8 @@ export default function TransactionPage() {
                     ) : (
                       <>
                         <SendIcon />
-                        {mode === "advanced" && selectedNotesForWithdraw.length > 0
+                        {mode === "advanced" &&
+                        selectedNotesForWithdraw.length > 0
                           ? `Withdraw ${selectedNotesForWithdraw.length} Note(s)`
                           : mode === "advanced"
                           ? "Deposit Privately"
@@ -2031,8 +2111,8 @@ export default function TransactionPage() {
                           {notes.length === 0 ? (
                             <div className="text-center p-6 bg-muted/30 rounded-xl border border-dashed border-border">
                               <p className="text-sm text-muted-foreground">
-                                No notes found. Deposit tokens to create notes or
-                                import existing notes.
+                                No notes found. Deposit tokens to create notes
+                                or import existing notes.
                               </p>
                             </div>
                           ) : (
@@ -2086,7 +2166,8 @@ export default function TransactionPage() {
                                         {note.depositSignature && (
                                           <p className="text-xs text-muted-foreground font-mono">
                                             Deposit:{" "}
-                                            {note.depositSignature.slice(0, 8)}...
+                                            {note.depositSignature.slice(0, 8)}
+                                            ...
                                           </p>
                                         )}
                                       </div>
@@ -2120,7 +2201,6 @@ export default function TransactionPage() {
                           )}
                         </div>
                       </div>
-
                     </motion.div>
                   )}
 

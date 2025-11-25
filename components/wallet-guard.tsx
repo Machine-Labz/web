@@ -24,7 +24,7 @@ export function WalletGuard({ children, fallback }: WalletGuardProps) {
           <div className="min-h-screen bg-background flex flex-col">
             <DappHeader />
 
-            <div className="flex-1 flex items-center justify-center p-4">
+            <div className="flex-1 flex items-center justify-center p-4 pt-32">
               <Card className="w-full max-w-md">
                 <CardContent className="p-8 text-center space-y-6">
                   <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">

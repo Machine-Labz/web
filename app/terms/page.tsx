@@ -1,6 +1,6 @@
 "use client";
 
-import { SiteHeader } from "@/components/site-header";
+import { Navbar } from "@/components/navbar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ export default function TermsOfUsePage() {
 
   return (
     <div className="flex min-h-[100dvh] flex-col">
-      <SiteHeader />
+      <Navbar />
       <main className="flex-1">
         <section className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-muted/30">
           <div className="container px-4 md:px-6">
