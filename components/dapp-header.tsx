@@ -151,7 +151,16 @@ export function DappHeader() {
                 "[&_.wallet-adapter-button-trigger]:!border-slate-700/50",
                 "[&_.wallet-adapter-button-trigger]:!text-white",
                 "[&_.wallet-adapter-button-trigger]:hover:!bg-slate-700/80",
-                "[&_.wallet-adapter-button-trigger]:hover:!border-slate-600/50"
+                "[&_.wallet-adapter-button-trigger]:hover:!border-slate-600/50",
+                // Dropdown menu styles
+                "[&_.wallet-adapter-dropdown]:!bg-slate-800",
+                "[&_.wallet-adapter-dropdown]:!border",
+                "[&_.wallet-adapter-dropdown]:!border-slate-700",
+                "[&_.wallet-adapter-dropdown]:!rounded-xl",
+                "[&_.wallet-adapter-dropdown-list]:!bg-slate-800",
+                "[&_.wallet-adapter-dropdown-list-item]:!text-white",
+                "[&_.wallet-adapter-dropdown-list-item]:hover:!bg-slate-700",
+                "[&_.wallet-adapter-dropdown-list-item]:!transition-colors"
               )}
             >
               <WalletMultiButton />
