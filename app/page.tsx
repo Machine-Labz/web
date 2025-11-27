@@ -12,6 +12,7 @@ import BlurText from "@/components/BlurText";
 import TrueFocus from "@/components/TrueFocus";
 import CloakPrivacyAnimation from "@/components/ui/privacy-animation";
 import PixelCard from "@/components/PixelCard";
+import { GridScan } from "@/components/GridScan";
 import {
   motion,
   useScroll,
@@ -86,7 +87,7 @@ function FeatureIconButton({
     >
       <motion.span
         className="text-sm font-medium text-slate-400 mb-3 transition-colors duration-300"
-        animate={{ color: isHovered ? "#0ea5e9" : "#94a3b8" }}
+        animate={{ color: isHovered ? "#31146F" : "#94a3b8" }}
       >
         {feature.title}
       </motion.span>
@@ -101,20 +102,20 @@ function FeatureIconButton({
           variant="default"
           gap={5}
           speed={50}
-          colors="#0ea5e9,#0284c7,#075985"
+          colors="#31146F,#1e0d4d,#0d0626"
           className="!w-[100px] !h-[100px] !bg-[#0a1525]/80 !border-slate-700/50 !rounded-2xl"
         >
           <div className="absolute inset-0 flex items-center justify-center z-10">
             <div
               className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300 ${
                 isHovered
-                  ? "bg-gradient-to-br from-sky-500/30 to-sky-600/20 border border-sky-500/40"
+                  ? "bg-gradient-to-br from-[#31146F]/30 to-[#1e0d4d]/20 border border-[#31146F]/40"
                   : "bg-slate-800/50 border border-slate-700/50"
               }`}
             >
               <Icon
                 className={`w-7 h-7 transition-colors duration-300 ${
-                  isHovered ? "text-sky-400" : "text-slate-400"
+                  isHovered ? "text-[#31146F]" : "text-slate-400"
                 }`}
               />
             </div>
@@ -179,8 +180,8 @@ function FeatureModal({
                 </button>
 
                 <div className="text-center">
-                  <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-sky-500/30 to-sky-600/10 border border-sky-500/30 flex items-center justify-center mb-6">
-                    <Icon className="w-10 h-10 text-sky-400" />
+                  <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-[#31146F]/30 to-[#1e0d4d]/10 border border-[#31146F]/30 flex items-center justify-center mb-6">
+                    <Icon className="w-10 h-10 text-[#31146F]" />
                   </div>
 
                   <h3 className="text-2xl font-bold text-white mb-4">
@@ -193,7 +194,7 @@ function FeatureModal({
 
                   <button
                     onClick={onClose}
-                    className="mt-6 px-6 py-2.5 bg-sky-500/20 border border-sky-500/30 rounded-lg text-sky-400 font-medium hover:bg-sky-500/30 transition-colors"
+                    className="mt-6 px-6 py-2.5 bg-[#31146F]/20 border border-[#31146F]/30 rounded-lg text-[#31146F] font-medium hover:bg-[#31146F]/30 transition-colors"
                   >
                     Got it
                   </button>
@@ -217,7 +218,7 @@ function InvisibleByDesignSection() {
   return (
     <section className="relative py-32 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#020617]" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-sky-500/[0.03] rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-[#31146F]/[0.03] rounded-full blur-[150px] pointer-events-none" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-6">
         <div className="text-center mb-20">
@@ -225,7 +226,7 @@ function InvisibleByDesignSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-sky-400 font-mono text-sm tracking-widest uppercase mb-4"
+            className="text-[#31146F] font-mono text-sm tracking-widest uppercase mb-4"
           >
             Core Features
           </motion.p>
@@ -241,8 +242,8 @@ function InvisibleByDesignSection() {
               sentence="Invisible by Design"
               manualMode={false}
               blurAmount={4}
-              borderColor="rgba(14, 165, 233, 0.6)"
-              glowColor="rgba(14, 165, 233, 0.3)"
+              borderColor="rgba(49, 20, 111, 0.6)"
+              glowColor="rgba(49, 20, 111, 0.3)"
               animationDuration={0.8}
               pauseBetweenAnimations={1.2}
             />
@@ -382,23 +383,24 @@ function LandingContent() {
       {/* HERO SECTION */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <LightRays
-            raysOrigin="top-center"
-            raysColor="#0ea5e9"
-            raysSpeed={0.5}
-            lightSpread={1.5}
-            rayLength={2}
-            pulsating={true}
-            fadeDistance={1.2}
-            saturation={0.8}
-            followMouse={true}
-            mouseInfluence={0.15}
+          <GridScan
+            sensitivity={0.55}
+            lineThickness={1}
+            linesColor="#31146F"
+            gridScale={0.1}
+            scanColor="#A855F7"
+            scanOpacity={0.4}
+            enablePost
+            bloomIntensity={0.6}
+            chromaticAberration={0.002}
+            noiseIntensity={0.01}
+            className="w-full h-full"
           />
         </div>
 
-        <div className="absolute inset-0 bg-gradient-to-b from-[#020617]/60 via-[#020617]/50 to-[#020617] z-[1]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#020617]/40 via-[#020617]/30 to-[#020617] z-[1]" />
 
-        <div className="absolute inset-0 z-[2] opacity-[0.02] mix-blend-overlay pointer-events-none">
+        <div className="absolute inset-0 z-[2] opacity-[0.01] mix-blend-overlay pointer-events-none">
           <Noise
             patternSize={200}
             patternAlpha={20}
@@ -406,7 +408,7 @@ function LandingContent() {
           />
         </div>
 
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,#020617_80%)] z-[3]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,#020617_70%)] z-[3]" />
 
         <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
           <motion.div
@@ -415,16 +417,16 @@ function LandingContent() {
             transition={{ duration: 1, delay: 0.3 }}
             className="mb-8"
           >
-            <h1 className="text-7xl md:text-9xl font-black tracking-tighter text-white drop-shadow-[0_0_30px_rgba(14,165,233,0.4)] cursor-default">
+            <h1 className="text-7xl md:text-9xl font-black tracking-wide text-white drop-shadow-[0_0_30px_rgba(49,20,111,0.4)] cursor-default font-darker-grotesque">
               <DecryptedText
-                text="CLOAK"
+                text="Cloak"
                 speed={80}
                 maxIterations={15}
                 sequential={true}
                 revealDirection="center"
                 characters="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*"
                 className="text-white"
-                encryptedClassName="text-sky-400"
+                encryptedClassName="text-[#31146F]"
                 continuous={true}
                 continuousInterval={2500}
               />
@@ -450,7 +452,7 @@ function LandingContent() {
           >
             <Link
               href="/privacy"
-              className="group relative px-10 py-5 bg-sky-500 text-[#020617] rounded-xl font-semibold text-lg overflow-hidden transition-all duration-300 hover:bg-sky-400 hover:shadow-[0_0_40px_rgba(14,165,233,0.4)] hover:scale-[1.02] active:scale-[0.98]"
+              className="group relative px-10 py-5 bg-white text-[#31146F] rounded-full font-semibold text-lg overflow-hidden transition-all duration-300 hover:bg-white/90 hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:scale-[1.02] active:scale-[0.98]"
             >
               <span className="relative z-10 flex items-center gap-3">
                 <DecryptedText
@@ -460,8 +462,8 @@ function LandingContent() {
                   sequential={true}
                   revealDirection="start"
                   characters="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                  className="text-[#020617]"
-                  encryptedClassName="text-[#020617]/60"
+                  className="text-[#31146F]"
+                  encryptedClassName="text-[#31146F]/60"
                   animateOn="hover"
                 />
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
@@ -488,7 +490,7 @@ function LandingContent() {
                 transition={{ delay: 1.7 + i * 0.1 }}
                 className="flex items-center gap-2"
               >
-                <item.icon className="w-4 h-4 text-sky-500" />
+                <item.icon className="w-4 h-4 text-[#31146F]" />
                 <span>{item.text}</span>
               </motion.div>
             ))}
@@ -506,7 +508,7 @@ function LandingContent() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-sky-400 font-mono text-sm tracking-widest uppercase mb-4"
+              className="text-[#A855F7] font-mono text-sm tracking-widest uppercase mb-4"
             >
               How It Works
             </motion.p>
@@ -632,7 +634,7 @@ function LandingContent() {
                       icon: Cpu,
                       label: "Hash Rate",
                       value: "1.2 TH/s",
-                      color: "text-sky-400",
+                      color: "text-[#31146F]",
                     },
                     {
                       icon: Coins,
@@ -721,7 +723,7 @@ function LandingContent() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="text-sky-400 font-mono text-sm tracking-widest uppercase mb-4"
+                className="text-[#31146F] font-mono text-sm tracking-widest uppercase mb-4"
               >
                 Developer SDK
               </motion.p>
@@ -761,7 +763,7 @@ function LandingContent() {
                   "Open source (Apache 2.0)",
                 ].map((item, index) => (
                   <div key={index} className="flex items-center gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#31146F]" />
                     <span className="text-slate-300">{item}</span>
                   </div>
                 ))}
@@ -791,21 +793,21 @@ function LandingContent() {
                         // Initialize Cloak
                       </span>
                       {"\n"}
-                      <span className="text-sky-400">import</span>
+                      <span className="text-[#31146F]">import</span>
                       <span className="text-white">
                         {" "}
                         {"{"} Cloak {"}"}{" "}
                       </span>
-                      <span className="text-sky-400">from</span>
+                      <span className="text-[#31146F]">from</span>
                       <span className="text-amber-300">
                         {" "}
                         &apos;@cloak/sdk&apos;
                       </span>
                       {"\n\n"}
-                      <span className="text-sky-400">const</span>
+                      <span className="text-[#31146F]">const</span>
                       <span className="text-slate-200"> cloak </span>
                       <span className="text-white">= </span>
-                      <span className="text-sky-400">new</span>
+                      <span className="text-[#31146F]">new</span>
                       <span className="text-amber-200"> Cloak</span>
                       <span className="text-white">({"{"}</span>
                       {"\n"}
@@ -818,14 +820,14 @@ function LandingContent() {
                       {"\n\n"}
                       <span className="text-slate-500">// Send privately</span>
                       {"\n"}
-                      <span className="text-sky-400">await</span>
+                      <span className="text-[#31146F]">await</span>
                       <span className="text-slate-200"> cloak</span>
                       <span className="text-white">.</span>
                       <span className="text-amber-200">send</span>
                       <span className="text-white">({"{"}</span>
                       {"\n"}
                       <span className="text-white"> amount: </span>
-                      <span className="text-sky-300">1.5</span>
+                      <span className="text-[#5d2ba3]">1.5</span>
                       <span className="text-white">,</span>
                       {"\n"}
                       <span className="text-white"> to: </span>
@@ -852,7 +854,7 @@ function LandingContent() {
       <section className="relative py-32 overflow-hidden">
         <div className="absolute inset-0 z-0 opacity-25">
           <Aurora
-            colorStops={["#020617", "#0284c7", "#020617"]}
+            colorStops={["#020617", "#31146F", "#020617"]}
             amplitude={0.5}
             blend={0.9}
             speed={0.3}
@@ -889,7 +891,7 @@ function LandingContent() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/privacy"
-                className="px-10 py-4 bg-sky-500 text-[#020617] rounded-lg font-semibold text-lg transition-all duration-300 hover:bg-sky-400 hover:shadow-[0_0_40px_rgba(14,165,233,0.3)]"
+                className="px-10 py-4 bg-white text-[#31146F] rounded-full font-semibold text-lg transition-all duration-300 hover:bg-white/90 hover:shadow-[0_0_40px_rgba(255,255,255,0.3)]"
               >
                 Launch App
                 <ArrowRight className="w-5 h-5 inline ml-2" />
@@ -899,7 +901,7 @@ function LandingContent() {
                 href="https://github.com/Machine-Labz/cloak"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-10 py-4 border border-slate-600 rounded-lg font-semibold text-lg text-slate-300 hover:bg-slate-800/50 hover:border-slate-500 transition-all duration-300"
+                className="px-10 py-4 border border-white/20 bg-transparent rounded-full font-semibold text-lg text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300"
               >
                 View on GitHub
               </a>

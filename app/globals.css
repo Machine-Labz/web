@@ -22,8 +22,8 @@
 
 @layer base {
   :root {
-    --font-sans: var(--font-dm-sans);
-    --font-mono: var(--font-geist-mono);
+    --font-sans: var(--font-manrope);
+    --font-mono: var(--font-manrope);
     /* Light mode colors with better contrast */
     --background: 0 0% 100%;
     --foreground: 222 84% 5%;

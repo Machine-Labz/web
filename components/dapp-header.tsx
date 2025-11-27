@@ -31,9 +31,7 @@ export function DappHeader() {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
-  const navLinks = [
-    { href: "/privacy", label: "Privacy Zone", icon: Shuffle },
-  ];
+  const navLinks = [{ href: "/privacy", label: "Privacy Zone", icon: Shuffle }];
 
   return (
     <motion.nav
@@ -44,10 +42,11 @@ export function DappHeader() {
         "fixed top-0 left-0 right-0 z-50 transition-all duration-500 px-4 md:px-6",
         isScrolled ? "py-2" : "py-4"
       )}
+      style={{ maxWidth: "100%" }}
     >
       <div
         className={cn(
-          "max-w-5xl mx-auto transition-all duration-500 flex items-center justify-between",
+          "max-w-6xl mx-auto transition-all duration-500 flex items-center justify-between",
           "rounded-2xl border border-slate-700/50",
           "bg-slate-900/80 backdrop-blur-xl",
           "shadow-[0_8px_32px_rgba(0,0,0,0.4)]",
@@ -57,16 +56,13 @@ export function DappHeader() {
         )}
       >
         {/* Logo */}
-        <Link
-          href="/"
-          className="flex items-center gap-3 group"
-        >
+        <Link href="/" className="flex items-center gap-3 group">
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="relative"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50 flex items-center justify-center overflow-hidden group-hover:border-sky-500/30 transition-colors duration-300">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50 flex items-center justify-center overflow-hidden group-hover:border-[#31146F]/30 transition-colors duration-300">
               <Image
                 src="/cloak-solo.png"
                 alt="Cloak"
@@ -76,7 +72,7 @@ export function DappHeader() {
               />
             </div>
             {/* Glow effect on hover */}
-            <div className="absolute inset-0 rounded-xl bg-sky-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute inset-0 rounded-xl bg-[#31146F]/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </motion.div>
           <span className="text-lg font-bold text-white hidden sm:block">
             <DecryptedText
@@ -85,7 +81,7 @@ export function DappHeader() {
               maxIterations={8}
               characters="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
               className="text-white"
-              encryptedClassName="text-sky-400"
+              encryptedClassName="text-[#A855F7]"
               animateOn="hover"
             />
           </span>
@@ -102,9 +98,9 @@ export function DappHeader() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300",
+                    "flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all duration-300",
                     isActive
-                      ? "bg-sky-500 text-[#020617]"
+                      ? "bg-white text-[#31146F]"
                       : "text-slate-400 hover:text-white hover:bg-slate-700/50"
                   )}
                 >
@@ -136,26 +132,28 @@ export function DappHeader() {
 
           {/* Wallet Button */}
           <ClientOnly>
-            <div className={cn(
-              "[&_.wallet-adapter-button]:!rounded-xl",
-              "[&_.wallet-adapter-button]:!px-4",
-              "[&_.wallet-adapter-button]:!py-2",
-              "[&_.wallet-adapter-button]:!text-sm",
-              "[&_.wallet-adapter-button]:!font-semibold",
-              "[&_.wallet-adapter-button]:!transition-all",
-              "[&_.wallet-adapter-button]:!duration-300",
-              "[&_.wallet-adapter-button]:!bg-sky-500",
-              "[&_.wallet-adapter-button]:!text-[#020617]",
-              "[&_.wallet-adapter-button]:hover:!bg-sky-400",
-              "[&_.wallet-adapter-button]:hover:!shadow-[0_0_20px_rgba(14,165,233,0.3)]",
-              "[&_.wallet-adapter-button]:!border-0",
-              "[&_.wallet-adapter-button-trigger]:!bg-slate-800/80",
-              "[&_.wallet-adapter-button-trigger]:!border",
-              "[&_.wallet-adapter-button-trigger]:!border-slate-700/50",
-              "[&_.wallet-adapter-button-trigger]:!text-white",
-              "[&_.wallet-adapter-button-trigger]:hover:!bg-slate-700/80",
-              "[&_.wallet-adapter-button-trigger]:hover:!border-slate-600/50",
-            )}>
+            <div
+              className={cn(
+                "[&_.wallet-adapter-button]:!rounded-full",
+                "[&_.wallet-adapter-button]:!px-4",
+                "[&_.wallet-adapter-button]:!py-2",
+                "[&_.wallet-adapter-button]:!text-sm",
+                "[&_.wallet-adapter-button]:!font-semibold",
+                "[&_.wallet-adapter-button]:!transition-all",
+                "[&_.wallet-adapter-button]:!duration-300",
+                "[&_.wallet-adapter-button]:!bg-white",
+                "[&_.wallet-adapter-button]:!text-[#31146F]",
+                "[&_.wallet-adapter-button]:hover:!bg-white/90",
+                "[&_.wallet-adapter-button]:hover:!shadow-[0_0_20px_rgba(255,255,255,0.2)]",
+                "[&_.wallet-adapter-button]:!border-0",
+                "[&_.wallet-adapter-button-trigger]:!bg-slate-800/80",
+                "[&_.wallet-adapter-button-trigger]:!border",
+                "[&_.wallet-adapter-button-trigger]:!border-slate-700/50",
+                "[&_.wallet-adapter-button-trigger]:!text-white",
+                "[&_.wallet-adapter-button-trigger]:hover:!bg-slate-700/80",
+                "[&_.wallet-adapter-button-trigger]:hover:!border-slate-600/50"
+              )}
+            >
               <WalletMultiButton />
             </div>
           </ClientOnly>

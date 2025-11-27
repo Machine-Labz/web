@@ -178,7 +178,7 @@ export default function DepositRecovery() {
   return (
     <Card className="border-border/40 bg-card/50 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="text-center font-space-grotesk">
+        <CardTitle className="text-center font-manrope">
           Recover Incomplete Deposit
         </CardTitle>
         <CardDescription className="text-center">

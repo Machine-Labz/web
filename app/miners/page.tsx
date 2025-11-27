@@ -288,17 +288,17 @@ export default function MinersPage() {
                       )}
                     </CardContent>
                   </Card>
-                  <Card className="border-blue-500/20 hover:border-blue-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/5">
+                  <Card className="border-[#31146F]/20 hover:border-[#31146F]/40 transition-all duration-300 hover:shadow-lg hover:shadow-[#31146F]/5">
                     <CardHeader className="pb-3">
                       <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                        <div className="p-2 rounded-lg bg-blue-500/10">
-                          <TrendingUp className="h-4 w-4 text-blue-500" />
+                        <div className="p-2 rounded-lg bg-[#31146F]/10">
+                          <TrendingUp className="h-4 w-4 text-[#31146F]" />
                         </div>
                         Total Mined
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-3xl sm:text-4xl font-bold text-blue-500">
+                      <p className="text-3xl sm:text-4xl font-bold text-[#31146F]">
                         {totalMined}
                       </p>
                     </CardContent>
@@ -480,7 +480,7 @@ export default function MinersPage() {
                                     <TrendingUp className="h-3.5 w-3.5" />
                                     Mined
                                   </span>
-                                  <span className="font-semibold text-blue-500">
+                                  <span className="font-semibold text-[#31146F]">
                                     {miner.totalMined}
                                   </span>
                                 </div>

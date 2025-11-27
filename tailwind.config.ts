@@ -20,9 +20,10 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        "space-grotesk": ["var(--font-space-grotesk)", "sans-serif"],
-        "dm-sans": ["var(--font-dm-sans)", "sans-serif"],
-        sans: ["var(--font-dm-sans)", "sans-serif"],
+        "manrope": ["var(--font-manrope)", "sans-serif"],
+        "darker-grotesque": ["var(--font-darker-grotesque)", "sans-serif"],
+        sans: ["var(--font-manrope)", "sans-serif"],
+        mono: ["var(--font-manrope)", "monospace"],
       },
       colors: {
         border: "hsl(var(--border))",

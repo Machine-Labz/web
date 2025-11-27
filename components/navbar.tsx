@@ -86,7 +86,7 @@ export function Navbar({ showWalletButton = false }: NavbarProps) {
               className="flex items-center"
             >
               <div className="relative">
-                <div className="absolute inset-0 bg-teal-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-[#31146F]/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <SvgIcon className="size-20 relative" />
               </div>
             </motion.div>
@@ -109,7 +109,7 @@ export function Navbar({ showWalletButton = false }: NavbarProps) {
                   >
                     {link.name}
                     <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-50 transition-opacity" />
-                    <span className="absolute bottom-1 left-4 right-4 h-px bg-gradient-to-r from-transparent via-teal-400/50 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+                    <span className="absolute bottom-1 left-4 right-4 h-px bg-gradient-to-r from-transparent via-[#A855F7]/50 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
                   </a>
                 ) : (
                   <Link
@@ -117,7 +117,7 @@ export function Navbar({ showWalletButton = false }: NavbarProps) {
                     className="relative px-4 py-2 text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200 group"
                   >
                     {link.name}
-                    <span className="absolute bottom-1 left-4 right-4 h-px bg-gradient-to-r from-transparent via-teal-400/50 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+                    <span className="absolute bottom-1 left-4 right-4 h-px bg-gradient-to-r from-transparent via-[#A855F7]/50 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
                   </Link>
                 )}
               </motion.div>
@@ -157,7 +157,7 @@ export function Navbar({ showWalletButton = false }: NavbarProps) {
             {/* Wallet Button */}
             {showWalletButton && (
               <ClientOnly>
-                <div className="ml-2 [&_.wallet-adapter-button]:!bg-slate-800 [&_.wallet-adapter-button]:!text-white [&_.wallet-adapter-button]:!rounded-xl [&_.wallet-adapter-button]:!px-4 [&_.wallet-adapter-button]:!py-2 [&_.wallet-adapter-button]:!text-sm [&_.wallet-adapter-button]:!font-medium [&_.wallet-adapter-button]:!border [&_.wallet-adapter-button]:!border-slate-700/50 [&_.wallet-adapter-button]:hover:!bg-slate-700 [&_.wallet-adapter-button]:hover:!border-slate-600 [&_.wallet-adapter-button]:!transition-all">
+                <div className="ml-2 [&_.wallet-adapter-button]:!bg-slate-800 [&_.wallet-adapter-button]:!text-white [&_.wallet-adapter-button]:!rounded-full [&_.wallet-adapter-button]:!px-4 [&_.wallet-adapter-button]:!py-2 [&_.wallet-adapter-button]:!text-sm [&_.wallet-adapter-button]:!font-medium [&_.wallet-adapter-button]:!border [&_.wallet-adapter-button]:!border-slate-700/50 [&_.wallet-adapter-button]:hover:!bg-slate-700 [&_.wallet-adapter-button]:hover:!border-slate-600 [&_.wallet-adapter-button]:!transition-all">
                   <WalletMultiButton />
                 </div>
               </ClientOnly>
@@ -169,7 +169,7 @@ export function Navbar({ showWalletButton = false }: NavbarProps) {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="relative px-5 py-2.5 rounded-xl text-sm font-semibold text-[#020617] bg-gradient-to-r from-teal-400 to-teal-500 hover:from-teal-300 hover:to-teal-400 transition-all duration-300 shadow-[0_0_20px_rgba(20,184,166,0.3)] hover:shadow-[0_0_30px_rgba(20,184,166,0.5)] flex items-center gap-2"
+                  className="relative px-5 py-2.5 rounded-full text-sm font-semibold text-[#020617] bg-white hover:bg-white/90 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] flex items-center gap-2"
                 >
                   <Shuffle className="w-4 h-4" />
                   <span>Swap</span>
@@ -252,7 +252,7 @@ export function Navbar({ showWalletButton = false }: NavbarProps) {
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="text-2xl font-light text-slate-300 hover:text-teal-400 transition-colors flex items-center gap-2"
+                        className="text-2xl font-light text-slate-300 hover:text-[#A855F7] transition-colors flex items-center gap-2"
                       >
                         {link.name}
                         <ExternalLink className="w-4 h-4 opacity-50" />
@@ -261,7 +261,7 @@ export function Navbar({ showWalletButton = false }: NavbarProps) {
                       <Link
                         href={link.href}
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="text-2xl font-light text-slate-300 hover:text-teal-400 transition-colors"
+                        className="text-2xl font-light text-slate-300 hover:text-[#A855F7] transition-colors"
                       >
                         {link.name}
                       </Link>
@@ -307,7 +307,7 @@ export function Navbar({ showWalletButton = false }: NavbarProps) {
                     transition={{ delay: 0.35 }}
                   >
                     <ClientOnly>
-                      <div className="[&_.wallet-adapter-button]:!bg-slate-800 [&_.wallet-adapter-button]:!text-white [&_.wallet-adapter-button]:!rounded-xl [&_.wallet-adapter-button]:!px-6 [&_.wallet-adapter-button]:!py-3 [&_.wallet-adapter-button]:!text-base [&_.wallet-adapter-button]:!font-medium [&_.wallet-adapter-button]:!border [&_.wallet-adapter-button]:!border-slate-700/50">
+                      <div className="[&_.wallet-adapter-button]:!bg-slate-800 [&_.wallet-adapter-button]:!text-white [&_.wallet-adapter-button]:!rounded-full [&_.wallet-adapter-button]:!px-6 [&_.wallet-adapter-button]:!py-3 [&_.wallet-adapter-button]:!text-base [&_.wallet-adapter-button]:!font-medium [&_.wallet-adapter-button]:!border [&_.wallet-adapter-button]:!border-slate-700/50">
                         <WalletMultiButton />
                       </div>
                     </ClientOnly>
@@ -326,7 +326,7 @@ export function Navbar({ showWalletButton = false }: NavbarProps) {
                       href="/swap"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      <button className="w-full px-8 py-4 rounded-xl text-lg font-semibold text-[#020617] bg-gradient-to-r from-teal-400 to-teal-500 shadow-[0_0_30px_rgba(20,184,166,0.3)] flex items-center justify-center gap-2">
+                      <button className="w-full px-8 py-4 rounded-full text-lg font-semibold text-[#020617] bg-white hover:bg-white/90 shadow-[0_0_30px_rgba(255,255,255,0.2)] flex items-center justify-center gap-2">
                         <Shuffle className="w-5 h-5" />
                         Swap Privately
                       </button>
