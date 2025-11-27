@@ -53,7 +53,9 @@ import {
 import DotGrid from "@/components/DotGrid";
 import DecryptedText from "@/components/DecryptedText";
 import { WalletGuard } from "@/components/wallet-guard";
-import { DappHeader } from "@/components/dapp-header";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { ClientOnly } from "@/components/client-only";
+import { cn } from "@/lib/utils";
 
 type TransactionMode = "swap" | "send";
 
@@ -827,9 +829,43 @@ export default function PrivacyPage() {
         </div>
         <div className="fixed inset-0 bg-gradient-to-b from-[#020617]/40 via-[#020617]/30 to-[#020617] z-[1]" />
 
-        {/* Header */}
-        <div className="relative z-20">
-          <DappHeader />
+        {/* Wallet Button - Fixed Top Right */}
+        <div className="fixed top-6 right-6 z-50">
+          <ClientOnly>
+            <div
+              className={cn(
+                "[&_.wallet-adapter-button]:!rounded-full",
+                "[&_.wallet-adapter-button]:!px-4",
+                "[&_.wallet-adapter-button]:!py-2",
+                "[&_.wallet-adapter-button]:!text-sm",
+                "[&_.wallet-adapter-button]:!font-semibold",
+                "[&_.wallet-adapter-button]:!transition-all",
+                "[&_.wallet-adapter-button]:!duration-300",
+                "[&_.wallet-adapter-button]:!bg-white",
+                "[&_.wallet-adapter-button]:!text-[#31146F]",
+                "[&_.wallet-adapter-button]:hover:!bg-white/90",
+                "[&_.wallet-adapter-button]:hover:!shadow-[0_0_20px_rgba(255,255,255,0.2)]",
+                "[&_.wallet-adapter-button]:!border-0",
+                "[&_.wallet-adapter-button-trigger]:!bg-slate-800/80",
+                "[&_.wallet-adapter-button-trigger]:!border",
+                "[&_.wallet-adapter-button-trigger]:!border-slate-700/50",
+                "[&_.wallet-adapter-button-trigger]:!text-white",
+                "[&_.wallet-adapter-button-trigger]:hover:!bg-slate-700/80",
+                "[&_.wallet-adapter-button-trigger]:hover:!border-slate-600/50",
+                // Dropdown menu styles
+                "[&_.wallet-adapter-dropdown]:!bg-slate-800",
+                "[&_.wallet-adapter-dropdown]:!border",
+                "[&_.wallet-adapter-dropdown]:!border-slate-700",
+                "[&_.wallet-adapter-dropdown]:!rounded-xl",
+                "[&_.wallet-adapter-dropdown-list]:!bg-slate-800",
+                "[&_.wallet-adapter-dropdown-list-item]:!text-white",
+                "[&_.wallet-adapter-dropdown-list-item]:hover:!bg-slate-700",
+                "[&_.wallet-adapter-dropdown-list-item]:!transition-colors"
+              )}
+            >
+              <WalletMultiButton />
+            </div>
+          </ClientOnly>
         </div>
 
         {/* Main Content */}
@@ -1126,48 +1162,6 @@ export default function PrivacyPage() {
               {/* Send Mode: Recipients */}
               {mode === "send" && (
                 <div className="space-y-4 mb-4">
-                  {/* Distribution Summary (for multiple recipients) */}
-                  {recipients.length > 1 && lamports > 0 && (
-                    <div className="bg-slate-800/30 rounded-xl p-3 border border-slate-700/20">
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-slate-400">Distributable</span>
-                        <span className="text-white font-medium">
-                          {formatAmount(distributableAmount)} SOL
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-slate-400">Allocated</span>
-                        <span className="text-white font-medium">
-                          {formatAmount(totalSendAmount)} SOL
-                        </span>
-                      </div>
-                      {allocationMismatch && (
-                        <div className="flex justify-between text-xs mt-2 pt-2 border-t border-slate-700/30">
-                          <span
-                            className={
-                              remainingToAllocate < 0
-                                ? "text-red-400"
-                                : "text-amber-400"
-                            }
-                          >
-                            {remainingToAllocate < 0
-                              ? "Over-allocated"
-                              : "Remaining"}
-                          </span>
-                          <span
-                            className={`font-medium ${
-                              remainingToAllocate < 0
-                                ? "text-red-400"
-                                : "text-amber-400"
-                            }`}
-                          >
-                            {formatAmount(Math.abs(remainingToAllocate))} SOL
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
                   {/* Recipients List */}
                   <div className="space-y-3">
                     {recipients.map((recipient, index) => {
@@ -1208,20 +1202,6 @@ export default function PrivacyPage() {
                               <span className="text-xs text-slate-500">
                                 Address
                               </span>
-                              {connected && publicKey && (
-                                <button
-                                  onClick={() => {
-                                    const newRecipients = [...recipients];
-                                    newRecipients[index].address =
-                                      publicKey.toBase58();
-                                    setRecipients(newRecipients);
-                                  }}
-                                  disabled={isLoading}
-                                  className="text-xs text-[#5d2ba3] hover:text-[#A855F7] transition-colors disabled:opacity-50"
-                                >
-                                  Use my wallet
-                                </button>
-                              )}
                             </div>
                             <Input
                               value={recipient.address}
@@ -1336,6 +1316,103 @@ export default function PrivacyPage() {
                       <Plus className="w-4 h-4" />
                       Add Recipient ({recipients.length}/{MAX_RECIPIENTS})
                     </button>
+                  )}
+
+                  {/* Transaction Summary */}
+                  {lamports > 0 && (
+                    <div className="bg-slate-800/30 rounded-xl p-4 border border-slate-700/20 space-y-3">
+                      <h3 className="text-sm font-semibold text-white mb-3">
+                        Transaction Summary
+                      </h3>
+
+                      {/* Total Deposit */}
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-400">Total deposit:</span>
+                        <span className="text-white font-mono">
+                          {formatAmount(lamports)} SOL
+                        </span>
+                      </div>
+
+                      {/* Protocol Fee (0.5%) */}
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-400">Protocol fee (0.5%):</span>
+                        <span className="text-slate-400 font-mono">
+                          {formatAmount(Math.floor(lamports * 0.005))} SOL
+                        </span>
+                      </div>
+
+                      {/* Fixed Fee */}
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-400">Fixed fee:</span>
+                        <span className="text-slate-400 font-mono">
+                          {formatAmount(2_500_000)} SOL
+                        </span>
+                      </div>
+
+                      {/* Total Fee */}
+                      <div className="flex justify-between text-xs pt-2 border-t border-slate-700/30">
+                        <span className="text-slate-300 font-medium">Total fee:</span>
+                        <span className="text-slate-300 font-mono font-medium">
+                          {formatAmount(calculateFee(lamports))} SOL
+                        </span>
+                      </div>
+
+                      {/* Recipients Section */}
+                      <div className="pt-2 border-t border-slate-700/30">
+                        <div className="flex justify-between text-xs mb-2">
+                          <span className="text-slate-300 font-medium">
+                            Recipients ({recipients.length})
+                          </span>
+                        </div>
+
+                        {/* List Recipients */}
+                        <div className="space-y-1.5">
+                          {recipients.map((recipient, index) => {
+                            const recipientAmount = parseAmountToLamports(recipient.amount);
+                            const addressShort = recipient.address
+                              ? `${recipient.address.slice(0, 4)}...${recipient.address.slice(-4)}`
+                              : "Not set";
+
+                            return (
+                              <div key={index} className="flex justify-between text-xs">
+                                <span className="text-slate-400">
+                                  #{index + 1} {addressShort}
+                                </span>
+                                <span className="text-slate-300 font-mono">
+                                  {recipientAmount > 0 ? formatAmount(recipientAmount) : "0"} SOL
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Total to Recipients */}
+                        <div className="flex justify-between text-xs pt-2 mt-2 border-t border-slate-700/30">
+                          <span className="text-white font-medium">Total to recipients:</span>
+                          <span className={`font-mono font-medium ${
+                            allocationMismatch && recipients.length > 1
+                              ? remainingToAllocate < 0
+                                ? "text-red-400"
+                                : "text-amber-400"
+                              : "text-white"
+                          }`}>
+                            {formatAmount(totalSendAmount)} SOL
+                          </span>
+                        </div>
+
+                        {/* Warning if mismatch */}
+                        {allocationMismatch && recipients.length > 1 && (
+                          <div className="text-xs mt-2 pt-2 border-t border-slate-700/30">
+                            <span className={remainingToAllocate < 0 ? "text-red-400" : "text-amber-400"}>
+                              {remainingToAllocate < 0
+                                ? `⚠️ Over-allocated by ${formatAmount(Math.abs(remainingToAllocate))} SOL`
+                                : `⚠️ ${formatAmount(remainingToAllocate)} SOL remaining to allocate`
+                              }
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
