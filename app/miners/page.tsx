@@ -164,10 +164,35 @@ export default function MinersPage() {
   return (
     <WalletGuard>
       <div className="min-h-screen bg-background relative">
+        {/* Background overlay with animated horizontal lines */}
+        <div
+          className="fixed inset-0 z-0 pointer-events-none"
+          style={{ minHeight: "100dvh", width: "100vw" }}
+        >
+          <div className="absolute inset-0 h-full w-full bg-white dark:bg-black [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]">
+            {[...Array(12)].map((_, i) => (
+              <motion.div
+                key={`miners-h-${i}`}
+                className="absolute left-0 w-full h-px bg-gradient-to-r from-transparent via-primary to-transparent"
+                style={{
+                  top: `calc(${8 + i * 8}% * (min(100vw,100dvh)/100vw))`,
+                }}
+                animate={{ opacity: [0, 0.8, 0], scaleX: [0, 1, 0] }}
+                transition={{
+                  duration: 2.5,
+                  repeat: Infinity,
+                  delay: i * 0.3,
+                  ease: "easeInOut",
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
         <div className="relative z-10">
           <DappHeader />
 
-          <main className="container mx-auto px-4 py-8 pt-32">
+          <main className="container mx-auto px-4 py-8 pt-24">
             <div className="mb-8 sm:mb-12">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}

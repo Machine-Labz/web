@@ -63,9 +63,9 @@ export function Navbar({ showWalletButton = false }: NavbarProps) {
       >
         <Link
           href="/"
-          className="text-2xl font-bold tracking-tighter relative z-50 flex items-center pl-4"
+          className="text-2xl font-bold tracking-tighter relative z-50 flex items-center"
         >
-          <SvgIcon className="size-24" />
+          <SvgIcon className="size-24 pl-30" />
         </Link>
 
         {/* Desktop Menu */}
