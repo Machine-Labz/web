@@ -124,26 +124,15 @@ export function SiteHeader({ showWalletButton = false }: SiteHeaderProps) {
           </Link>
 
           {DAPP_AVAILABLE ? (
-            <>
-              <Link href="/swap">
-                <Button 
-                  variant="outline"
-                  className="rounded-full border-border hover:bg-accent"
-                >
-                  Swap Privately
-                  <ChevronRight className="ml-1 size-4" />
-                </Button>
-              </Link>
-              <Link href="/transaction">
-                <Button 
-                  variant="outline"
-                  className="rounded-full border-border hover:bg-accent"
-                >
-                  Send Privately
-                  <ChevronRight className="ml-1 size-4" />
-                </Button>
-              </Link>
-            </>
+            <Link href="/transaction">
+              <Button 
+                variant="outline"
+                className="rounded-full border-border hover:bg-accent"
+              >
+                Send Privately
+                <ChevronRight className="ml-1 size-4" />
+              </Button>
+            </Link>
           ) : (
             <Button
               disabled
@@ -234,32 +223,18 @@ export function SiteHeader({ showWalletButton = false }: SiteHeaderProps) {
               </Link>
 
               {DAPP_AVAILABLE ? (
-                <>
-                  <Link
-                    href="/swap"
-                    onClick={() => setMobileMenuOpen(false)}
+                <Link
+                  href="/transaction"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Button 
+                    variant="outline"
+                    className="w-full rounded-full border-border hover:bg-accent"
                   >
-                    <Button 
-                      variant="outline"
-                      className="w-full rounded-full border-border hover:bg-accent"
-                    >
-                      Swap Privately
-                      <ChevronRight className="ml-1 size-4" />
-                    </Button>
-                  </Link>
-                  <Link
-                    href="/transaction"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Button 
-                      variant="outline"
-                      className="w-full rounded-full border-border hover:bg-accent"
-                    >
-                      Send Privately
-                      <ChevronRight className="ml-1 size-4" />
-                    </Button>
-                  </Link>
-                </>
+                    Send Privately
+                    <ChevronRight className="ml-1 size-4" />
+                  </Button>
+                </Link>
               ) : (
                 <Button
                   disabled

@@ -138,12 +138,6 @@ export default function CloakLandingPage() {
       icon: <Eye className="size-5" />,
     },
     {
-      title: "Private Token Swaps",
-      description:
-        "Swap SOL for USDC or other tokens privately. The recipient receives tokens without revealing the payer's identity.",
-      icon: <Shuffle className="size-5" />,
-    },
-    {
       title: "On-Chain Verification",
       description:
         "SP1 Groth16 proofs verified on Solana ensure mathematical guarantees of privacy.",
@@ -343,55 +337,15 @@ export default function CloakLandingPage() {
 
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight mb-4 sm:mb-6 text-foreground font-space-grotesk leading-tight">
                 {DAPP_AVAILABLE
-                  ? "Private SOL Transfers & Swaps with Unlinkable Withdrawals"
+                  ? "Private SOL Transfers with Unlinkable Withdrawals"
                   : "Private Transfers on Solana"}
               </h1>
 
               <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground mb-4 sm:mb-6 max-w-3xl mx-auto text-balance px-4">
-                Deposit into the shared privacy pool and withdraw or swap tokens without
+                Deposit into the shared privacy pool and withdraw without
                 revealing which deposit you own. Try it now on testnet!
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
-                <motion.div
-                  whileHover={{ scale: DAPP_AVAILABLE ? 1.05 : 1 }}
-                  whileTap={{ scale: DAPP_AVAILABLE ? 0.95 : 1 }}
-                  transition={{ duration: 0.2 }}
-                  className="w-full sm:w-auto"
-                >
-                  {DAPP_AVAILABLE ? (
-                    <Link
-                      href="/swap"
-                      className="block w-full sm:w-auto"
-                    >
-                      <Button
-                        size="lg"
-                        className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 animate-bounce"
-                      >
-                        <Shuffle className="mr-2 size-4" />
-                        Swap Privately
-                        <motion.div
-                          animate={{ x: [0, 4, 0] }}
-                          transition={{
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                          }}
-                        >
-                          <ArrowRight className="ml-2 size-4" />
-                        </motion.div>
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Button
-                      size="lg"
-                      disabled
-                      className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base bg-muted text-muted-foreground cursor-not-allowed"
-                    >
-                      <Lock className="mr-2 size-4" />
-                      Coming Soon
-                    </Button>
-                  )}
-                </motion.div>
                 <motion.div
                   whileHover={{ scale: DAPP_AVAILABLE ? 1.05 : 1 }}
                   whileTap={{ scale: DAPP_AVAILABLE ? 0.95 : 1 }}
@@ -405,11 +359,19 @@ export default function CloakLandingPage() {
                     >
                       <Button
                         size="lg"
-                        variant="outline"
-                        className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base border-primary/20 hover:bg-primary/5 bg-transparent text-foreground"
+                        className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 animate-bounce"
                       >
-                        Send Privately
-                        <ChevronRight className="ml-2 size-4" />
+                        Try Testnet Now
+                        <motion.div
+                          animate={{ x: [0, 4, 0] }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                          }}
+                        >
+                          <ArrowRight className="ml-2 size-4" />
+                        </motion.div>
                       </Button>
                     </Link>
                   ) : (
@@ -1705,14 +1667,13 @@ export default function CloakLandingPage() {
                   transition={{ duration: 0.2 }}
                 >
                   {DAPP_AVAILABLE ? (
-                    <Link href="/swap" className="w-full sm:w-auto">
+                    <Link href="/transaction" className="w-full sm:w-auto">
                       <Button
                         size="lg"
                         variant="default"
                         className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base bg-primary text-primary-foreground hover:bg-primary/90"
                       >
-                        <Shuffle className="mr-2 size-4" />
-                        Swap Privately
+                        Send Privately
                         <motion.div
                           animate={{ x: [0, 4, 0] }}
                           transition={{
@@ -1723,33 +1684,6 @@ export default function CloakLandingPage() {
                         >
                           <ArrowRight className="ml-2 size-4" />
                         </motion.div>
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Button
-                      size="lg"
-                      disabled
-                      className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base bg-muted text-muted-foreground cursor-not-allowed"
-                    >
-                      <Lock className="mr-2 size-4" />
-                      Coming Soon
-                    </Button>
-                  )}
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {DAPP_AVAILABLE ? (
-                    <Link href="/transaction" className="w-full sm:w-auto">
-                      <Button
-                        size="lg"
-                        variant="outline"
-                        className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base border-white/20 bg-transparent text-white hover:bg-white/10"
-                      >
-                        Send Privately
-                        <ChevronRight className="ml-2 size-4" />
                       </Button>
                     </Link>
                   ) : (

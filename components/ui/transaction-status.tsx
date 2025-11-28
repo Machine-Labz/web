@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
-import { SOLIcon, USDCIcon, ZCashIcon } from "@/components/icons/token-icons";
+import { SOLIcon, USDCIcon } from "@/components/icons/token-icons";
 
 const LAMPORTS_PER_SOL = 1_000_000_000;
 
@@ -41,8 +41,7 @@ interface TransactionStatusProps {
   recipients?: Array<{ address: string; amountLamports?: number }>;
   signature?: string;
   mode?: "transfer" | "swap";
-  swapOutputAmount?: string; // For swap mode: output token amount to display
-  swapOutputToken?: string; // For swap mode: output token symbol (e.g., "USDC", "ZEC")
+  swapOutputAmount?: string; // For swap mode: USDC amount to display
 }
 
 // Animated Icons for each status
@@ -216,7 +215,6 @@ export function TransactionStatus({
   signature,
   mode = "transfer",
   swapOutputAmount,
-  swapOutputToken = "USDC",
 }: TransactionStatusProps) {
   const baseConfig = statusConfig[status];
   // Override descriptions for swap mode
@@ -495,7 +493,7 @@ export function TransactionStatus({
                 />
               </motion.div>
 
-              {/* Destination Wallet / Output Token (for swap) */}
+              {/* Destination Wallet / USDC (for swap) */}
               <motion.div
                 className="flex flex-col items-center space-y-2"
                 animate={{
@@ -506,17 +504,13 @@ export function TransactionStatus({
               >
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                   {mode === "swap" ? (
-                    swapOutputToken === "ZEC" ? (
-                      <ZCashIcon className="w-6 h-6" />
-                    ) : (
-                      <USDCIcon className="w-6 h-6" />
-                    )
+                    <USDCIcon className="w-6 h-6" />
                   ) : (
                     <Wallet className="w-6 h-6 text-primary" />
                   )}
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  {mode === "swap" ? swapOutputToken : "Destination"}
+                  {mode === "swap" ? `USDC` : "Destination"}
                 </span>
                 {mode === "swap" && swapOutputAmount && animationState.showDestination && (
                   <span className="text-xs font-medium text-primary mt-1">
@@ -535,14 +529,14 @@ export function TransactionStatus({
                 {mode === "swap" ? "Swapping:" : "Amount:"}
               </span>
               <span className="font-medium">
-                {amount} {mode === "swap" ? `SOL → ${swapOutputToken}` : "SOL"}
+                {amount} {mode === "swap" ? "SOL → USDC" : "SOL"}
               </span>
             </div>
             {mode === "swap" && swapOutputAmount && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Receiving:</span>
                 <span className="font-medium text-green-600 dark:text-green-400">
-                  {swapOutputAmount} {swapOutputToken}
+                  {swapOutputAmount} USDC
                 </span>
               </div>
             )}
@@ -550,12 +544,9 @@ export function TransactionStatus({
               <span className="text-muted-foreground text-xs uppercase">Recipients</span>
               <div className="space-y-2">
                 {recipients.map((entry, idx) => {
-                  // For swap mode, always show output token amount (or calculating); never show SOL
-                  // For transfer mode, show SOL amount
-                  const formatted = mode === "swap"
-                    ? swapOutputAmount
-                      ? `${swapOutputAmount} ${swapOutputToken}`
-                      : "Calculating..."
+                  // For swap mode, show USDC amount; for transfer mode, show SOL amount
+                  const formatted = mode === "swap" && swapOutputAmount
+                    ? `${swapOutputAmount} USDC`
                     : entry.amountLamports !== undefined
                     ? `${(entry.amountLamports / LAMPORTS_PER_SOL).toFixed(9)} SOL`
                     : undefined;
@@ -568,7 +559,7 @@ export function TransactionStatus({
                     >
                       <div className="flex items-center gap-2">
                         <a
-                          href={`https://orb.helius.dev/address/${entry.address}/program-authority?cluster=${getCluster()}`}
+                          href={`https://solscan.io/account/${entry.address}?cluster=${getCluster()}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-primary hover:underline"
@@ -588,13 +579,7 @@ export function TransactionStatus({
                         </button>
                       </div>
                       {formatted && (
-                        <span className={
-                          mode === "swap"
-                            ? swapOutputAmount
-                              ? "text-green-600 dark:text-green-400 font-medium"
-                              : "text-muted-foreground italic"
-                            : ""
-                        }>
+                        <span className={mode === "swap" ? "text-green-600 dark:text-green-400 font-medium" : ""}>
                           {formatted}
                         </span>
                       )}
@@ -608,7 +593,7 @@ export function TransactionStatus({
                 <span className="text-muted-foreground">Signature:</span>
                 <div className="flex items-center gap-2">
                   <a
-                    href={`https://orb.helius.dev/tx/${signature}?cluster=${getCluster()}`}
+                    href={`https://solscan.io/tx/${signature}?cluster=${getCluster()}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-mono text-xs text-primary hover:underline"
@@ -648,13 +633,13 @@ export function TransactionStatus({
                 </div>
               </div>
               <a
-                href={`https://orb.helius.dev/tx/${signature}?cluster=${getCluster()}`}
+                href={`https://solscan.io/tx/${signature}?cluster=${getCluster()}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium"
               >
                 <ExternalLink className="w-4 h-4" />
-                View on Orb
+                View on Solscan
               </a>
             </div>
           </div>

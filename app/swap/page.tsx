@@ -22,7 +22,7 @@ import {
   TransactionStatus,
   type TransactionStatus as Status,
 } from "@/components/ui/transaction-status";
-import { SOLIcon, USDCIcon, ZCashIcon } from "@/components/icons/token-icons";
+import { SOLIcon, USDCIcon } from "@/components/icons/token-icons";
 import {
   generateNoteFromWallet,
   saveNote,
@@ -36,8 +36,10 @@ import { blake3 } from "@noble/hashes/blake3.js";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
 import { Buffer } from "buffer";
 import { calculateFee } from "@/lib/note-manager";
-import { TOKENS, OUTPUT_TOKENS, type OutputToken, getTokenBySymbol } from "@/lib/tokens";
 
+const DEVNET_USDC_MINT = new PublicKey(
+  "BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k"
+);
 const DEFAULT_SWAP_SLIPPAGE_BPS = 100; // 1%
 
 export default function SwapPage() {
@@ -45,10 +47,9 @@ export default function SwapPage() {
   const { connection } = useConnection();
   const [amount, setAmount] = useState("");
   const [recipientAddress, setRecipientAddress] = useState("");
-  const [outputToken, setOutputToken] = useState<OutputToken>("USDC");
   const [isLoading, setIsLoading] = useState(false);
   const [solBalance, setSolBalance] = useState<number | null>(null);
-  const [outputTokenBalance, setOutputTokenBalance] = useState<number | null>(null);
+  const [usdcBalance, setUsdcBalance] = useState<number | null>(null);
   const [quoteOutAmount, setQuoteOutAmount] = useState<number | null>(null);
   const [quoteMinOut, setQuoteMinOut] = useState<number | null>(null);
   const [isQuoteLoading, setIsQuoteLoading] = useState(false);
@@ -72,25 +73,18 @@ export default function SwapPage() {
   });
   const { generateProof } = prover;
 
-  // Fetch balances when wallet/connection or output token changes
+  // Fetch balances when wallet/connection changes
   useEffect(() => {
     if (!connected || !publicKey || !connection) {
       setSolBalance(null);
-      setOutputTokenBalance(null);
+      setUsdcBalance(null);
       return;
     }
     (async () => {
       try {
-        const token = getTokenBySymbol(outputToken);
-        if (!token) {
-          setSolBalance(null);
-          setOutputTokenBalance(null);
-          return;
-        }
-        
         const [sol, ata] = await Promise.all([
           connection.getBalance(publicKey),
-          getAssociatedTokenAddress(token.mint, publicKey).catch(
+          getAssociatedTokenAddress(DEVNET_USDC_MINT, publicKey).catch(
             () => null
           ),
         ]);
@@ -98,19 +92,19 @@ export default function SwapPage() {
         if (ata) {
           try {
             const tokenAcc = await connection.getTokenAccountBalance(ata);
-            setOutputTokenBalance(Number(tokenAcc.value.amount));
+            setUsdcBalance(Number(tokenAcc.value.amount));
           } catch {
-            setOutputTokenBalance(0);
+            setUsdcBalance(0);
           }
         } else {
-          setOutputTokenBalance(0);
+          setUsdcBalance(0);
         }
       } catch {
         setSolBalance(null);
-        setOutputTokenBalance(null);
+        setUsdcBalance(null);
       }
     })();
-  }, [connected, publicKey, connection, outputToken]);
+  }, [connected, publicKey, connection]);
 
   // Fetch Orca quote for UI preview
   useEffect(() => {
@@ -137,9 +131,7 @@ export default function SwapPage() {
         setIsQuoteLoading(true);
         const url = new URL("/api/swap-quote", window.location.origin);
         url.searchParams.set("amount", swapLamports.toString());
-        url.searchParams.set("outputToken", outputToken);
-        // Don't pass wallet parameter - Orca may check for token ATA which might not exist
-        // The swap will be executed by the relay, not the user's wallet
+        url.searchParams.set("wallet", publicKey.toBase58());
         url.searchParams.set(
           "slippageBps",
           String(DEFAULT_SWAP_SLIPPAGE_BPS)
@@ -166,7 +158,7 @@ export default function SwapPage() {
     return () => {
       cancelled = true;
     };
-  }, [amount, connected, publicKey, outputToken]);
+  }, [amount, connected, publicKey]);
 
   // Validate recipient address
   const isValidRecipient = (() => {
@@ -177,16 +169,6 @@ export default function SwapPage() {
     } catch {
       return false;
     }
-  })();
-
-  // Check if balance is sufficient for the amount + fees
-  const hasInsufficientBalance = (() => {
-    if (!connected || !publicKey || solBalance === null) return false;
-    const lamports = parseAmountToLamports(amount);
-    if (lamports <= 0) return false;
-    const totalFee = calculateFee(lamports);
-    const requiredBalance = lamports + 5000; // amount + estimated transaction fees
-    return solBalance < requiredBalance;
   })();
 
   const handleSwap = async () => {
@@ -237,56 +219,7 @@ export default function SwapPage() {
       const { pool: poolPubkey, commitments: commitmentsPubkey } =
         getShieldPoolPDAs();
 
-      console.log("[Swap] Deposit transaction setup:", {
-        programId: programId.toBase58(),
-        pool: poolPubkey.toBase58(),
-        commitments: commitmentsPubkey.toBase58(),
-        payer: publicKey.toBase58(),
-        amount: note.amount,
-        commitment: note.commitment,
-      });
-
-      // Verify accounts exist before building transaction
-      console.log("[Swap] Verifying accounts exist...");
-      const [poolAccount, commitmentsAccount, payerBalance] = await Promise.all([
-        connection.getAccountInfo(poolPubkey).catch((e) => {
-          console.error("[Swap] Failed to fetch pool account:", e);
-          return null;
-        }),
-        connection.getAccountInfo(commitmentsPubkey).catch((e) => {
-          console.error("[Swap] Failed to fetch commitments account:", e);
-          return null;
-        }),
-        connection.getBalance(publicKey).catch((e) => {
-          console.error("[Swap] Failed to fetch payer balance:", e);
-          return 0;
-        }),
-      ]);
-
-      console.log("[Swap] Account verification:", {
-        poolExists: poolAccount !== null,
-        commitmentsExists: commitmentsAccount !== null,
-        payerBalance: payerBalance,
-        requiredBalance: note.amount + 5000, // amount + estimated fees
-      });
-
-      if (!poolAccount) {
-        throw new Error(`Pool account not found: ${poolPubkey.toBase58()}`);
-      }
-      if (!commitmentsAccount) {
-        throw new Error(`Commitments account not found: ${commitmentsPubkey.toBase58()}`);
-      }
-      if (payerBalance < note.amount + 5000) {
-        throw new Error(
-          `Insufficient balance: ${payerBalance} lamports, need at least ${note.amount + 5000} lamports (${(note.amount + 5000) / 1_000_000_000} SOL)`
-        );
-      }
-
       const commitmentBytes = Buffer.from(note.commitment, "hex");
-      if (commitmentBytes.length !== 32) {
-        throw new Error(`Invalid commitment length: ${commitmentBytes.length} bytes (expected 32)`);
-      }
-
       const depositIx = createDepositInstruction({
         programId,
         payer: publicKey,
@@ -294,16 +227,6 @@ export default function SwapPage() {
         commitments: commitmentsPubkey,
         amount: note.amount,
         commitment: commitmentBytes,
-      });
-
-      console.log("[Swap] Deposit instruction created:", {
-        keys: depositIx.keys.map((k) => ({
-          pubkey: k.pubkey.toBase58(),
-          isSigner: k.isSigner,
-          isWritable: k.isWritable,
-        })),
-        programId: depositIx.programId.toBase58(),
-        dataLength: depositIx.data.length,
       });
 
       const computeUnitLimitIx = ComputeBudgetProgram.setComputeUnitLimit({
@@ -321,36 +244,10 @@ export default function SwapPage() {
         lastValidBlockHeight,
       }).add(computeUnitPriceIx, computeUnitLimitIx, depositIx);
 
-      console.log("[Swap] Transaction built, simulating...");
       const simulation = await connection.simulateTransaction(depositTx);
-
-      console.log("[Swap] Simulation result:", {
-        err: simulation.value.err,
-        logs: simulation.value.logs?.slice(0, 10), // First 10 logs
-        unitsConsumed: simulation.value.unitsConsumed,
-      });
-
       if (simulation.value.err) {
-        const err = simulation.value.err;
-        const errStr = typeof err === "string" ? err : JSON.stringify(err);
-        console.error("[Swap] Simulation failed:", {
-          error: err,
-          errorString: errStr,
-          logs: simulation.value.logs,
-        });
-        
-        // Try to extract account key from error if it's an AccountNotFound
-        let errorMessage = `Simulation failed: ${errStr}`;
-        if (errStr.includes("AccountNotFound")) {
-          errorMessage += "\n\nThis usually means one of the required accounts doesn't exist. Check:";
-          errorMessage += `\n- Pool: ${poolPubkey.toBase58()}`;
-          errorMessage += `\n- Commitments: ${commitmentsPubkey.toBase58()}`;
-          errorMessage += `\n- Payer: ${publicKey.toBase58()}`;
-          if (simulation.value.logs) {
-            errorMessage += "\n\nSimulation logs:\n" + simulation.value.logs.slice(0, 20).join("\n");
-          }
-        }
-        throw new Error(errorMessage);
+        const err = JSON.stringify(simulation.value.err);
+        throw new Error(`Simulation failed: ${err}`);
       }
 
       const sig = await sendTransaction(depositTx, connection);
@@ -435,9 +332,7 @@ export default function SwapPage() {
       // Orca quote (server-side)
       const quoteUrl = new URL("/api/swap-quote", window.location.origin);
       quoteUrl.searchParams.set("amount", withdrawAmountLamports.toString());
-      quoteUrl.searchParams.set("outputToken", outputToken);
-      // Don't pass wallet parameter - Orca may check for token ATA which might not exist
-      // The swap will be executed by the relay, not the user's wallet
+      quoteUrl.searchParams.set("wallet", publicKey.toBase58());
       quoteUrl.searchParams.set("slippageBps", String(DEFAULT_SWAP_SLIPPAGE_BPS));
       const quoteResp = await fetch(quoteUrl.toString(), { method: "GET" });
       const quoteJson = await quoteResp.json();
@@ -445,20 +340,11 @@ export default function SwapPage() {
         throw new Error(quoteJson.error || "Failed to fetch swap quote");
       }
       const minOutputAmount: number = quoteJson.minOutputAmount;
-      const outAmount: number = quoteJson.outAmount || minOutputAmount;
-      // Store the output amount for display in TransactionStatus
-      setQuoteOutAmount(outAmount);
-
-      // Get the selected output token
-      const outputTokenInfo = getTokenBySymbol(outputToken);
-      if (!outputTokenInfo) {
-        throw new Error(`Invalid output token: ${outputToken}`);
-      }
 
       // Use the specified recipient address (not the depositor's address)
       const recipientPubkey = new PublicKey(recipientAddress.trim());
       const recipientAta = await getAssociatedTokenAddress(
-        outputTokenInfo.mint,
+        DEVNET_USDC_MINT,
         recipientPubkey
       );
 
@@ -472,7 +358,7 @@ export default function SwapPage() {
       const amountBytes = new Uint8Array(8);
       new DataView(amountBytes.buffer).setBigUint64(0, BigInt(note.amount), true);
       const concat = new Uint8Array(32 + 32 + 8 + 8);
-      concat.set(outputTokenInfo.mint.toBytes(), 0);
+      concat.set(DEVNET_USDC_MINT.toBytes(), 0);
       concat.set(recipientAta.toBytes(), 32);
       concat.set(minOutBytes, 64);
       concat.set(amountBytes, 72);
@@ -503,7 +389,7 @@ export default function SwapPage() {
         },
         outputs: [],
         swapParams: {
-          output_mint: outputTokenInfo.mint.toBase58(),
+          output_mint: DEVNET_USDC_MINT.toBase58(),
           recipient_ata: recipientAta.toBase58(),
           min_output_amount: minOutputAmount,
         },
@@ -534,7 +420,7 @@ export default function SwapPage() {
           outputs: [{ recipient: recipientPubkey.toBase58(), amount: withdrawAmountLamports }],
           feeBps: relayFeeBps,
           swap: {
-            output_mint: outputTokenInfo.mint.toBase58(),
+            output_mint: DEVNET_USDC_MINT.toBase58(),
             slippage_bps: DEFAULT_SWAP_SLIPPAGE_BPS,
             min_output_amount: minOutputAmount,
           },
@@ -549,15 +435,8 @@ export default function SwapPage() {
       setTransactionStatus("sent");
       toast.success("Swap completed successfully!", { description: `Transaction: ${txSig}` });
     } catch (e: any) {
-      console.error("[Swap] Error in handleSwap:", {
-        error: e,
-        message: e?.message,
-        stack: e?.stack,
-        name: e?.name,
-      });
       setTransactionStatus("error");
-      const errorMessage = e?.message || String(e);
-      toast.error("Swap failed", { description: errorMessage });
+      toast.error("Swap failed", { description: e?.message || String(e) });
     } finally {
       setIsLoading(false);
       isProcessingRef.current = false;
@@ -605,18 +484,19 @@ export default function SwapPage() {
                   </div>
                 </div>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold font-space-grotesk text-foreground mb-3 tracking-tight">
-                  Swap SOL Privately
+                  Swap SOL to USDC Privately
                 </h1>
                 <p className="text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed">
-                  Deposit SOL privately, specify a recipient and output token, and let the relay
-                  execute a private swap. The recipient receives tokens
+                  Deposit SOL privately, specify a recipient, and let the relay
+                  execute a private swap to USDC. The recipient receives USDC
                   without revealing who paid.
                 </p>
 
                 <div className="mt-4 max-w-xl mx-auto space-y-3">
                   <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-center">
                     <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400">
-                      <strong>Devnet only:</strong> Swap SOL to USDC or ZEC.{" "}
+                      <strong>Devnet only:</strong> Uses devnet SOL and DevUSDC
+                      (`BRjp…Hok1k`).{" "}
                       <a
                         href="https://faucet.solana.com/"
                         target="_blank"
@@ -643,12 +523,8 @@ export default function SwapPage() {
                         : "Connect wallet to see SOL balance"}
                     </span>
                     <span>
-                      {outputTokenBalance !== null
-                        ? (() => {
-                            const token = getTokenBySymbol(outputToken);
-                            if (!token) return "";
-                            return `${(outputTokenBalance / 10 ** token.decimals).toFixed(4)} ${token.symbol}`;
-                          })()
+                      {usdcBalance !== null
+                        ? `${(usdcBalance / 1_000_000).toFixed(4)} devUSDC`
                         : ""}
                     </span>
                   </div>
@@ -670,31 +546,13 @@ export default function SwapPage() {
                           onChange={(e) => setAmount(e.target.value)}
                           placeholder="0.00"
                           disabled={!connected || isLoading}
-                          className={`flex-1 text-xl font-semibold border-none bg-transparent px-0 focus-visible:ring-0 ${
-                            hasInsufficientBalance ? "text-destructive" : ""
-                          }`}
+                          className="flex-1 text-xl font-semibold border-none bg-transparent px-0 focus-visible:ring-0"
                         />
                         <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium">
                           <SOLIcon className="w-4 h-4" />
                           <span className="font-medium">SOL</span>
                         </div>
                       </div>
-                      {hasInsufficientBalance && (
-                        <p className="text-xs text-destructive font-medium flex items-center gap-1 mt-1">
-                          <span className="inline-block w-1 h-1 rounded-full bg-destructive"></span>
-                          Insufficient balance. You have{" "}
-                          {solBalance !== null
-                            ? `${(solBalance / 1_000_000_000).toFixed(6)} SOL`
-                            : "0 SOL"}
-                          , but need{" "}
-                          {(() => {
-                            const lamports = parseAmountToLamports(amount);
-                            const required = lamports + 5000;
-                            return `${(required / 1_000_000_000).toFixed(6)} SOL`;
-                          })()}{" "}
-                          (amount + fees)
-                        </p>
-                      )}
                     </div>
 
                     {/* Swap hint */}
@@ -709,21 +567,6 @@ export default function SwapPage() {
                     <div className="rounded-xl border border-border bg-background/80 p-4 space-y-2">
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>Receive (est.)</span>
-                        <select
-                          value={outputToken}
-                          onChange={(e) => setOutputToken(e.target.value as OutputToken)}
-                          disabled={isLoading}
-                          className="text-xs bg-background border border-border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
-                        >
-                          {OUTPUT_TOKENS.map((token) => {
-                            const tokenInfo = getTokenBySymbol(token);
-                            return (
-                              <option key={token} value={token}>
-                                {tokenInfo?.name || token}
-                              </option>
-                            );
-                          })}
-                        </select>
                       </div>
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-1">
@@ -731,57 +574,34 @@ export default function SwapPage() {
                             {isQuoteLoading
                               ? "…"
                               : quoteOutAmount !== null
-                              ? (() => {
-                                  const token = getTokenBySymbol(outputToken);
-                                  if (!token) return "0.000000";
-                                  return (quoteOutAmount / 10 ** token.decimals).toFixed(6);
-                                })()
+                              ? (quoteOutAmount / 1_000_000).toFixed(6)
                               : "0.000000"}
                           </div>
-                          {quoteMinOut !== null && (() => {
-                            const token = getTokenBySymbol(outputToken);
-                            if (!token) return null;
-                            return (
-                              <div className="text-xs text-muted-foreground">
-                                Min received:{" "}
-                                {(quoteMinOut / 10 ** token.decimals).toFixed(6)} {token.symbol}
-                              </div>
-                            );
-                          })()}
+                          {quoteMinOut !== null && (
+                            <div className="text-xs text-muted-foreground">
+                              Min received:{" "}
+                              {(quoteMinOut / 1_000_000).toFixed(6)} devUSDC
+                            </div>
+                          )}
                         </div>
                         <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium">
-                          {(() => {
-                            const token = getTokenBySymbol(outputToken);
-                            if (!token) return <USDCIcon className="w-4 h-4" />;
-                            if (token.icon === "USDC") return <USDCIcon className="w-4 h-4" />;
-                            if (token.icon === "ZEC") return <ZCashIcon className="w-4 h-4" />;
-                            return <USDCIcon className="w-4 h-4" />;
-                          })()}
-                          <span className="font-medium">
-                            {(() => {
-                              const token = getTokenBySymbol(outputToken);
-                              return token?.symbol || "USDC";
-                            })()}
-                          </span>
+                          <USDCIcon className="w-4 h-4" />
+                          <span className="font-medium">devUSDC</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Price info */}
-                    {quoteOutAmount !== null && parseFloat(amount || "0") > 0 && (() => {
-                      const token = getTokenBySymbol(outputToken);
-                      if (!token) return null;
-                      return (
-                        <div className="text-xs text-muted-foreground px-1">
-                          1 SOL ≈{" "}
-                          {(
-                            (quoteOutAmount / 10 ** token.decimals) /
-                            parseFloat(amount || "1")
-                          ).toFixed(6)}{" "}
-                          {token.symbol}
-                        </div>
-                      );
-                    })()}
+                    {quoteOutAmount !== null && parseFloat(amount || "0") > 0 && (
+                      <div className="text-xs text-muted-foreground px-1">
+                        1 SOL ≈{" "}
+                        {(
+                          (quoteOutAmount / 1_000_000) /
+                          parseFloat(amount || "1")
+                        ).toFixed(3)}{" "}
+                        devUSDC
+                      </div>
+                    )}
                   </div>
 
                   {/* Recipient Address Input */}
@@ -832,17 +652,13 @@ export default function SwapPage() {
                       isLoading ||
                       !amount ||
                       !recipientAddress.trim() ||
-                      !isValidRecipient ||
-                      hasInsufficientBalance
+                      !isValidRecipient
                     }
                     className="w-full h-12 text-base font-bold"
                   >
                     {isLoading
                       ? "Processing..."
-                      : (() => {
-                          const token = getTokenBySymbol(outputToken);
-                          return `Swap SOL → ${token?.symbol || "USDC"} Privately`;
-                        })()}
+                      : "Swap SOL → USDC Privately"}
                   </Button>
 
                   {!connected && (
@@ -891,20 +707,8 @@ export default function SwapPage() {
                       mode="swap"
                       swapOutputAmount={
                         quoteOutAmount !== null
-                          ? (() => {
-                              const token = getTokenBySymbol(outputToken);
-                              if (!token) return "0.000000";
-                              return (quoteOutAmount / 10 ** token.decimals).toFixed(6);
-                            })()
-                          : transactionStatus !== "deposited" && transactionStatus !== "idle"
-                          ? "Calculating..."
+                          ? `${(quoteOutAmount / 1_000_000).toFixed(6)}`
                           : undefined
-                      }
-                      swapOutputToken={
-                        (() => {
-                          const token = getTokenBySymbol(outputToken);
-                          return token?.symbol || "USDC";
-                        })()
                       }
                     />
                   </div>
