@@ -902,17 +902,8 @@ export default function PrivacyPage() {
 
               {/* Devnet Disclaimer */}
               <div className="bg-[#31146F]/10 border border-[#31146F]/20 rounded-xl p-3 text-center">
-                <p className="text-xs text-[#5d2ba3]">
-                  <strong>Testing on Solana Devnet</strong> — Uses test SOL with
-                  no real value.{" "}
-                  <a
-                    href="https://faucet.solana.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline hover:no-underline font-semibold"
-                  >
-                    Get free test SOL
-                  </a>
+                <p className="text-xs text-[#ffffff]">
+                  Avaiable on Solana Devnet
                 </p>
               </div>
             </div>
