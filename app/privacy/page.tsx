@@ -1177,6 +1177,75 @@ export default function PrivacyPage() {
                       className="bg-slate-800/50 border-slate-700/30 font-mono text-sm focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
                   </div>
+
+                  {/* Transaction Summary for Swap */}
+                  {lamports > 0 && (
+                    <div className="bg-slate-800/30 rounded-xl p-4 border border-slate-700/20 space-y-3 mb-4">
+                      <h3 className="text-sm font-semibold text-white mb-3">
+                        Transaction Summary
+                      </h3>
+
+                      {/* Total Deposit */}
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-400">Total deposit:</span>
+                        <span className="text-white font-mono">
+                          {formatAmount(lamports)} SOL
+                        </span>
+                      </div>
+
+                      {/* Protocol Fee (0.5%) */}
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-400">Protocol fee (0.5%):</span>
+                        <span className="text-slate-400 font-mono">
+                          {(Math.floor(lamports * 0.005) / 1_000_000_000).toFixed(9)} SOL
+                        </span>
+                      </div>
+
+                      {/* Fixed Fee */}
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-400">Fixed fee:</span>
+                        <span className="text-slate-400 font-mono">
+                          0.002500000 SOL
+                        </span>
+                      </div>
+
+                      {/* Total Fee */}
+                      <div className="flex justify-between text-xs pt-2 border-t border-slate-700/30">
+                        <span className="text-slate-300 font-medium">Total fee:</span>
+                        <span className="text-slate-300 font-mono font-medium">
+                          {formatAmount(calculateFee(lamports))} SOL
+                        </span>
+                      </div>
+
+                      {/* Recipient Info */}
+                      <div className="pt-2 border-t border-slate-700/30">
+                        <div className="flex justify-between text-xs mb-2">
+                          <span className="text-slate-300 font-medium">
+                            Recipient
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">
+                            {swapRecipient
+                              ? `${swapRecipient.slice(0, 4)}...${swapRecipient.slice(-4)}`
+                              : "Not set"}
+                          </span>
+                          <span className="text-slate-300 font-mono">
+                            {quoteOutAmount !== null
+                              ? (() => {
+                                  const token = getTokenBySymbol(outputToken);
+                                  if (!token) return "0";
+                                  return (
+                                    (quoteOutAmount / 10 ** token.decimals).toFixed(6) + ` ${outputToken}`
+                                  );
+                                })()
+                              : `0 ${outputToken}`}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
 
@@ -1358,7 +1427,7 @@ export default function PrivacyPage() {
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-400">Protocol fee (0.5%):</span>
                         <span className="text-slate-400 font-mono">
-                          {formatAmount(Math.floor(lamports * 0.005))} SOL
+                          {(Math.floor(lamports * 0.005) / 1_000_000_000).toFixed(9)} SOL
                         </span>
                       </div>
 
@@ -1366,7 +1435,7 @@ export default function PrivacyPage() {
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-400">Fixed fee:</span>
                         <span className="text-slate-400 font-mono">
-                          {formatAmount(2_500_000)} SOL
+                          0.002500000 SOL
                         </span>
                       </div>
 
