@@ -192,7 +192,7 @@ export default function MinersPage() {
         <div className="relative z-10">
           <DappHeader />
 
-          <main className="container mx-auto px-4 py-8">
+          <main className="container mx-auto px-4 py-8 pt-24">
             <div className="mb-8 sm:mb-12">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -203,7 +203,9 @@ export default function MinersPage() {
                   Miner Network
                 </h1>
                 <p className="text-sm sm:text-base text-muted-foreground max-w-3xl">
-                  View all registered miners and their recent activity. Miners with &quot;Has Claims Available&quot; have revealed PoW claims ready to be consumed for withdrawals.
+                  View all registered miners and their recent activity. Miners
+                  with &quot;Has Claims Available&quot; have revealed PoW claims
+                  ready to be consumed for withdrawals.
                 </p>
               </motion.div>
             </div>
@@ -285,7 +287,9 @@ export default function MinersPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-3xl sm:text-4xl font-bold">{miners.length}</p>
+                      <p className="text-3xl sm:text-4xl font-bold">
+                        {miners.length}
+                      </p>
                     </CardContent>
                   </Card>
                   <Card className="border-green-500/20 hover:border-green-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-green-500/5">
@@ -303,7 +307,8 @@ export default function MinersPage() {
                       </p>
                       {activeSlotThreshold !== null && (
                         <p className="text-xs text-muted-foreground mt-2">
-                          Active in last {activeSlotThreshold} slots or has claims
+                          Active in last {activeSlotThreshold} slots or has
+                          claims
                         </p>
                       )}
                     </CardContent>
@@ -318,7 +323,9 @@ export default function MinersPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-3xl sm:text-4xl font-bold text-blue-500">{totalMined}</p>
+                      <p className="text-3xl sm:text-4xl font-bold text-blue-500">
+                        {totalMined}
+                      </p>
                     </CardContent>
                   </Card>
                   <Card className="border-purple-500/20 hover:border-purple-500/40 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/5">
@@ -332,7 +339,9 @@ export default function MinersPage() {
                     </CardHeader>
                     <CardContent>
                       <p className="text-3xl sm:text-4xl font-bold text-purple-500">
-                        {currentSlot !== null ? currentSlot.toLocaleString() : "Unknown"}
+                        {currentSlot !== null
+                          ? currentSlot.toLocaleString()
+                          : "Unknown"}
                       </p>
                     </CardContent>
                   </Card>
@@ -534,7 +543,10 @@ export default function MinersPage() {
                                       <div
                                         className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full transition-all duration-500"
                                         style={{
-                                          width: `${Math.min(miner.utilizationRate, 100)}%`,
+                                          width: `${Math.min(
+                                            miner.utilizationRate,
+                                            100
+                                          )}%`,
                                         }}
                                       />
                                     </div>
@@ -549,7 +561,8 @@ export default function MinersPage() {
                                 </p>
                                 {miner.lastActivitySlot !== null && (
                                   <p className="text-xs text-muted-foreground font-mono">
-                                    Last: {miner.lastActivitySlot.toLocaleString()}
+                                    Last:{" "}
+                                    {miner.lastActivitySlot.toLocaleString()}
                                   </p>
                                 )}
                                 <p className="text-xs text-muted-foreground font-mono">

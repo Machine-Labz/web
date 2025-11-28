@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { motion } from "framer-motion";
-import { SiteHeader } from "@/components/site-header";
+import { Navbar } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,7 +37,9 @@ export default function WaitlistPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [signature, setSignature] = useState<string | null>(null);
   const [timestamp, setTimestamp] = useState<number | null>(null);
-  const [registrationCount, setRegistrationCount] = useState<number | null>(null);
+  const [registrationCount, setRegistrationCount] = useState<number | null>(
+    null
+  );
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -65,7 +67,7 @@ export default function WaitlistPage() {
 
   const handleSignMessage = async () => {
     setError(null); // Clear any previous errors
-    
+
     if (!wallet?.adapter || !publicKey) {
       toast.error("Wallet not connected");
       return;
@@ -86,7 +88,7 @@ export default function WaitlistPage() {
     try {
       // Generate timestamp for message
       const messageTimestamp = Date.now();
-      
+
       // Simple message for receiving updates
       const message = `Sign up for Cloak waitlist. By signing this message, you confirm ownership of this wallet to receive notifications. Wallet: ${publicKey.toBase58()} | Timestamp: ${messageTimestamp}`;
 
@@ -109,7 +111,7 @@ export default function WaitlistPage() {
 
   const handleSubmit = async () => {
     setError(null); // Clear any previous errors
-    
+
     if (!email) {
       const errorMsg = "Please enter your email address";
       setError(errorMsg);
@@ -168,7 +170,7 @@ export default function WaitlistPage() {
       toast.success("Success!", {
         description: "Your wallet and email have been saved",
       });
-      
+
       // Refresh registration count
       try {
         const countResponse = await fetch("/api/waitlist");
@@ -230,7 +232,7 @@ export default function WaitlistPage() {
 
   return (
     <div className="flex h-[100dvh] flex-col overflow-hidden">
-      <SiteHeader />
+      <Navbar showWalletButton={true} />
       <main className="flex-1 flex items-center justify-center overflow-y-auto">
         {/* Animated Background */}
         <div
@@ -295,7 +297,10 @@ export default function WaitlistPage() {
                 >
                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                   <span className="text-sm font-medium">
-                    <span className="font-bold text-primary">{registrationCount.toLocaleString()}</span> wallets registered
+                    <span className="font-bold text-primary">
+                      {registrationCount.toLocaleString()}
+                    </span>{" "}
+                    wallets registered
                   </span>
                 </motion.div>
               )}
@@ -424,7 +429,7 @@ export default function WaitlistPage() {
                     <p className="text-muted-foreground">
                       We'll notify you about early access opportunities.
                     </p>
-                    
+
                     {error && !isSuccess && (
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
@@ -439,7 +444,7 @@ export default function WaitlistPage() {
                         </div>
                       </motion.div>
                     )}
-                    
+
                     {isSuccess ? (
                       <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
