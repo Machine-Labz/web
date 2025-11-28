@@ -115,31 +115,18 @@ export class SP1ArtifactProverClient {
       const artifactData = await artifactResponse.json();
       const { artifact_id, upload_url } = artifactData;
 
-      // Step 2: Prepare stdin data (combined private + public + outputs)
+      // Step 2: Prepare stdin data (combined private + public + outputs + optional swap_params)
       const stdinPayload = JSON.stringify({
         private: inputs.privateInputs,
         public: inputs.publicInputs,
         outputs: inputs.outputs,
+        ...(inputs.swapParams && { swap_params: inputs.swapParams }),
       });
 
-      // Step 3: Upload stdin directly to TEE
-      const INDEXER_URL = process.env.NEXT_PUBLIC_INDEXER_URL || '';
-      if (!INDEXER_URL) {
-        throw new Error('NEXT_PUBLIC_INDEXER_URL is not configured');
-      }
-      const uploadUrlFull = upload_url.startsWith('http')
-        ? upload_url
-        : `${INDEXER_URL}${upload_url}`;
+      // Step 3: Upload stdin via Next.js proxy (keeps INDEXER_URL private)
+      const uploadUrlProxy = `${this.config.apiUrl}/artifact/${artifact_id}/upload`;
 
-      // Verify upload URL is for TEE (security check)
-      const uploadUrlObj = new URL(uploadUrlFull, window.location.origin);
-      if (!this.isValidTeeUrl(uploadUrlObj)) {
-        throw new Error(
-          `Invalid upload URL: ${uploadUrlFull}. Must be a TEE endpoint.`
-        );
-      }
-
-      const uploadResponse = await fetch(uploadUrlFull, {
+      const uploadResponse = await fetch(uploadUrlProxy, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -265,21 +252,8 @@ export class SP1ArtifactProverClient {
     }
   }
 
-  /**
-   * Verify that upload URL is for TEE (security check)
-   */
-  private isValidTeeUrl(url: URL): boolean {
-    // In production, this should check against a whitelist of TEE domains
-    // For now, we'll accept any URL that points to our API
-    const allowedHosts = [
-      window.location.hostname,
-      "localhost",
-      "127.0.0.1",
-      // Add production TEE domains here
-    ];
-
-    return allowedHosts.includes(url.hostname);
-  }
+  // Note: isValidTeeUrl removed - uploads now go through Next.js proxy
+  // which keeps INDEXER_URL private and handles security server-side
 
   /**
    * Get the current API URL

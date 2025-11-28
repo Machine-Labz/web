@@ -8,10 +8,6 @@ import { toast } from "sonner";
 import { scanAndImportNotes } from "@/lib/note-manager";
 import { IndexerClient } from "@/lib/indexer-client";
 
-const INDEXER_URL = process.env.NEXT_PUBLIC_INDEXER_URL;
-if (!INDEXER_URL) {
-  throw new Error("NEXT_PUBLIC_INDEXER_URL not set");
-}
 
 type ScanState = "idle" | "scanning" | "success" | "error";
 
@@ -26,7 +22,7 @@ export default function ScanNotes() {
     setNotesScanned(0);
 
     try {
-      const indexer = new IndexerClient(INDEXER_URL);
+      const indexer = new IndexerClient();
       
       // Get all encrypted outputs from indexer
       toast.info("Fetching encrypted notes from indexer...");

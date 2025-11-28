@@ -31,10 +31,6 @@ const PROGRAM_ID = process.env.NEXT_PUBLIC_PROGRAM_ID;
 if (!PROGRAM_ID) {
   throw new Error("NEXT_PUBLIC_PROGRAM_ID not set");
 }
-const INDEXER_URL = process.env.NEXT_PUBLIC_INDEXER_URL;
-if (!INDEXER_URL) {
-  throw new Error("NEXT_PUBLIC_INDEXER_URL not set");
-}
 const RPC_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL;
 if (!RPC_URL) {
   throw new Error("NEXT_PUBLIC_SOLANA_RPC_URL not set");

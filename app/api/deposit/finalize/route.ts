@@ -15,14 +15,9 @@ import { Connection, PublicKey } from '@solana/web3.js';
  * This is idempotent - can be safely retried if the client loses connection.
  */
 
-const INDEXER_URL = process.env.INDEXER_URL || process.env.NEXT_PUBLIC_INDEXER_URL;
-if (!INDEXER_URL) {
-    // console.error('[Deposit Finalize] Missing INDEXER_URL environment variable');
-}
-const RPC_URL = process.env.SOLANA_RPC_URL || process.env.NEXT_PUBLIC_SOLANA_RPC_URL;
-if (!RPC_URL) {
-  // console.error('[Deposit Finalize] Missing RPC_URL environment variable');
-}
+// Load environment variables with fallback for development
+const INDEXER_URL = process.env.NEXT_PUBLIC_INDEXER_URL || process.env.INDEXER_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : undefined);
+const RPC_URL = process.env.SOLANA_RPC_URL || process.env.NEXT_PUBLIC_SOLANA_RPC_URL || (process.env.NODE_ENV === 'development' ? 'https://api.testnet.solana.com' : undefined);
 
 interface FinalizeDepositRequest {
   tx_signature: string;
@@ -67,11 +62,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // Parse request body
+    // Parse request body - read only once
     let body: FinalizeDepositRequest;
     try {
       body = await request.json();
     } catch (error) {
+      // Check if error is due to body already being read
+      if (error instanceof Error && error.message.includes('already been read')) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Request body processing error. Please try again.',
+          },
+          { status: 400 }
+        );
+      }
       return NextResponse.json(
         {
           success: false,
@@ -355,6 +360,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   } catch (error: any) {
     const totalTime = Date.now() - startTime;
     // console.error('[Deposit Finalize] Error:', error);
+
+    // Handle body already read error
+    if (error instanceof Error && error.message.includes('already been read')) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Request body processing error. Please try again.',
+        },
+        { status: 400 }
+      );
+    }
 
     // Handle timeout
     if (error.name === 'AbortError' || error.name === 'TimeoutError') {

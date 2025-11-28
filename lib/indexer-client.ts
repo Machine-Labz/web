@@ -29,7 +29,9 @@ export interface NotesRangeResponse {
 export class IndexerClient {
   private baseUrl: string;
 
-  constructor(baseUrl: string = process.env.NEXT_PUBLIC_INDEXER_URL || 'http://localhost:3001') {
+  constructor(baseUrl: string = '/api/indexer') {
+    // Use Next.js proxy to keep INDEXER_URL private
+    // All requests go through /api/indexer/* which proxies to the actual indexer
     this.baseUrl = baseUrl;
   }
 
