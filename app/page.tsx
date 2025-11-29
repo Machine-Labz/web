@@ -87,7 +87,7 @@ function FeatureIconButton({
     >
       <motion.span
         className="text-sm font-medium text-slate-400 mb-3 transition-colors duration-300"
-        animate={{ color: isHovered ? "#31146F" : "#94a3b8" }}
+        animate={{ color: isHovered ? "#A855F7" : "#94a3b8" }}
       >
         {feature.title}
       </motion.span>
@@ -102,20 +102,20 @@ function FeatureIconButton({
           variant="default"
           gap={5}
           speed={50}
-          colors="#31146F,#1e0d4d,#0d0626"
+          colors="#A855F7,#7C3AED,#5B21B6"
           className="!w-[100px] !h-[100px] !bg-[#0a1525]/80 !border-slate-700/50 !rounded-2xl"
         >
           <div className="absolute inset-0 flex items-center justify-center z-10">
             <div
               className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300 ${
                 isHovered
-                  ? "bg-gradient-to-br from-[#31146F]/30 to-[#1e0d4d]/20 border border-[#31146F]/40"
+                  ? "bg-gradient-to-br from-[#A855F7]/20 to-[#7C3AED]/10 border border-[#A855F7]/50"
                   : "bg-slate-800/50 border border-slate-700/50"
               }`}
             >
               <Icon
                 className={`w-7 h-7 transition-colors duration-300 ${
-                  isHovered ? "text-[#31146F]" : "text-slate-400"
+                  isHovered ? "text-[#A855F7]" : "text-slate-400"
                 }`}
               />
             </div>
@@ -180,8 +180,8 @@ function FeatureModal({
                 </button>
 
                 <div className="text-center">
-                  <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-[#31146F]/30 to-[#1e0d4d]/10 border border-[#31146F]/30 flex items-center justify-center mb-6">
-                    <Icon className="w-10 h-10 text-[#31146F]" />
+                  <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-[#A855F7]/20 to-[#7C3AED]/10 border border-[#A855F7]/40 flex items-center justify-center mb-6">
+                    <Icon className="w-10 h-10 text-[#A855F7]" />
                   </div>
 
                   <h3 className="text-2xl font-bold text-white mb-4">
@@ -194,7 +194,7 @@ function FeatureModal({
 
                   <button
                     onClick={onClose}
-                    className="mt-6 px-6 py-2.5 bg-[#31146F]/20 border border-[#31146F]/30 rounded-lg text-[#31146F] font-medium hover:bg-[#31146F]/30 transition-colors"
+                    className="mt-6 px-6 py-2.5 bg-[#A855F7]/20 border border-[#A855F7]/40 rounded-lg text-[#A855F7] font-medium hover:bg-[#A855F7]/30 transition-colors"
                   >
                     Got it
                   </button>
@@ -218,7 +218,7 @@ function InvisibleByDesignSection() {
   return (
     <section className="relative py-32 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#020617]" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-[#31146F]/[0.03] rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-[#A855F7]/[0.05] rounded-full blur-[150px] pointer-events-none" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-6">
         <div className="text-center mb-20">
@@ -226,7 +226,7 @@ function InvisibleByDesignSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-[#31146F] font-mono text-sm tracking-widest uppercase mb-4"
+            className="text-[#A855F7] font-mono text-sm tracking-widest uppercase mb-4"
           >
             Core Features
           </motion.p>
@@ -242,8 +242,8 @@ function InvisibleByDesignSection() {
               sentence="Invisible by Design"
               manualMode={false}
               blurAmount={4}
-              borderColor="rgba(49, 20, 111, 0.6)"
-              glowColor="rgba(49, 20, 111, 0.3)"
+              borderColor="rgba(168, 85, 247, 0.6)"
+              glowColor="rgba(168, 85, 247, 0.3)"
               animationDuration={0.8}
               pauseBetweenAnimations={1.2}
             />

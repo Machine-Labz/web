@@ -94,8 +94,12 @@ export default function PrivacyPage() {
   >([{ address: "", amount: "" }]);
 
   // Allocation tracking for Send mode
-  const [recentWallets, setRecentWallets] = useState<Array<{address: string; label?: string}>>([]);
-  const [showWalletSuggestions, setShowWalletSuggestions] = useState<Record<number, boolean>>({});
+  const [recentWallets, setRecentWallets] = useState<
+    Array<{ address: string; label?: string }>
+  >([]);
+  const [showWalletSuggestions, setShowWalletSuggestions] = useState<
+    Record<number, boolean>
+  >({});
 
   const prover = useSP1Prover({
     onStart: () => setTransactionStatus("generating_proof"),
@@ -204,9 +208,9 @@ export default function PrivacyPage() {
     const lamports = parseAmountToLamports(amount);
     if (!lamports || lamports <= 0) {
       // Clear amounts when no amount is set
-      setRecipients(prev => {
-        if (prev.every(r => r.amount.trim() === "")) return prev;
-        return prev.map(r => ({ ...r, amount: "" }));
+      setRecipients((prev) => {
+        if (prev.every((r) => r.amount.trim() === "")) return prev;
+        return prev.map((r) => ({ ...r, amount: "" }));
       });
       return;
     }
@@ -872,681 +876,747 @@ export default function PrivacyPage() {
         <main className="relative z-10 flex items-center justify-center min-h-screen">
           <div className="w-full max-w-6xl mx-auto px-4 md:px-6 py-24">
             <div className="max-w-2xl mx-auto">
-            {/* Title */}
-            <div className="text-center mb-6">
-              {/* Devnet Badge */}
-              <div className="flex items-center justify-center mb-4">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Devnet Live
+              {/* Title */}
+              <div className="text-center mb-6">
+                {/* Devnet Badge */}
+                <div className="flex items-center justify-center mb-4">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Devnet Live
+                  </div>
                 </div>
-              </div>
 
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-3">
-                <DecryptedText
-                  text="PRIVACY ZONE"
-                  speed={60}
-                  maxIterations={12}
-                  sequential={true}
-                  revealDirection="center"
-                  characters="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                  className="text-white"
-                  encryptedClassName="text-[#31146F]"
-                  continuous={true}
-                  continuousInterval={4000}
-                />
-              </h1>
-              <p className="text-slate-400 text-sm mb-4">
-                Swap or send privately on Solana using zero-knowledge proofs
-              </p>
-
-              {/* Devnet Disclaimer */}
-              <div className="bg-[#31146F]/10 border border-[#31146F]/20 rounded-xl p-3 text-center">
-                <p className="text-xs text-[#ffffff]">
-                  Avaiable on Solana Devnet
+                <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-3">
+                  <DecryptedText
+                    text="PRIVACY ZONE"
+                    speed={60}
+                    maxIterations={12}
+                    sequential={true}
+                    revealDirection="center"
+                    characters="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                    className="text-white"
+                    encryptedClassName="text-[#31146F]"
+                    continuous={true}
+                    continuousInterval={4000}
+                  />
+                </h1>
+                <p className="text-slate-400 text-sm mb-4">
+                  Swap or send privately on Solana using zero-knowledge proofs
                 </p>
               </div>
-            </div>
 
-            {/* Mode Toggle */}
-            <div className="flex justify-center mb-6">
-              <div className="inline-flex bg-slate-900/80 rounded-full p-1 border border-slate-700/50">
-                <button
-                  onClick={() => setMode("swap")}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
-                    mode === "swap"
-                      ? "bg-white text-[#31146F]"
-                      : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  <Shuffle className="w-4 h-4" />
-                  Swap
-                </button>
-                <button
-                  onClick={() => setMode("send")}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
-                    mode === "send"
-                      ? "bg-white text-[#31146F]"
-                      : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  <Send className="w-4 h-4" />
-                  Send
-                </button>
-              </div>
-            </div>
-
-            {/* Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 shadow-2xl"
-            >
-              {/* Token Selector (for Send mode) */}
-              {mode === "send" && (
-                <div className="mb-4">
-                  <Label className="text-sm font-semibold text-slate-400 mb-3 block">
-                    Select Token
-                  </Label>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {/* SOL is default */}}
-                      className="inline-flex items-center gap-2 rounded-full border border-[#31146F] text-[#A855F7] bg-[#31146F]/10 px-4 py-2 text-sm font-medium transition-colors"
-                    >
-                      <SOLIcon className="w-5 h-5" />
-                      <span>SOL • Solana</span>
-                    </button>
-                    <button
-                      type="button"
-                      disabled
-                      className="inline-flex items-center gap-2 rounded-full border border-slate-700 text-slate-500 bg-transparent px-4 py-2 text-sm font-medium opacity-50 cursor-not-allowed"
-                    >
-                      <USDCIcon className="w-5 h-5" />
-                      <span>USDC (soon)</span>
-                    </button>
-                    <button
-                      type="button"
-                      disabled
-                      className="inline-flex items-center gap-2 rounded-full border border-slate-700 text-slate-500 bg-transparent px-4 py-2 text-sm font-medium opacity-50 cursor-not-allowed"
-                    >
-                      <ZCashIcon className="w-5 h-5" />
-                      <span>ZCash (soon)</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Balance Display */}
-              <div className="flex items-center justify-between text-xs text-slate-500 mb-4">
-                <span>
-                  {solBalance !== null
-                    ? `${(solBalance / LAMPORTS_PER_SOL).toFixed(4)} SOL`
-                    : "Connect wallet"}
-                </span>
-                {mode === "swap" && outputTokenBalance !== null && (
-                  <span>
-                    {(() => {
-                      const token = getTokenBySymbol(outputToken);
-                      if (!token) return "";
-                      return `${(
-                        outputTokenBalance /
-                        10 ** token.decimals
-                      ).toFixed(4)} ${token.symbol}`;
-                    })()}
-                  </span>
-                )}
-              </div>
-
-              {/* Amount Input */}
-              <div className="bg-slate-800/50 rounded-xl p-4 mb-4 border border-slate-700/30">
-                <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
-                  <span>{mode === "swap" ? "Pay" : "Amount"}</span>
-                  {connected && publicKey && solBalance && (
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() =>
-                          setAmount(
-                            ((solBalance * 0.25) / LAMPORTS_PER_SOL).toFixed(9)
-                          )
-                        }
-                        disabled={isLoading}
-                        className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-700/50 text-slate-300 hover:bg-[#31146F] hover:text-white transition-colors disabled:opacity-50"
-                      >
-                        25%
-                      </button>
-                      <button
-                        onClick={() =>
-                          setAmount(
-                            ((solBalance * 0.5) / LAMPORTS_PER_SOL).toFixed(9)
-                          )
-                        }
-                        disabled={isLoading}
-                        className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-700/50 text-slate-300 hover:bg-[#31146F] hover:text-white transition-colors disabled:opacity-50"
-                      >
-                        50%
-                      </button>
-                      <button
-                        onClick={() =>
-                          setAmount(
-                            ((solBalance - 10000) / LAMPORTS_PER_SOL).toFixed(9)
-                          )
-                        }
-                        disabled={isLoading}
-                        className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-700/50 text-slate-300 hover:bg-[#31146F] hover:text-white transition-colors disabled:opacity-50"
-                      >
-                        MAX
-                      </button>
-                      <button
-                        onClick={() => setAmount("")}
-                        disabled={isLoading}
-                        className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-700/50 text-slate-300 hover:bg-red-500 hover:text-white transition-colors disabled:opacity-50"
-                      >
-                        RESET
-                      </button>
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-3">
-                  <Input
-                    type="text"
-                    inputMode="decimal"
-                    value={amount}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(",", ".");
-                      if (val === "" || /^\d*\.?\d*$/.test(val)) {
-                        setAmount(val);
-                      }
-                    }}
-                    placeholder="0.00"
-                    disabled={!connected || isLoading}
-                    className={`flex-1 text-2xl font-bold bg-transparent border-none px-0 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 outline-none ring-0 ${
-                      hasInsufficientBalance ? "text-red-400" : "text-white"
+              {/* Mode Toggle */}
+              <div className="flex justify-center mb-6">
+                <div className="inline-flex bg-slate-900/80 rounded-full p-1 border border-slate-700/50">
+                  <button
+                    onClick={() => setMode("swap")}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
+                      mode === "swap"
+                        ? "bg-white text-[#31146F]"
+                        : "text-slate-400 hover:text-white"
                     }`}
-                  />
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-700/50">
-                    <SOLIcon className="w-5 h-5" />
-                    <span className="font-semibold">SOL</span>
-                  </div>
+                  >
+                    <Shuffle className="w-4 h-4" />
+                    Swap
+                  </button>
+                  <button
+                    onClick={() => setMode("send")}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
+                      mode === "send"
+                        ? "bg-white text-[#31146F]"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    <Send className="w-4 h-4" />
+                    Send
+                  </button>
                 </div>
-                {hasInsufficientBalance && (
-                  <p className="text-xs text-red-400 mt-2">
-                    Insufficient balance
-                  </p>
-                )}
               </div>
 
-              {/* Swap Mode: Output Token Selection & Recipient */}
-              {mode === "swap" && (
-                <>
-                  {/* Output Token Selection */}
+              {/* Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 shadow-2xl"
+              >
+                {/* Token Selector (for Send mode) */}
+                {mode === "send" && (
                   <div className="mb-4">
                     <Label className="text-sm font-semibold text-slate-400 mb-3 block">
-                      Select Output Token
+                      Select Token
                     </Label>
                     <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => setOutputToken("USDC")}
-                        disabled={isLoading}
-                        className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                          outputToken === "USDC"
-                            ? "border-[#31146F] text-[#A855F7] bg-[#31146F]/10"
-                            : "border-slate-700 text-slate-400 bg-transparent hover:border-slate-600 hover:text-slate-300"
-                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        onClick={() => {
+                          /* SOL is default */
+                        }}
+                        className="inline-flex items-center gap-2 rounded-full border border-[#31146F] text-[#A855F7] bg-[#31146F]/10 px-4 py-2 text-sm font-medium transition-colors"
                       >
-                        <USDCIcon className="w-5 h-5" />
-                        <span>USDC</span>
+                        <SOLIcon className="w-5 h-5" />
+                        <span>SOL • Solana</span>
                       </button>
                       <button
                         type="button"
-                        onClick={() => setOutputToken("ZCash")}
-                        disabled={isLoading}
-                        className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                          outputToken === "ZCash"
-                            ? "border-[#31146F] text-[#A855F7] bg-[#31146F]/10"
-                            : "border-slate-700 text-slate-400 bg-transparent hover:border-slate-600 hover:text-slate-300"
-                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        disabled
+                        className="inline-flex items-center gap-2 rounded-full border border-slate-700 text-slate-500 bg-transparent px-4 py-2 text-sm font-medium opacity-50 cursor-not-allowed"
+                      >
+                        <USDCIcon className="w-5 h-5" />
+                        <span>USDC (soon)</span>
+                      </button>
+                      <button
+                        type="button"
+                        disabled
+                        className="inline-flex items-center gap-2 rounded-full border border-slate-700 text-slate-500 bg-transparent px-4 py-2 text-sm font-medium opacity-50 cursor-not-allowed"
                       >
                         <ZCashIcon className="w-5 h-5" />
-                        <span>ZCash</span>
+                        <span>ZCash (soon)</span>
                       </button>
                     </div>
                   </div>
+                )}
 
-                  {/* Receive Amount Display */}
-                  <div className="bg-slate-800/50 rounded-xl p-4 mb-4 border border-slate-700/30">
-                    <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
-                      <span>Receive (est.)</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 text-2xl font-bold text-white">
-                        {isQuoteLoading
-                          ? "..."
-                          : quoteOutAmount !== null
-                          ? (() => {
-                              const token = getTokenBySymbol(outputToken);
-                              if (!token) return "0";
-                              return (
-                                quoteOutAmount /
-                                10 ** token.decimals
-                              ).toFixed(6);
-                            })()
-                          : "0.00"}
-                      </div>
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-700/50">
-                        {outputToken === "USDC" ? (
-                          <USDCIcon className="w-5 h-5" />
-                        ) : (
-                          <ZCashIcon className="w-5 h-5" />
-                        )}
-                        <span className="font-semibold">{outputToken}</span>
-                      </div>
-                    </div>
-                  </div>
+                {/* Balance Display */}
+                <div className="flex items-center justify-between text-xs text-slate-500 mb-4">
+                  <span>
+                    {solBalance !== null
+                      ? `${(solBalance / LAMPORTS_PER_SOL).toFixed(4)} SOL`
+                      : "Connect wallet"}
+                  </span>
+                  {mode === "swap" && outputTokenBalance !== null && (
+                    <span>
+                      {(() => {
+                        const token = getTokenBySymbol(outputToken);
+                        if (!token) return "";
+                        return `${(
+                          outputTokenBalance /
+                          10 ** token.decimals
+                        ).toFixed(4)} ${token.symbol}`;
+                      })()}
+                    </span>
+                  )}
+                </div>
 
-                  {/* Swap Recipient */}
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <Label className="text-sm text-slate-400">
-                        Recipient Address
-                      </Label>
-                      {connected && publicKey && (
+                {/* Amount Input */}
+                <div className="bg-slate-800/50 rounded-xl p-4 mb-4 border border-slate-700/30">
+                  <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
+                    <span>{mode === "swap" ? "Pay" : "Amount"}</span>
+                    {connected && publicKey && solBalance && (
+                      <div className="flex items-center gap-1.5">
                         <button
-                          onClick={() => setSwapRecipient(publicKey.toBase58())}
-                          className="text-xs text-[#31146F] hover:text-[#5d2ba3]"
+                          onClick={() =>
+                            setAmount(
+                              ((solBalance * 0.25) / LAMPORTS_PER_SOL).toFixed(
+                                9
+                              )
+                            )
+                          }
+                          disabled={isLoading}
+                          className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-700/50 text-slate-300 hover:bg-[#31146F] hover:text-white transition-colors disabled:opacity-50"
                         >
-                          Use my wallet
+                          25%
                         </button>
-                      )}
-                    </div>
-                    <Input
-                      value={swapRecipient}
-                      onChange={(e) => setSwapRecipient(e.target.value)}
-                      placeholder="Solana address..."
-                      disabled={!connected || isLoading}
-                      className="bg-slate-800/50 border-slate-700/30 font-mono text-sm focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                    />
+                        <button
+                          onClick={() =>
+                            setAmount(
+                              ((solBalance * 0.5) / LAMPORTS_PER_SOL).toFixed(9)
+                            )
+                          }
+                          disabled={isLoading}
+                          className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-700/50 text-slate-300 hover:bg-[#31146F] hover:text-white transition-colors disabled:opacity-50"
+                        >
+                          50%
+                        </button>
+                        <button
+                          onClick={() =>
+                            setAmount(
+                              ((solBalance - 10000) / LAMPORTS_PER_SOL).toFixed(
+                                9
+                              )
+                            )
+                          }
+                          disabled={isLoading}
+                          className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-700/50 text-slate-300 hover:bg-[#31146F] hover:text-white transition-colors disabled:opacity-50"
+                        >
+                          MAX
+                        </button>
+                        <button
+                          onClick={() => setAmount("")}
+                          disabled={isLoading}
+                          className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-700/50 text-slate-300 hover:bg-red-500 hover:text-white transition-colors disabled:opacity-50"
+                        >
+                          RESET
+                        </button>
+                      </div>
+                    )}
                   </div>
+                  <div className="flex items-center gap-3">
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      value={amount}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(",", ".");
+                        if (val === "" || /^\d*\.?\d*$/.test(val)) {
+                          setAmount(val);
+                        }
+                      }}
+                      placeholder="0.00"
+                      disabled={!connected || isLoading}
+                      className={`flex-1 text-2xl font-bold bg-transparent border-none px-0 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 outline-none ring-0 ${
+                        hasInsufficientBalance ? "text-red-400" : "text-white"
+                      }`}
+                    />
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-700/50">
+                      <SOLIcon className="w-5 h-5" />
+                      <span className="font-semibold">SOL</span>
+                    </div>
+                  </div>
+                  {hasInsufficientBalance && (
+                    <p className="text-xs text-red-400 mt-2">
+                      Insufficient balance
+                    </p>
+                  )}
+                </div>
 
-                  {/* Transaction Summary for Swap */}
-                  {lamports > 0 && (
-                    <div className="bg-slate-800/30 rounded-xl p-4 border border-slate-700/20 space-y-3 mb-4">
-                      <h3 className="text-sm font-semibold text-white mb-3">
-                        Transaction Summary
-                      </h3>
-
-                      {/* Total Deposit */}
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-400">Total deposit:</span>
-                        <span className="text-white font-mono">
-                          {formatAmount(lamports)} SOL
-                        </span>
+                {/* Swap Mode: Output Token Selection & Recipient */}
+                {mode === "swap" && (
+                  <>
+                    {/* Output Token Selection */}
+                    <div className="mb-4">
+                      <Label className="text-sm font-semibold text-slate-400 mb-3 block">
+                        Select Output Token
+                      </Label>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setOutputToken("USDC")}
+                          disabled={isLoading}
+                          className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                            outputToken === "USDC"
+                              ? "border-[#31146F] text-[#A855F7] bg-[#31146F]/10"
+                              : "border-slate-700 text-slate-400 bg-transparent hover:border-slate-600 hover:text-slate-300"
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                          <USDCIcon className="w-5 h-5" />
+                          <span>USDC</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setOutputToken("ZEC")}
+                          disabled={isLoading}
+                          className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                            outputToken === "ZEC"
+                              ? "border-[#31146F] text-[#A855F7] bg-[#31146F]/10"
+                              : "border-slate-700 text-slate-400 bg-transparent hover:border-slate-600 hover:text-slate-300"
+                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                          <ZCashIcon className="w-5 h-5" />
+                          <span>ZCash</span>
+                        </button>
                       </div>
+                    </div>
 
-                      {/* Protocol Fee (0.5%) */}
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-400">Protocol fee (0.5%):</span>
-                        <span className="text-slate-400 font-mono">
-                          {(Math.floor(lamports * 0.005) / 1_000_000_000).toFixed(9)} SOL
-                        </span>
+                    {/* Receive Amount Display */}
+                    <div className="bg-slate-800/50 rounded-xl p-4 mb-4 border border-slate-700/30">
+                      <div className="flex items-center justify-between text-xs text-slate-500 mb-2">
+                        <span>Receive (est.)</span>
                       </div>
-
-                      {/* Fixed Fee */}
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-400">Fixed fee:</span>
-                        <span className="text-slate-400 font-mono">
-                          0.002500000 SOL
-                        </span>
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 text-2xl font-bold text-white">
+                          {isQuoteLoading
+                            ? "..."
+                            : quoteOutAmount !== null
+                            ? (() => {
+                                const token = getTokenBySymbol(outputToken);
+                                if (!token) return "0";
+                                return (
+                                  quoteOutAmount /
+                                  10 ** token.decimals
+                                ).toFixed(6);
+                              })()
+                            : "0.00"}
+                        </div>
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-700/50">
+                          {outputToken === "USDC" ? (
+                            <USDCIcon className="w-5 h-5" />
+                          ) : (
+                            <ZCashIcon className="w-5 h-5" />
+                          )}
+                          <span className="font-semibold">{outputToken}</span>
+                        </div>
                       </div>
+                    </div>
 
-                      {/* Total Fee */}
-                      <div className="flex justify-between text-xs pt-2 border-t border-slate-700/30">
-                        <span className="text-slate-300 font-medium">Total fee:</span>
-                        <span className="text-slate-300 font-mono font-medium">
-                          {formatAmount(calculateFee(lamports))} SOL
-                        </span>
+                    {/* Swap Recipient */}
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <Label className="text-sm text-slate-400">
+                          Recipient Address
+                        </Label>
+                        {connected && publicKey && (
+                          <button
+                            onClick={() =>
+                              setSwapRecipient(publicKey.toBase58())
+                            }
+                            className="text-xs text-[#31146F] hover:text-[#5d2ba3]"
+                          >
+                            Use my wallet
+                          </button>
+                        )}
                       </div>
+                      <Input
+                        value={swapRecipient}
+                        onChange={(e) => setSwapRecipient(e.target.value)}
+                        placeholder="Solana address..."
+                        disabled={!connected || isLoading}
+                        className="bg-slate-800/50 border-slate-700/30 font-mono text-sm focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                      />
+                    </div>
 
-                      {/* Recipient Info */}
-                      <div className="pt-2 border-t border-slate-700/30">
-                        <div className="flex justify-between text-xs mb-2">
-                          <span className="text-slate-300 font-medium">
-                            Recipient
+                    {/* Transaction Summary for Swap */}
+                    {lamports > 0 && (
+                      <div className="bg-slate-800/30 rounded-xl p-4 border border-slate-700/20 space-y-3 mb-4">
+                        <h3 className="text-sm font-semibold text-white mb-3">
+                          Transaction Summary
+                        </h3>
+
+                        {/* Total Deposit */}
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">Total deposit:</span>
+                          <span className="text-white font-mono">
+                            {formatAmount(lamports)} SOL
                           </span>
                         </div>
 
+                        {/* Protocol Fee (0.5%) */}
                         <div className="flex justify-between text-xs">
                           <span className="text-slate-400">
-                            {swapRecipient
-                              ? `${swapRecipient.slice(0, 4)}...${swapRecipient.slice(-4)}`
-                              : "Not set"}
+                            Protocol fee (0.5%):
                           </span>
-                          <span className="text-slate-300 font-mono">
-                            {quoteOutAmount !== null
-                              ? (() => {
-                                  const token = getTokenBySymbol(outputToken);
-                                  if (!token) return "0";
-                                  return (
-                                    (quoteOutAmount / 10 ** token.decimals).toFixed(6) + ` ${outputToken}`
-                                  );
-                                })()
-                              : `0 ${outputToken}`}
+                          <span className="text-slate-400 font-mono">
+                            {(
+                              Math.floor(lamports * 0.005) / 1_000_000_000
+                            ).toFixed(9)}{" "}
+                            SOL
                           </span>
                         </div>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
 
-              {/* Send Mode: Recipients */}
-              {mode === "send" && (
-                <div className="space-y-4 mb-4">
-                  {/* Recipients List */}
-                  <div className="space-y-3">
-                    {recipients.map((recipient, index) => {
-                      const parsed = parsedRecipients[index];
-                      const hasAddressError =
-                        recipient.address.trim() &&
-                        !parsed.addressValid;
-                      const hasAmountError =
-                        recipient.amount.trim() &&
-                        !parsed.amountValid;
+                        {/* Fixed Fee */}
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">Fixed fee:</span>
+                          <span className="text-slate-400 font-mono">
+                            0.002500000 SOL
+                          </span>
+                        </div>
 
-                      return (
-                        <div
-                          key={index}
-                          className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/30"
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <Label className="text-sm text-slate-400 flex items-center gap-2">
-                              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-700/50 text-xs text-slate-300">
-                                {index + 1}
-                              </span>
+                        {/* Total Fee */}
+                        <div className="flex justify-between text-xs pt-2 border-t border-slate-700/30">
+                          <span className="text-slate-300 font-medium">
+                            Total fee:
+                          </span>
+                          <span className="text-slate-300 font-mono font-medium">
+                            {formatAmount(calculateFee(lamports))} SOL
+                          </span>
+                        </div>
+
+                        {/* Recipient Info */}
+                        <div className="pt-2 border-t border-slate-700/30">
+                          <div className="flex justify-between text-xs mb-2">
+                            <span className="text-slate-300 font-medium">
                               Recipient
-                            </Label>
-                            {recipients.length > 1 && (
-                              <button
-                                onClick={() => removeRecipient(index)}
-                                disabled={isLoading}
-                                className="text-slate-500 hover:text-red-400 transition-colors disabled:opacity-50"
-                              >
-                                <Minus className="w-4 h-4" />
-                              </button>
-                            )}
+                            </span>
                           </div>
 
-                          {/* Address Input */}
-                          <div className="mb-3">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs text-slate-500">
-                                Address
-                              </span>
-                            </div>
-                            <Input
-                              value={recipient.address}
-                              onChange={(e) => {
-                                const newRecipients = [...recipients];
-                                newRecipients[index].address = e.target.value;
-                                setRecipients(newRecipients);
-                              }}
-                              placeholder="Solana address..."
-                              disabled={!connected || isLoading}
-                              className={`bg-slate-700/30 border-slate-600/30 font-mono text-sm focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-                                hasAddressError
-                                  ? "border-red-500/50 focus:border-red-500"
-                                  : ""
-                              }`}
-                            />
-                            {hasAddressError && (
-                              <p className="text-xs text-red-400 mt-1">
-                                Invalid Solana address
-                              </p>
-                            )}
+                          <div className="flex justify-between text-xs">
+                            <span className="text-slate-400">
+                              {swapRecipient
+                                ? `${swapRecipient.slice(
+                                    0,
+                                    4
+                                  )}...${swapRecipient.slice(-4)}`
+                                : "Not set"}
+                            </span>
+                            <span className="text-slate-300 font-mono">
+                              {quoteOutAmount !== null
+                                ? (() => {
+                                    const token = getTokenBySymbol(outputToken);
+                                    if (!token) return "0";
+                                    return (
+                                      (
+                                        quoteOutAmount /
+                                        10 ** token.decimals
+                                      ).toFixed(6) + ` ${outputToken}`
+                                    );
+                                  })()
+                                : `0 ${outputToken}`}
+                            </span>
                           </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
 
-                          {/* Amount Input */}
-                          <div>
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs text-slate-500">
-                                Amount
-                              </span>
-                              {recipients.length === 1 && (
-                                <span className="text-xs text-slate-500">
-                                  Auto-filled
+                {/* Send Mode: Recipients */}
+                {mode === "send" && (
+                  <div className="space-y-4 mb-4">
+                    {/* Recipients List */}
+                    <div className="space-y-3">
+                      {recipients.map((recipient, index) => {
+                        const parsed = parsedRecipients[index];
+                        const hasAddressError =
+                          recipient.address.trim() && !parsed.addressValid;
+                        const hasAmountError =
+                          recipient.amount.trim() && !parsed.amountValid;
+
+                        return (
+                          <div
+                            key={index}
+                            className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/30"
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <Label className="text-sm text-slate-400 flex items-center gap-2">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-slate-700/50 text-xs text-slate-300">
+                                  {index + 1}
                                 </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
+                                Recipient
+                              </Label>
                               {recipients.length > 1 && (
                                 <button
-                                  onClick={() => {
-                                    const currentAmount = parseAmountToLamports(recipient.amount);
-                                    const newAmount = Math.max(0, currentAmount - 100_000_000); // -0.1 SOL
-                                    updateRecipientAmount(index, lamportsToSolInput(newAmount));
-                                  }}
-                                  disabled={!connected || isLoading}
-                                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-700/50 text-slate-300 hover:bg-red-500/20 hover:text-red-400 transition-colors disabled:opacity-50"
+                                  onClick={() => removeRecipient(index)}
+                                  disabled={isLoading}
+                                  className="text-slate-500 hover:text-red-400 transition-colors disabled:opacity-50"
                                 >
                                   <Minus className="w-4 h-4" />
                                 </button>
                               )}
+                            </div>
+
+                            {/* Address Input */}
+                            <div className="mb-3">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs text-slate-500">
+                                  Address
+                                </span>
+                              </div>
                               <Input
-                                type="text"
-                                inputMode="decimal"
-                                value={recipient.amount}
+                                value={recipient.address}
                                 onChange={(e) => {
-                                  const val = e.target.value.replace(",", ".");
-                                  if (val === "" || /^\d*\.?\d*$/.test(val)) {
-                                    updateRecipientAmount(index, val);
-                                  }
+                                  const newRecipients = [...recipients];
+                                  newRecipients[index].address = e.target.value;
+                                  setRecipients(newRecipients);
                                 }}
-                                placeholder={
-                                  recipients.length === 1
-                                    ? "Auto-distributed"
-                                    : "0.00"
-                                }
-                                disabled={
-                                  !connected ||
-                                  isLoading ||
-                                  recipients.length === 1
-                                }
-                                className={`flex-1 bg-slate-700/30 border-slate-600/30 text-sm focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-                                  hasAmountError
+                                placeholder="Solana address..."
+                                disabled={!connected || isLoading}
+                                className={`bg-slate-700/30 border-slate-600/30 font-mono text-sm focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
+                                  hasAddressError
                                     ? "border-red-500/50 focus:border-red-500"
                                     : ""
-                                } ${recipients.length === 1 ? "cursor-not-allowed opacity-70" : ""}`}
+                                }`}
                               />
-                              {recipients.length > 1 && (
-                                <button
-                                  onClick={() => {
-                                    const currentAmount = parseAmountToLamports(recipient.amount);
-                                    const newAmount = currentAmount + 100_000_000; // +0.1 SOL
-                                    updateRecipientAmount(index, lamportsToSolInput(newAmount));
-                                  }}
-                                  disabled={!connected || isLoading}
-                                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-700/50 text-slate-300 hover:bg-green-500/20 hover:text-green-400 transition-colors disabled:opacity-50"
-                                >
-                                  <Plus className="w-4 h-4" />
-                                </button>
+                              {hasAddressError && (
+                                <p className="text-xs text-red-400 mt-1">
+                                  Invalid Solana address
+                                </p>
                               )}
-                              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-700/50">
-                                <SOLIcon className="w-4 h-4" />
-                                <span className="text-sm font-medium">SOL</span>
-                              </div>
                             </div>
-                            {hasAmountError && (
-                              <p className="text-xs text-red-400 mt-1">
-                                Amount must be greater than zero
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
 
-                  {/* Add Recipient Button */}
-                  {recipients.length < MAX_RECIPIENTS && (
-                    <button
-                      onClick={addRecipient}
-                      disabled={isLoading}
-                      className="w-full py-3 border border-dashed border-slate-600 rounded-xl text-slate-500 hover:text-white hover:border-slate-500 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Add Recipient ({recipients.length}/{MAX_RECIPIENTS})
-                    </button>
-                  )}
-
-                  {/* Transaction Summary */}
-                  {lamports > 0 && (
-                    <div className="bg-slate-800/30 rounded-xl p-4 border border-slate-700/20 space-y-3">
-                      <h3 className="text-sm font-semibold text-white mb-3">
-                        Transaction Summary
-                      </h3>
-
-                      {/* Total Deposit */}
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-400">Total deposit:</span>
-                        <span className="text-white font-mono">
-                          {formatAmount(lamports)} SOL
-                        </span>
-                      </div>
-
-                      {/* Protocol Fee (0.5%) */}
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-400">Protocol fee (0.5%):</span>
-                        <span className="text-slate-400 font-mono">
-                          {(Math.floor(lamports * 0.005) / 1_000_000_000).toFixed(9)} SOL
-                        </span>
-                      </div>
-
-                      {/* Fixed Fee */}
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-400">Fixed fee:</span>
-                        <span className="text-slate-400 font-mono">
-                          0.002500000 SOL
-                        </span>
-                      </div>
-
-                      {/* Total Fee */}
-                      <div className="flex justify-between text-xs pt-2 border-t border-slate-700/30">
-                        <span className="text-slate-300 font-medium">Total fee:</span>
-                        <span className="text-slate-300 font-mono font-medium">
-                          {formatAmount(calculateFee(lamports))} SOL
-                        </span>
-                      </div>
-
-                      {/* Recipients Section */}
-                      <div className="pt-2 border-t border-slate-700/30">
-                        <div className="flex justify-between text-xs mb-2">
-                          <span className="text-slate-300 font-medium">
-                            Recipients ({recipients.length})
-                          </span>
-                        </div>
-
-                        {/* List Recipients */}
-                        <div className="space-y-1.5">
-                          {recipients.map((recipient, index) => {
-                            const recipientAmount = parseAmountToLamports(recipient.amount);
-                            const addressShort = recipient.address
-                              ? `${recipient.address.slice(0, 4)}...${recipient.address.slice(-4)}`
-                              : "Not set";
-
-                            return (
-                              <div key={index} className="flex justify-between text-xs">
-                                <span className="text-slate-400">
-                                  #{index + 1} {addressShort}
+                            {/* Amount Input */}
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs text-slate-500">
+                                  Amount
                                 </span>
-                                <span className="text-slate-300 font-mono">
-                                  {recipientAmount > 0 ? formatAmount(recipientAmount) : "0"} SOL
-                                </span>
+                                {recipients.length === 1 && (
+                                  <span className="text-xs text-slate-500">
+                                    Auto-filled
+                                  </span>
+                                )}
                               </div>
-                            );
-                          })}
-                        </div>
+                              <div className="flex items-center gap-2">
+                                {recipients.length > 1 && (
+                                  <button
+                                    onClick={() => {
+                                      const currentAmount =
+                                        parseAmountToLamports(recipient.amount);
+                                      const newAmount = Math.max(
+                                        0,
+                                        currentAmount - 100_000_000
+                                      ); // -0.1 SOL
+                                      updateRecipientAmount(
+                                        index,
+                                        lamportsToSolInput(newAmount)
+                                      );
+                                    }}
+                                    disabled={!connected || isLoading}
+                                    className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-700/50 text-slate-300 hover:bg-red-500/20 hover:text-red-400 transition-colors disabled:opacity-50"
+                                  >
+                                    <Minus className="w-4 h-4" />
+                                  </button>
+                                )}
+                                <Input
+                                  type="text"
+                                  inputMode="decimal"
+                                  value={recipient.amount}
+                                  onChange={(e) => {
+                                    const val = e.target.value.replace(
+                                      ",",
+                                      "."
+                                    );
+                                    if (val === "" || /^\d*\.?\d*$/.test(val)) {
+                                      updateRecipientAmount(index, val);
+                                    }
+                                  }}
+                                  placeholder={
+                                    recipients.length === 1
+                                      ? "Auto-distributed"
+                                      : "0.00"
+                                  }
+                                  disabled={
+                                    !connected ||
+                                    isLoading ||
+                                    recipients.length === 1
+                                  }
+                                  className={`flex-1 bg-slate-700/30 border-slate-600/30 text-sm focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
+                                    hasAmountError
+                                      ? "border-red-500/50 focus:border-red-500"
+                                      : ""
+                                  } ${
+                                    recipients.length === 1
+                                      ? "cursor-not-allowed opacity-70"
+                                      : ""
+                                  }`}
+                                />
+                                {recipients.length > 1 && (
+                                  <button
+                                    onClick={() => {
+                                      const currentAmount =
+                                        parseAmountToLamports(recipient.amount);
+                                      const newAmount =
+                                        currentAmount + 100_000_000; // +0.1 SOL
+                                      updateRecipientAmount(
+                                        index,
+                                        lamportsToSolInput(newAmount)
+                                      );
+                                    }}
+                                    disabled={!connected || isLoading}
+                                    className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-700/50 text-slate-300 hover:bg-green-500/20 hover:text-green-400 transition-colors disabled:opacity-50"
+                                  >
+                                    <Plus className="w-4 h-4" />
+                                  </button>
+                                )}
+                                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-700/50">
+                                  <SOLIcon className="w-4 h-4" />
+                                  <span className="text-sm font-medium">
+                                    SOL
+                                  </span>
+                                </div>
+                              </div>
+                              {hasAmountError && (
+                                <p className="text-xs text-red-400 mt-1">
+                                  Amount must be greater than zero
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
 
-                        {/* Total to Recipients */}
-                        <div className="flex justify-between text-xs pt-2 mt-2 border-t border-slate-700/30">
-                          <span className="text-white font-medium">Total to recipients:</span>
-                          <span className={`font-mono font-medium ${
-                            allocationMismatch && recipients.length > 1
-                              ? remainingToAllocate < 0
-                                ? "text-red-400"
-                                : "text-amber-400"
-                              : "text-white"
-                          }`}>
-                            {formatAmount(totalSendAmount)} SOL
+                    {/* Add Recipient Button */}
+                    {recipients.length < MAX_RECIPIENTS && (
+                      <button
+                        onClick={addRecipient}
+                        disabled={isLoading}
+                        className="w-full py-3 border border-dashed border-slate-600 rounded-xl text-slate-500 hover:text-white hover:border-slate-500 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add Recipient ({recipients.length}/{MAX_RECIPIENTS})
+                      </button>
+                    )}
+
+                    {/* Transaction Summary */}
+                    {lamports > 0 && (
+                      <div className="bg-slate-800/30 rounded-xl p-4 border border-slate-700/20 space-y-3">
+                        <h3 className="text-sm font-semibold text-white mb-3">
+                          Transaction Summary
+                        </h3>
+
+                        {/* Total Deposit */}
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">Total deposit:</span>
+                          <span className="text-white font-mono">
+                            {formatAmount(lamports)} SOL
                           </span>
                         </div>
 
-                        {/* Warning if mismatch */}
-                        {allocationMismatch && recipients.length > 1 && (
-                          <div className="text-xs mt-2 pt-2 border-t border-slate-700/30">
-                            <span className={remainingToAllocate < 0 ? "text-red-400" : "text-amber-400"}>
-                              {remainingToAllocate < 0
-                                ? `⚠️ Over-allocated by ${formatAmount(Math.abs(remainingToAllocate))} SOL`
-                                : `⚠️ ${formatAmount(remainingToAllocate)} SOL remaining to allocate`
-                              }
+                        {/* Protocol Fee (0.5%) */}
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">
+                            Protocol fee (0.5%):
+                          </span>
+                          <span className="text-slate-400 font-mono">
+                            {(
+                              Math.floor(lamports * 0.005) / 1_000_000_000
+                            ).toFixed(9)}{" "}
+                            SOL
+                          </span>
+                        </div>
+
+                        {/* Fixed Fee */}
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">Fixed fee:</span>
+                          <span className="text-slate-400 font-mono">
+                            0.002500000 SOL
+                          </span>
+                        </div>
+
+                        {/* Total Fee */}
+                        <div className="flex justify-between text-xs pt-2 border-t border-slate-700/30">
+                          <span className="text-slate-300 font-medium">
+                            Total fee:
+                          </span>
+                          <span className="text-slate-300 font-mono font-medium">
+                            {formatAmount(calculateFee(lamports))} SOL
+                          </span>
+                        </div>
+
+                        {/* Recipients Section */}
+                        <div className="pt-2 border-t border-slate-700/30">
+                          <div className="flex justify-between text-xs mb-2">
+                            <span className="text-slate-300 font-medium">
+                              Recipients ({recipients.length})
                             </span>
                           </div>
-                        )}
+
+                          {/* List Recipients */}
+                          <div className="space-y-1.5">
+                            {recipients.map((recipient, index) => {
+                              const recipientAmount = parseAmountToLamports(
+                                recipient.amount
+                              );
+                              const addressShort = recipient.address
+                                ? `${recipient.address.slice(
+                                    0,
+                                    4
+                                  )}...${recipient.address.slice(-4)}`
+                                : "Not set";
+
+                              return (
+                                <div
+                                  key={index}
+                                  className="flex justify-between text-xs"
+                                >
+                                  <span className="text-slate-400">
+                                    #{index + 1} {addressShort}
+                                  </span>
+                                  <span className="text-slate-300 font-mono">
+                                    {recipientAmount > 0
+                                      ? formatAmount(recipientAmount)
+                                      : "0"}{" "}
+                                    SOL
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* Total to Recipients */}
+                          <div className="flex justify-between text-xs pt-2 mt-2 border-t border-slate-700/30">
+                            <span className="text-white font-medium">
+                              Total to recipients:
+                            </span>
+                            <span
+                              className={`font-mono font-medium ${
+                                allocationMismatch && recipients.length > 1
+                                  ? remainingToAllocate < 0
+                                    ? "text-red-400"
+                                    : "text-amber-400"
+                                  : "text-white"
+                              }`}
+                            >
+                              {formatAmount(totalSendAmount)} SOL
+                            </span>
+                          </div>
+
+                          {/* Warning if mismatch */}
+                          {allocationMismatch && recipients.length > 1 && (
+                            <div className="text-xs mt-2 pt-2 border-t border-slate-700/30">
+                              <span
+                                className={
+                                  remainingToAllocate < 0
+                                    ? "text-red-400"
+                                    : "text-amber-400"
+                                }
+                              >
+                                {remainingToAllocate < 0
+                                  ? `⚠️ Over-allocated by ${formatAmount(
+                                      Math.abs(remainingToAllocate)
+                                    )} SOL`
+                                  : `⚠️ ${formatAmount(
+                                      remainingToAllocate
+                                    )} SOL remaining to allocate`}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                )}
+
+                {/* Fee Display */}
+                <div className="flex items-center justify-between text-xs text-slate-500 mb-4 px-1">
+                  <span>Network Fee</span>
+                  <span>
+                    {parseAmountToLamports(amount) > 0
+                      ? formatAmount(
+                          calculateFee(parseAmountToLamports(amount))
+                        )
+                      : "0"}{" "}
+                    SOL
+                  </span>
                 </div>
-              )}
 
-              {/* Fee Display */}
-              <div className="flex items-center justify-between text-xs text-slate-500 mb-4 px-1">
-                <span>Network Fee</span>
-                <span>
-                  {parseAmountToLamports(amount) > 0
-                    ? formatAmount(calculateFee(parseAmountToLamports(amount)))
-                    : "0"}{" "}
-                  SOL
-                </span>
-              </div>
+                {/* Submit Button */}
+                <Button
+                  onClick={mode === "swap" ? handleSwap : handleSend}
+                  disabled={mode === "swap" ? !canSubmitSwap : !canSubmitSend}
+                  className="w-full h-14 text-lg font-bold bg-white hover:bg-white/90 text-[#31146F] rounded-full transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] disabled:bg-slate-700 disabled:text-slate-400"
+                >
+                  {isLoading
+                    ? "Processing..."
+                    : mode === "swap"
+                    ? `Swap SOL → ${outputToken} Privately`
+                    : "Send Privately"}
+                </Button>
 
-              {/* Submit Button */}
-              <Button
-                onClick={mode === "swap" ? handleSwap : handleSend}
-                disabled={mode === "swap" ? !canSubmitSwap : !canSubmitSend}
-                className="w-full h-14 text-lg font-bold bg-white hover:bg-white/90 text-[#31146F] rounded-full transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] disabled:bg-slate-700 disabled:text-slate-400"
-              >
-                {isLoading
-                  ? "Processing..."
-                  : mode === "swap"
-                  ? `Swap SOL → ${outputToken} Privately`
-                  : "Send Privately"}
-              </Button>
+                {!connected && (
+                  <div className="mt-4 text-center p-4 bg-slate-800/30 rounded-xl border border-dashed border-slate-700">
+                    <Wallet className="w-6 h-6 mx-auto mb-2 text-slate-500" />
+                    <p className="text-sm text-slate-500">
+                      Connect your wallet to start
+                    </p>
+                  </div>
+                )}
+              </motion.div>
 
-              {!connected && (
-                <div className="mt-4 text-center p-4 bg-slate-800/30 rounded-xl border border-dashed border-slate-700">
-                  <Wallet className="w-6 h-6 mx-auto mb-2 text-slate-500" />
-                  <p className="text-sm text-slate-500">
-                    Connect your wallet to start
-                  </p>
+              {/* Features */}
+              <div className="flex justify-center gap-6 mt-6 text-xs text-slate-500">
+                <div className="flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5 text-[#31146F]" />
+                  ZK Verified
                 </div>
-              )}
-            </motion.div>
-
-            {/* Features */}
-            <div className="flex justify-center gap-6 mt-6 text-xs text-slate-500">
-              <div className="flex items-center gap-1.5">
-                <Shield className="w-3.5 h-3.5 text-[#31146F]" />
-                ZK Verified
+                <div className="flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-[#31146F]" />
+                  Solana Speed
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Eye className="w-3.5 h-3.5 text-[#31146F]" />
+                  Untraceable
+                </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5 text-[#31146F]" />
-                Solana Speed
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Eye className="w-3.5 h-3.5 text-[#31146F]" />
-                Untraceable
-              </div>
-            </div>
             </div>
           </div>
         </main>
