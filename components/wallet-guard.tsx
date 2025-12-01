@@ -32,7 +32,7 @@ export function WalletGuard({ children, fallback }: WalletGuardProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <h2 className="text-2xl font-bold font-space-grotesk text-foreground">
+                    <h2 className="text-2xl font-bold font-manrope text-foreground">
                       Wallet Required
                     </h2>
                     <p className="text-muted-foreground">

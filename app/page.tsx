@@ -1,1653 +1,953 @@
 "use client";
 
-// Configuration - Set to true when dapp is ready for public use
-const DAPP_AVAILABLE = true;
-
-import Link from "next/link";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import Link from "next/link";
+import LightRays from "@/components/LightRays";
+import Threads from "@/components/Threads";
+import Aurora from "@/components/Aurora";
+import Noise from "@/components/Noise";
+import DecryptedText from "@/components/DecryptedText";
+import BlurText from "@/components/BlurText";
+import TrueFocus from "@/components/TrueFocus";
 import CloakPrivacyAnimation from "@/components/ui/privacy-animation";
+import PixelCard from "@/components/PixelCard";
+import { GridScan } from "@/components/GridScan";
 import {
-  ArrowRight,
-  ChevronRight,
-  Eye,
-  Layers,
-  Lock,
-  Mail,
-  Receipt,
+  motion,
+  useScroll,
+  useTransform,
+  AnimatePresence,
+} from "framer-motion";
+import {
   Shield,
-  Shuffle,
   Zap,
+  Eye,
+  Code,
+  ArrowRight,
+  Pickaxe,
+  Cpu,
   TrendingUp,
-  Building,
-  ExternalLink,
-  Workflow,
-  Brain,
-  Cog,
-  Hash,
-  Rocket,
+  Users,
+  Coins,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Navbar } from "@/components/navbar";
-import SvgIcon from "@/components/ui/logo";
-import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
 
-export default function CloakLandingPage() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
-  const [isLaunched, setIsLaunched] = useState(false);
+// Feature data for Invisible by Design section
+const FEATURES = [
+  {
+    icon: Shield,
+    title: "Zero-Knowledge",
+    description:
+      "Cryptographic proofs verify transactions without revealing your data. Your privacy is mathematically guaranteed.",
+  },
+  {
+    icon: Zap,
+    title: "Solana Speed",
+    description:
+      "Sub-second confirmations on the fastest blockchain. Privacy without compromise on performance.",
+  },
+  {
+    icon: Pickaxe,
+    title: "PoW Mining",
+    description:
+      "Permissionless miners secure the network and earn SOL rewards. No stake required to participate.",
+  },
+  {
+    icon: Eye,
+    title: "Untraceable",
+    description:
+      "Complete anonymity for your transactions. Your financial trail ends here, permanently.",
+  },
+];
+
+// Feature Icon Button with PixelCard hover effect
+function FeatureIconButton({
+  feature,
+  index,
+  hoveredIndex,
+  setHoveredIndex,
+  onClickOpen,
+}: {
+  feature: (typeof FEATURES)[0];
+  index: number;
+  hoveredIndex: number | null;
+  setHoveredIndex: (index: number | null) => void;
+  onClickOpen: () => void;
+}) {
+  const Icon = feature.icon;
+  const isHovered = hoveredIndex === index;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.1 }}
+      className="flex flex-col items-center"
+    >
+      <motion.span
+        className="text-sm font-medium text-slate-400 mb-3 transition-colors duration-300"
+        animate={{ color: isHovered ? "#A855F7" : "#94a3b8" }}
+      >
+        {feature.title}
+      </motion.span>
+
+      <div
+        className="relative cursor-pointer"
+        onMouseEnter={() => setHoveredIndex(index)}
+        onMouseLeave={() => setHoveredIndex(null)}
+        onClick={onClickOpen}
+      >
+        <PixelCard
+          variant="default"
+          gap={5}
+          speed={50}
+          colors="#A855F7,#7C3AED,#5B21B6"
+          className="!w-[100px] !h-[100px] !bg-[#0a1525]/80 !border-slate-700/50 !rounded-2xl"
+        >
+          <div className="absolute inset-0 flex items-center justify-center z-10">
+            <div
+              className={`w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                isHovered
+                  ? "bg-gradient-to-br from-[#A855F7]/20 to-[#7C3AED]/10 border border-[#A855F7]/50"
+                  : "bg-slate-800/50 border border-slate-700/50"
+              }`}
+            >
+              <Icon
+                className={`w-7 h-7 transition-colors duration-300 ${
+                  isHovered ? "text-[#A855F7]" : "text-slate-400"
+                }`}
+              />
+            </div>
+          </div>
+        </PixelCard>
+      </div>
+    </motion.div>
+  );
+}
+
+// Feature Modal
+function FeatureModal({
+  feature,
+  isOpen,
+  onClose,
+}: {
+  feature: (typeof FEATURES)[0] | null;
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  if (!feature) return null;
+  const Icon = feature.icon;
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
+          />
+
+          <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              className="w-full max-w-md pointer-events-auto"
+            >
+              <div className="relative bg-[#0a1222] border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
+                <button
+                  onClick={onClose}
+                  className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+
+                <div className="text-center">
+                  <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-[#A855F7]/20 to-[#7C3AED]/10 border border-[#A855F7]/40 flex items-center justify-center mb-6">
+                    <Icon className="w-10 h-10 text-[#A855F7]" />
+                  </div>
+
+                  <h3 className="text-2xl font-bold text-white mb-4">
+                    {feature.title}
+                  </h3>
+
+                  <p className="text-slate-400 leading-relaxed">
+                    {feature.description}
+                  </p>
+
+                  <button
+                    onClick={onClose}
+                    className="mt-6 px-6 py-2.5 bg-[#A855F7]/20 border border-[#A855F7]/40 rounded-lg text-[#A855F7] font-medium hover:bg-[#A855F7]/30 transition-colors"
+                  >
+                    Got it
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// Invisible by Design Section
+function InvisibleByDesignSection() {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [modalFeature, setModalFeature] = useState<(typeof FEATURES)[0] | null>(
+    null
+  );
+
+  return (
+    <section className="relative py-32 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-[#020617] via-[#0f172a] to-[#020617]" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-[#A855F7]/[0.05] rounded-full blur-[150px] pointer-events-none" />
+
+      <div className="relative z-10 max-w-6xl mx-auto px-6">
+        <div className="text-center mb-20">
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-[#A855F7] font-mono text-sm tracking-widest uppercase mb-4"
+          >
+            Core Features
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="mb-6 text-4xl md:text-5xl font-bold text-white"
+          >
+            <TrueFocus
+              sentence="Invisible by Design"
+              manualMode={false}
+              blurAmount={4}
+              borderColor="rgba(168, 85, 247, 0.6)"
+              glowColor="rgba(168, 85, 247, 0.3)"
+              animationDuration={0.8}
+              pauseBetweenAnimations={1.2}
+            />
+          </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="text-slate-400 text-lg max-w-xl mx-auto"
+          >
+            Cryptography at your fingertips meets seamless user experience.
+          </motion.p>
+        </div>
+
+        <div className="flex justify-center">
+          <div className="inline-flex items-center gap-8 md:gap-12 p-6 md:p-8 rounded-3xl bg-[#0a1222]/60 border border-slate-800/50 backdrop-blur-sm">
+            {FEATURES.map((feature, index) => (
+              <FeatureIconButton
+                key={feature.title}
+                feature={feature}
+                index={index}
+                hoveredIndex={hoveredIndex}
+                setHoveredIndex={setHoveredIndex}
+                onClickOpen={() => setModalFeature(feature)}
+              />
+            ))}
+          </div>
+        </div>
+
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.5 }}
+          className="text-center text-slate-600 text-sm mt-8"
+        >
+          Expand for more details
+        </motion.p>
+      </div>
+
+      <FeatureModal
+        feature={modalFeature}
+        isOpen={modalFeature !== null}
+        onClose={() => setModalFeature(null)}
+      />
+    </section>
+  );
+}
+
+// Hash animation component for mining section
+const HashRain = () => {
+  const [hashes, setHashes] = useState<string[]>([]);
 
   useEffect(() => {
-    setMounted(true);
-    const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // Countdown logic
-  useEffect(() => {
-    const targetDate = new Date("2025-10-31T03:59:15-03:00"); // America/São_Paulo timezone
-
-    const updateCountdown = () => {
-      const now = new Date().getTime();
-      const distance = targetDate.getTime() - now;
-
-      if (distance < 0) {
-        setIsLaunched(true);
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        return;
-      }
-
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor(
-        (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+    const generateHash = () => {
+      const chars = "0123456789abcdef";
+      return (
+        "0x" +
+        Array.from({ length: 16 }, () =>
+          chars.charAt(Math.floor(Math.random() * chars.length))
+        ).join("")
       );
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-      setTimeLeft({ days, hours, minutes, seconds });
     };
 
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
+    const initial = Array.from({ length: 30 }, generateHash);
+    setHashes(initial);
+
+    const interval = setInterval(() => {
+      setHashes((prev) => {
+        const newHashes = [...prev];
+        const randomIndex = Math.floor(Math.random() * newHashes.length);
+        newHashes[randomIndex] = generateHash();
+        return newHashes;
+      });
+    }, 150);
 
     return () => clearInterval(interval);
   }, []);
 
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {hashes.map((hash, i) => (
+        <motion.div
+          key={i}
+          className="absolute font-mono text-[10px] text-amber-500/20 whitespace-nowrap"
+          style={{
+            left: `${(i % 6) * 18}%`,
+            top: `${Math.floor(i / 6) * 20}%`,
+          }}
+          animate={{
+            opacity: [0.1, 0.3, 0.1],
+            y: [0, 10, 0],
+          }}
+          transition={{
+            duration: 3 + Math.random() * 2,
+            repeat: Infinity,
+            delay: Math.random() * 2,
+          }}
+        >
+          {hash}
+        </motion.div>
+      ))}
+    </div>
+  );
+};
 
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
+export default function LandingPage() {
+  const [mounted, setMounted] = useState(false);
 
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 },
-  };
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  const features = [
-    {
-      title: "Shared Privacy Pool",
-      description:
-        "Deposit SOL into a shared pool where individual deposits cannot be linked to withdrawals.",
-      icon: <Lock className="size-5" />,
-    },
-    {
-      title: "Zero-Knowledge Proofs",
-      description:
-        "Cryptographically prove ownership without revealing which deposit you control.",
-      icon: <Shield className="size-5" />,
-    },
-    {
-      title: "Unlinkable Withdrawals",
-      description:
-        "Withdraw to any address without revealing the connection to your original deposit.",
-      icon: <Eye className="size-5" />,
-    },
-    {
-      title: "On-Chain Verification",
-      description:
-        "SP1 Groth16 proofs verified on Solana ensure mathematical guarantees of privacy.",
-      icon: <Zap className="size-5" />,
-    },
-    {
-      title: "PoW Mining",
-      description:
-        "Optional proof-of-work claims allow prioritized withdrawals for enhanced throughput.",
-      icon: <Hash className="size-5" />,
-    },
-    {
-      title: "Fixed & Transparent Fees",
-      description:
-        "0% on deposits, 0.5% + fixed fee on withdrawals with complete fee transparency.",
-      icon: <Receipt className="size-5" />,
-    },
-  ];
+  if (!mounted) {
+    return <div className="min-h-screen bg-[#020617]" />;
+  }
+
+  return <LandingContent />;
+}
+
+function LandingContent() {
+  const miningRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: miningRef,
+    offset: ["start end", "end start"],
+  });
+  const hashOpacity = useTransform(
+    scrollYProgress,
+    [0, 0.3, 0.7, 1],
+    [0, 1, 1, 0]
+  );
 
   return (
-    <div className="flex min-h-[100dvh] flex-col">
-      <Navbar />
-      <main className="flex-1">
-        {/* Hero Section */}
-        <section className="w-full py-12 md:py-20 lg:py-32 xl:py-40 overflow-hidden relative">
-          <div className="container px-4 md:px-6 relative">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-center max-w-4xl mx-auto mb-12"
+    <div className="min-h-screen bg-[#020617] text-white overflow-x-hidden">
+      {/* HERO SECTION */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <GridScan
+            sensitivity={0.55}
+            lineThickness={1}
+            linesColor="#31146F"
+            gridScale={0.1}
+            scanColor="#A855F7"
+            scanOpacity={0.4}
+            enablePost
+            bloomIntensity={0.6}
+            chromaticAberration={0.002}
+            noiseIntensity={0.01}
+            className="w-full h-full"
+          />
+        </div>
+
+        <div className="absolute inset-0 bg-gradient-to-b from-[#020617]/40 via-[#020617]/30 to-[#020617] z-[1]" />
+
+        <div className="absolute inset-0 z-[2] opacity-[0.01] mix-blend-overlay pointer-events-none">
+          <Noise
+            patternSize={200}
+            patternAlpha={20}
+            patternRefreshInterval={3}
+          />
+        </div>
+
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,#020617_70%)] z-[3]" />
+
+        <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, delay: 0.3 }}
+            className="mb-8"
+          >
+            <h1 className="text-7xl md:text-9xl font-black tracking-wide text-white drop-shadow-[0_0_30px_rgba(49,20,111,0.4)] cursor-default font-darker-grotesque">
+              <DecryptedText
+                text="Cloak"
+                speed={80}
+                maxIterations={15}
+                sequential={true}
+                revealDirection="center"
+                characters="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*"
+                className="text-white"
+                encryptedClassName="text-[#31146F]"
+                continuous={true}
+                continuousInterval={2500}
+              />
+            </h1>
+          </motion.div>
+
+          <div className="mb-14">
+            <BlurText
+              text="Privacy is not a feature. It's a fundamental right."
+              delay={70}
+              animateBy="words"
+              direction="bottom"
+              className="text-xl md:text-2xl text-slate-300 font-light tracking-wide justify-center"
+            />
+          </div>
+
+          {/* Single CTA Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.2 }}
+            className="flex justify-center"
+          >
+            <Link
+              href="/privacy"
+              className="group relative px-10 py-5 bg-white text-[#31146F] rounded-full font-semibold text-lg overflow-hidden transition-all duration-300 hover:bg-white/90 hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:scale-[1.02] active:scale-[0.98]"
             >
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-4">
-                <Badge
-                  className="rounded-full px-4 py-1.5 text-sm font-medium bg-accent text-accent-foreground border-0"
-                  variant="secondary"
-                >
-                  Private execution on Solana
-                </Badge>
-                <Badge
-                  className="rounded-full px-4 py-1.5 text-sm font-medium bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 animate-pulse"
-                  variant="outline"
-                >
-                  <Rocket className="inline-block w-3.5 h-3.5 mr-1.5" />
-                  Just Launched on Devnet!
-                </Badge>
-              </div>
+              <span className="relative z-10 flex items-center gap-3">
+                <DecryptedText
+                  text="Enter Privacy Zone"
+                  speed={30}
+                  maxIterations={8}
+                  sequential={true}
+                  revealDirection="start"
+                  characters="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                  className="text-[#31146F]"
+                  encryptedClassName="text-[#31146F]/60"
+                  animateOn="hover"
+                />
+                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+              </span>
+            </Link>
+          </motion.div>
 
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight mb-4 sm:mb-6 text-foreground font-space-grotesk leading-tight">
-                {DAPP_AVAILABLE
-                  ? "Private SOL Transfers with Unlinkable Withdrawals"
-                  : "Private Transfers on Solana"}
-              </h1>
-
-              <p className="text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground mb-4 sm:mb-6 max-w-3xl mx-auto text-balance px-4">
-                Deposit into the shared privacy pool and withdraw or swap tokens
-                without revealing which deposit you own. Try it now on testnet!
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
-                <motion.div
-                  whileHover={{ scale: DAPP_AVAILABLE ? 1.05 : 1 }}
-                  whileTap={{ scale: DAPP_AVAILABLE ? 0.95 : 1 }}
-                  transition={{ duration: 0.2 }}
-                  className="w-full sm:w-auto"
-                >
-                  {DAPP_AVAILABLE ? (
-                    <Link href="/swap" className="block w-full sm:w-auto">
-                      <Button
-                        size="lg"
-                        className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25"
-                      >
-                        <Shuffle className="mr-2 size-4" />
-                        Swap Privately
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Button
-                      size="lg"
-                      disabled
-                      className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base bg-muted text-muted-foreground cursor-not-allowed"
-                    >
-                      <Lock className="mr-2 size-4" />
-                      Coming Soon
-                    </Button>
-                  )}
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: DAPP_AVAILABLE ? 1.05 : 1 }}
-                  whileTap={{ scale: DAPP_AVAILABLE ? 0.95 : 1 }}
-                  transition={{ duration: 0.2 }}
-                  className="w-full sm:w-auto"
-                >
-                  {DAPP_AVAILABLE ? (
-                    <Link
-                      href="/transaction"
-                      className="block w-full sm:w-auto"
-                    >
-                      <Button
-                        size="lg"
-                        className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 animate-bounce"
-                      >
-                        Try Testnet Now
-                        <motion.div
-                          animate={{ x: [0, 4, 0] }}
-                          transition={{
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                          }}
-                        >
-                          <ArrowRight className="ml-2 size-4" />
-                        </motion.div>
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Button
-                      size="lg"
-                      disabled
-                      className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base bg-muted text-muted-foreground cursor-not-allowed"
-                    >
-                      <Lock className="mr-2 size-4" />
-                      Coming Soon
-                    </Button>
-                  )}
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                  className="w-full sm:w-auto"
-                >
-                  <Link href="/waitlist" className="block w-full sm:w-auto">
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base border-primary/20 hover:bg-primary/5 bg-transparent text-foreground"
-                    >
-                      <Rocket className="mr-2 size-4" />
-                      Join Waitlist
-                    </Button>
-                  </Link>
-                </motion.div>
-              </div>
-
+          {/* Trust indicators */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 1.6 }}
+            className="flex items-center justify-center gap-10 mt-20 text-sm text-slate-500"
+          >
+            {[
+              { icon: Shield, text: "ZK Verified" },
+              { icon: Zap, text: "Solana Speed" },
+              { icon: Eye, text: "Untraceable" },
+            ].map((item, i) => (
               <motion.div
-                className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mt-4 sm:mt-6 text-xs sm:text-sm text-muted-foreground px-4"
-                initial={{ opacity: 0, y: 20 }}
+                key={item.text}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
+                transition={{ delay: 1.7 + i * 0.1 }}
+                className="flex items-center gap-2"
               >
-                {[
-                  { icon: Shield, text: "Fully Private" },
-                  { icon: Zap, text: "Solana Speed" },
-                  { icon: Receipt, text: "Verifiable" },
-                ].map((item, index) => (
-                  <motion.div
-                    key={item.text}
-                    className="flex items-center gap-1.5 sm:gap-2"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3, delay: 0.6 + index * 0.1 }}
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    <motion.div
-                      animate={{
-                        rotate: [0, 5, -5, 0],
-                        scale: [1, 1.1, 1],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        delay: index * 0.5,
-                        ease: "easeInOut",
-                      }}
-                    >
-                      <item.icon className="size-3.5 sm:size-4 text-primary" />
-                    </motion.div>
-                    <span>{item.text}</span>
-                  </motion.div>
-                ))}
+                <item.icon className="w-4 h-4 text-[#31146F]" />
+                <span>{item.text}</span>
               </motion.div>
-            </motion.div>
-            {/* Countdown */}
-            {!isLaunched && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="mb-6 px-4"
-              >
-                <div className="flex justify-center gap-2 sm:gap-4 md:gap-6 lg:gap-10">
-                  <div className="text-center">
-                    <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary">
-                      {timeLeft.days.toString().padStart(2, "0")}
-                    </div>
-                    <div className="text-[10px] sm:text-xs text-muted-foreground">
-                      Days
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary">
-                      {timeLeft.hours.toString().padStart(2, "0")}
-                    </div>
-                    <div className="text-[10px] sm:text-xs text-muted-foreground">
-                      Hours
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary">
-                      {timeLeft.minutes.toString().padStart(2, "0")}
-                    </div>
-                    <div className="text-[10px] sm:text-xs text-muted-foreground">
-                      Min
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg sm:text-xl md:text-2xl font-bold text-primary">
-                      {timeLeft.seconds.toString().padStart(2, "0")}
-                    </div>
-                    <div className="text-[10px] sm:text-xs text-muted-foreground">
-                      Sec
-                    </div>
-                  </div>
-                </div>
-                <p className="text-center text-[10px] sm:text-xs text-muted-foreground mt-2 px-2">
-                  Launching on Devnet on October 31, 2025 at 06:59 UTC
-                </p>
-              </motion.div>
-            )}
+            ))}
+          </motion.div>
+        </div>
+      </section>
 
-            <motion.div
-              initial={{ opacity: 0, y: 40, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-              className="relative mx-auto max-w-5xl px-4"
-            >
-              <div className="relative rounded-xl overflow-hidden shadow-2xl border border-border/40 bg-gradient-to-b from-background to-card/20 p-4 sm:p-6 md:p-8">
-                <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-black/10 dark:ring-white/10 z-0"></div>
-                <CloakPrivacyAnimation />
-              </div>
-              <div className="absolute -bottom-3 sm:-bottom-6 -right-3 sm:-right-6 -z-10 h-[150px] sm:h-[200px] md:h-[300px] w-[150px] sm:w-[200px] md:w-[300px] rounded-full bg-gradient-to-br from-primary/30 to-accent/30 blur-3xl opacity-70"></div>
-              <div className="absolute -top-3 sm:-top-6 -left-3 sm:-left-6 -z-10 h-[150px] sm:h-[200px] md:h-[300px] w-[150px] sm:w-[200px] md:w-[300px] rounded-full bg-gradient-to-br from-accent/30 to-primary/30 blur-3xl opacity-70"></div>
-            </motion.div>
-          </div>
-        </section>
+      {/* HOW IT WORKS */}
+      <section className="relative py-28 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#020617] via-[#0a1628] to-[#020617]" />
 
-        {/* Differentiation Section */}
-        <section className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-gradient-to-b from-background via-muted/20 to-background relative overflow-hidden">
-          <div className="absolute -top-12 sm:-top-24 -right-12 sm:-right-24 w-48 sm:w-72 md:w-96 h-48 sm:h-72 md:h-96 bg-primary/5 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-12 sm:-bottom-24 -left-12 sm:-left-24 w-48 sm:w-72 md:w-96 h-48 sm:h-72 md:h-96 bg-accent/5 rounded-full blur-3xl"></div>
-
-          <div className="container px-4 md:px-6 relative z-10">
-            <motion.div
+        <div className="relative z-10 max-w-7xl mx-auto px-6">
+          <div className="text-center mb-14">
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-center space-y-4 mb-20"
+              className="text-[#A855F7] font-mono text-sm tracking-widest uppercase mb-4"
             >
-              <Badge variant="secondary" className="mb-4">
-                Why Cloak is Different
-              </Badge>
-              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight font-space-grotesk text-balance px-4">
-                Built for True Privacy & Security
-              </h2>
-              <p className="mx-auto max-w-[700px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
-                Cloak uses zero-knowledge proofs, Merkle tree commitments, and
-                optional proof-of-work mining to provide cryptographically
-                guaranteed privacy.
-              </p>
-            </motion.div>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12 sm:mb-16">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="group"
-              >
-                <Card className="h-full border-border/40 bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-300 hover:shadow-lg">
-                  <CardContent className="p-6 sm:p-8 text-center space-y-4 sm:space-y-6">
-                    <div className="w-16 sm:w-20 h-16 sm:h-20 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300">
-                      <Shield className="w-8 sm:w-10 h-8 sm:h-10 text-primary" />
-                    </div>
-                    <div className="space-y-2 sm:space-y-3">
-                      <h3 className="text-xl sm:text-2xl font-bold font-space-grotesk text-foreground">
-                        ZK for Truth
-                      </h3>
-                      <p className="text-muted-foreground leading-relaxed">
-                        Proves correctness and conservation without trusting
-                        servers. On-chain verification ensures mathematical
-                        guarantees.
-                      </p>
-                    </div>
-                    <div className="pt-4">
-                      <div className="w-full h-1 bg-gradient-to-r from-primary/20 via-primary to-primary/20 rounded-full"></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="group"
-              >
-                <Card className="h-full border-border/40 bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-300 hover:shadow-lg">
-                  <CardContent className="p-6 sm:p-8 text-center space-y-4 sm:space-y-6">
-                    <div className="w-16 sm:w-20 h-16 sm:h-20 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300">
-                      <Layers className="w-8 sm:w-10 h-8 sm:h-10 text-primary" />
-                    </div>
-                    <div className="space-y-2 sm:space-y-3">
-                      <h3 className="text-xl sm:text-2xl font-bold font-space-grotesk text-foreground">
-                        PoW for Fairness
-                      </h3>
-                      <p className="text-muted-foreground leading-relaxed">
-                        Permissionless miners ensure liquidity and fair access.
-                        No central operator controls the system.
-                      </p>
-                    </div>
-                    <div className="pt-4">
-                      <div className="w-full h-1 bg-gradient-to-r from-primary/20 via-primary to-primary/20 rounded-full"></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="group sm:col-span-2 lg:col-span-1"
-              >
-                <Card className="h-full border-border/40 bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-300 hover:shadow-lg">
-                  <CardContent className="p-6 sm:p-8 text-center space-y-4 sm:space-y-6">
-                    <div className="w-16 sm:w-20 h-16 sm:h-20 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors duration-300">
-                      <Zap className="w-8 sm:w-10 h-8 sm:h-10 text-primary" />
-                    </div>
-                    <div className="space-y-2 sm:space-y-3">
-                      <h3 className="text-xl sm:text-2xl font-bold font-space-grotesk text-foreground">
-                        Solana for Speed
-                      </h3>
-                      <p className="text-muted-foreground leading-relaxed">
-                        On-chain ZK verification happens in seconds. Proof
-                        generation uses SP1 for efficient Groth16 circuit
-                        execution.
-                      </p>
-                    </div>
-                    <div className="pt-4">
-                      <div className="w-full h-1 bg-gradient-to-r from-primary/20 via-primary to-primary/20 rounded-full"></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
-        {/* TypeScript SDK Section (moved just below Differentiation) */}
-        <section className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-gradient-to-b from-background via-primary/5 to-background relative overflow-hidden">
-          <div className="container px-4 md:px-6 relative z-10">
-            <motion.div
+              How It Works
+            </motion.p>
+            <motion.h2
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-center space-y-3 sm:space-y-4 mb-8 sm:mb-12 md:mb-16"
+              transition={{ delay: 0.1 }}
+              className="text-4xl md:text-5xl font-bold mb-6 text-white"
             >
-              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-medium">
-                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                TypeScript SDK
-              </div>
-              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight font-space-grotesk text-balance px-4">
-                Build Private Transfers into Your App
-              </h2>
-              <p className="mx-auto max-w-[700px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
-                Complete TypeScript SDK for integrating Cloak's privacy protocol
-                into your application. One method handles everything - deposit,
-                proof generation, and withdrawal.
-              </p>
-            </motion.div>
-
-            <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center max-w-6xl mx-auto">
-              {/* Code Example */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="relative order-2 lg:order-1"
-              >
-                <div className="bg-gray-900 rounded-lg shadow-2xl overflow-hidden">
-                  {/* macOS traffic lights */}
-                  <div className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-gray-800 border-b border-gray-700">
-                    <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-red-500"></div>
-                    <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-yellow-500"></div>
-                    <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-green-500"></div>
-                    <div className="flex-1 text-center">
-                      <span className="text-gray-400 text-[10px] sm:text-xs font-mono">
-                        example.ts
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Code content */}
-                  <div className="bg-gray-900 overflow-x-auto">
-                    <div className="p-3 sm:p-4 md:p-6 min-w-max">
-                      <pre className="text-[10px] sm:text-xs md:text-sm text-gray-100 font-mono leading-relaxed">
-                        <code className="block whitespace-pre">
-                          <span className="text-purple-400">import</span>{" "}
-                          <span className="text-white">{"{"}</span>{" "}
-                          <span className="text-blue-300">CloakSDK</span>{" "}
-                          <span className="text-white">{"}"}</span>{" "}
-                          <span className="text-purple-400">from</span>{" "}
-                          <span className="text-green-400">"@cloak/sdk"</span>
-                          <span className="text-white">;</span>
-                          <br />
-                          <br />
-                          <span className="text-gray-500">
-                            // Initialize client
-                          </span>
-                          <br />
-                          <span className="text-purple-400">const</span>{" "}
-                          <span className="text-blue-300">client</span>{" "}
-                          <span className="text-white">=</span>{" "}
-                          <span className="text-purple-400">new</span>{" "}
-                          <span className="text-yellow-300">CloakSDK</span>
-                          <span className="text-white">({"{"}</span>
-                          <br />
-                          &nbsp;&nbsp;
-                          <span className="text-blue-300">network</span>
-                          <span className="text-white">:</span>{" "}
-                          <span className="text-green-400">"devnet"</span>
-                          <span className="text-white">,</span>
-                          <br />
-                          &nbsp;&nbsp;
-                          <span className="text-blue-300">programId</span>
-                          <span className="text-white">,</span>{" "}
-                          <span className="text-blue-300">poolAddress</span>
-                          <span className="text-white">,</span>
-                          <br />
-                          &nbsp;&nbsp;
-                          <span className="text-blue-300">apiUrl</span>
-                          <br />
-                          <span className="text-white">{"})"}</span>
-                          <span className="text-white">;</span>
-                          <br />
-                          <br />
-                          <span className="text-gray-500">
-                            // Generate note
-                          </span>
-                          <br />
-                          <span className="text-purple-400">const</span>{" "}
-                          <span className="text-blue-300">note</span>{" "}
-                          <span className="text-white">=</span>{" "}
-                          <span className="text-blue-300">client</span>
-                          <span className="text-white">.</span>
-                          <span className="text-yellow-300">generateNote</span>
-                          <span className="text-white">(</span>
-                          <span className="text-orange-400">1_000_000_000</span>
-                          <span className="text-white">)</span>
-                          <span className="text-white">;</span>
-                          <br />
-                          <br />
-                          <span className="text-gray-500">
-                            // Complete flow: deposit + transfer
-                          </span>
-                          <br />
-                          <span className="text-purple-400">const</span>{" "}
-                          <span className="text-blue-300">result</span>{" "}
-                          <span className="text-white">=</span>{" "}
-                          <span className="text-purple-400">await</span>{" "}
-                          <span className="text-blue-300">client</span>
-                          <span className="text-white">.</span>
-                          <span className="text-yellow-300">
-                            privateTransfer
-                          </span>
-                          <span className="text-white">(</span>
-                          <br />
-                          &nbsp;&nbsp;
-                          <span className="text-blue-300">connection</span>
-                          <span className="text-white">,</span>{" "}
-                          <span className="text-blue-300">wallet</span>
-                          <span className="text-white">,</span>{" "}
-                          <span className="text-blue-300">note</span>
-                          <span className="text-white">,</span>
-                          <br />
-                          &nbsp;&nbsp;<span className="text-white">[</span>
-                          <br />
-                          &nbsp;&nbsp;&nbsp;&nbsp;
-                          <span className="text-white">{"{"}</span>{" "}
-                          <span className="text-blue-300">recipient</span>
-                          <span className="text-white">:</span>{" "}
-                          <span className="text-blue-300">addr1</span>
-                          <span className="text-white">,</span>{" "}
-                          <span className="text-blue-300">amount</span>
-                          <span className="text-white">:</span>{" "}
-                          <span className="text-orange-400">500_000_000</span>{" "}
-                          <span className="text-white">{"}"}</span>
-                          <span className="text-white">,</span>
-                          <br />
-                          &nbsp;&nbsp;&nbsp;&nbsp;
-                          <span className="text-white">{"{"}</span>{" "}
-                          <span className="text-blue-300">recipient</span>
-                          <span className="text-white">:</span>{" "}
-                          <span className="text-blue-300">addr2</span>
-                          <span className="text-white">,</span>{" "}
-                          <span className="text-blue-300">amount</span>
-                          <span className="text-white">:</span>{" "}
-                          <span className="text-orange-400">492_500_000</span>{" "}
-                          <span className="text-white">{"}"}</span>
-                          <br />
-                          &nbsp;&nbsp;<span className="text-white">]</span>
-                          <br />
-                          <span className="text-white">)</span>
-                          <span className="text-white">;</span>
-                          <br />
-                          <br />
-                          <span className="text-green-400">✅</span>{" "}
-                          <span className="text-gray-400">
-                            // Done! Handles deposit + proof + withdrawal
-                          </span>
-                        </code>
-                      </pre>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Features List */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="space-y-4 sm:space-y-6 order-1 lg:order-2"
-              >
-                {[
-                  {
-                    icon: Zap,
-                    title: "One Method Does It All",
-                    description:
-                      "privateTransfer() automatically handles deposit, proof generation, and withdrawal to up to 5 recipients.",
-                  },
-                  {
-                    icon: Shield,
-                    title: "Type-Safe & Validated",
-                    description:
-                      "Full TypeScript support with compile-time validation. Enforces 1-5 recipients and amount conservation.",
-                  },
-                  {
-                    icon: Cog,
-                    title: "Framework Agnostic",
-                    description:
-                      "Works in any JavaScript environment - React, Vue, Node.js, or vanilla JS. No React dependencies.",
-                  },
-                  {
-                    icon: Workflow,
-                    title: "Progress Callbacks",
-                    description:
-                      "Track deposit, proof generation, and withdrawal status with built-in progress hooks.",
-                  },
-                ].map((feature, i) => {
-                  const Icon = feature.icon;
-                  return (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 10 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.3, delay: 0.1 * i }}
-                      className="flex gap-3 sm:gap-4 items-start"
-                    >
-                      <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                      </div>
-                      <div className="space-y-1">
-                        <h3 className="text-sm sm:text-base md:text-lg font-bold font-space-grotesk">
-                          {feature.title}
-                        </h3>
-                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                          {feature.description}
-                        </p>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-
-                <div className="pt-2 sm:pt-4">
-                  <a
-                    href="https://github.com/Machine-Labz/cloak/blob/feat/cloak-sdk/tooling/cloak-sdk/README.md"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block w-full sm:w-auto"
-                  >
-                    <Button
-                      size="lg"
-                      className="rounded-full w-full sm:w-auto text-sm sm:text-base px-6"
-                    >
-                      View SDK Documentation
-                      <ExternalLink className="ml-2 w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    </Button>
-                  </a>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
-        {/* Developer Tools Section (restored) */}
-        <section className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-gradient-to-b from-background via-muted/10 to-background relative overflow-hidden">
-          <div className="container px-4 md:px-6">
-            <motion.div
+              The Privacy Flow
+            </motion.h2>
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-center space-y-3 sm:space-y-4 mb-8 sm:mb-12 md:mb-16"
+              transition={{ delay: 0.2 }}
+              className="text-slate-400 text-lg max-w-2xl mx-auto"
             >
-              <Badge variant="secondary" className="mb-4">
-                Developer Tools
-              </Badge>
-              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight font-space-grotesk text-balance px-4">
-                Cloak Development Kit
-              </h2>
-              <p className="mx-auto max-w-[700px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
-                Rust tools and libraries for building with Cloak's privacy
-                protocol. Generate zero-knowledge proofs, run miners, and parse
-                proofs with our comprehensive tooling.
-              </p>
-            </motion.div>
-
-            <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center">
-              {/* Text Content */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="space-y-6 sm:space-y-8 order-2 lg:order-1"
-              >
-                <div className="space-y-3 sm:space-y-4">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Brain className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
-                    </div>
-                    <h3 className="text-xl sm:text-2xl font-bold font-space-grotesk">
-                      ZK Proof Generation
-                    </h3>
-                  </div>
-                  <p className="text-muted-foreground text-base sm:text-lg">
-                    Generate zero-knowledge proofs for withdrawals using the SP1
-                    guest program and host CLI. Local CPU proving (~2 min) or
-                    SP1 network TEE (~30-45 sec). Full circuit implementation
-                    with 6 constraints enforced.
-                  </p>
-                </div>
-
-                <div className="space-y-3 sm:space-y-4">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Hash className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
-                    </div>
-                    <h3 className="text-xl sm:text-2xl font-bold font-space-grotesk">
-                      PoW Mining
-                    </h3>
-                  </div>
-                  <p className="text-muted-foreground text-base sm:text-lg">
-                    Run the standalone miner CLI to produce wildcard claims for
-                    the scramble registry. Earn fees by helping prioritize
-                    withdrawals during congestion. Automatic difficulty
-                    adjustment and claim lifecycle management.
-                  </p>
-                </div>
-
-                <div className="space-y-3 sm:space-y-4">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
-                    </div>
-                    <h3 className="text-xl sm:text-2xl font-bold font-space-grotesk">
-                      Proof Utilities
-                    </h3>
-                  </div>
-                  <p className="text-muted-foreground text-base sm:text-lg">
-                    Extract 260-byte Groth16 proofs from SP1 bundles, parse
-                    public inputs (104 bytes), and generate verification keys
-                    for on-chain verification. All tools support no_std for
-                    on-chain integration.
-                  </p>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4">
-                  <a
-                    href="https://cloak-eqpl.vercel.app/docs/packages/overview"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full sm:w-auto"
-                  >
-                    <Button
-                      size="lg"
-                      className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base"
-                    >
-                      View Documentation
-                      <ExternalLink className="ml-2 size-4" />
-                    </Button>
-                  </a>
-                  <a
-                    href="https://github.com/cloak-labz/cloak"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full sm:w-auto"
-                  >
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base"
-                    >
-                      View on GitHub
-                      <ExternalLink className="ml-2 size-4" />
-                    </Button>
-                  </a>
-                </div>
-              </motion.div>
-
-              {/* Code Snippet */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="relative order-1 lg:order-2"
-              >
-                {/* macOS-style window */}
-                <div className="bg-gray-900 rounded-lg shadow-2xl overflow-hidden max-w-full">
-                  {/* macOS traffic lights */}
-                  <div className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-gray-800 border-b border-gray-700">
-                    <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-red-500"></div>
-                    <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-yellow-500"></div>
-                    <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-full bg-green-500"></div>
-                    <div className="flex-1 text-center">
-                      <span className="text-gray-400 text-[10px] sm:text-xs md:text-sm font-mono">
-                        terminal
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Code content */}
-                  <div className="bg-gray-900 overflow-x-auto">
-                    <div className="p-3 sm:p-4 md:p-6 min-w-max">
-                      <pre className="text-[10px] sm:text-xs md:text-sm text-gray-100 font-mono leading-relaxed">
-                        <code className="block whitespace-pre">
-                          <span className="text-green-400">$</span>{" "}
-                          <span className="text-gray-400">
-                            # Generate withdrawal proof
-                          </span>
-                          <br />
-                          <span className="text-green-400">$</span>{" "}
-                          <span className="text-white">cargo run</span>{" "}
-                          <span className="text-blue-400">--package</span>{" "}
-                          <span className="text-yellow-300">
-                            zk-guest-sp1-host
-                          </span>{" "}
-                          <span className="text-white">--</span>{" "}
-                          <span className="text-blue-400">--bin</span>{" "}
-                          <span className="text-yellow-300">cloak-zk</span>{" "}
-                          <span className="text-white">--</span>{" "}
-                          <span className="text-blue-400">prove</span>
-                          <br />
-                          &nbsp;&nbsp;
-                          <span className="text-blue-400">--private</span>{" "}
-                          <span className="text-yellow-300">private.json</span>
-                          <br />
-                          &nbsp;&nbsp;
-                          <span className="text-blue-400">--public</span>{" "}
-                          <span className="text-yellow-300">public.json</span>
-                          <br />
-                          &nbsp;&nbsp;
-                          <span className="text-blue-400">--outputs</span>{" "}
-                          <span className="text-yellow-300">outputs.json</span>
-                          <br />
-                          &nbsp;&nbsp;
-                          <span className="text-blue-400">--proof</span>{" "}
-                          <span className="text-yellow-300">out/proof.bin</span>
-                          <br />
-                          <br />
-                          <span className="text-yellow-300">📖</span>{" "}
-                          <span className="text-gray-300">
-                            Reading input files...
-                          </span>
-                          <br />
-                          <span className="text-green-400">✅</span>{" "}
-                          <span className="text-gray-300">
-                            Input files loaded
-                          </span>
-                          <br />
-                          <span className="text-yellow-300">🔑</span>{" "}
-                          <span className="text-gray-300">
-                            Generating proving key...
-                          </span>
-                          <br />
-                          <span className="text-green-400">✅</span>{" "}
-                          <span className="text-gray-300">
-                            Proof generated!
-                          </span>
-                          <br />
-                          <span className="text-gray-500">
-                            Proof size: 89,234 bytes
-                          </span>
-                          <br />
-                          <span className="text-gray-500">
-                            Total cycles: 1,234,567
-                          </span>
-                          <br />
-                          <br />
-                          <span className="text-green-400">$</span>{" "}
-                          <span className="text-gray-400"># Run PoW miner</span>
-                          <br />
-                          <span className="text-green-400">$</span>{" "}
-                          <span className="text-white">cargo run</span>{" "}
-                          <span className="text-blue-400">--package</span>{" "}
-                          <span className="text-yellow-300">cloak-miner</span>{" "}
-                          <span className="text-white">--</span>{" "}
-                          <span className="text-blue-400">--network</span>{" "}
-                          <span className="text-yellow-300">devnet</span>{" "}
-                          <span className="text-white">mine</span>
-                          <br />
-                          <br />
-                          <span className="text-yellow-300">⛏️</span>{" "}
-                          <span className="text-gray-300">
-                            Starting PoW mining...
-                          </span>
-                          <br />
-                          <span className="text-yellow-300">🔍</span>{" "}
-                          <span className="text-gray-300">
-                            Found solution: 0x3a7f...
-                          </span>
-                          <br />
-                          <span className="text-green-400">✅</span>{" "}
-                          <span className="text-gray-300">
-                            Claim submitted to registry
-                          </span>
-                          <br />
-                          <span className="text-gray-500">
-                            Difficulty: 16 | Block: 42,069
-                          </span>
-                        </code>
-                      </pre>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
+              Your transaction becomes untraceable through ZK proofs, relay
+              submission, and PoW-secured delivery.
+            </motion.p>
           </div>
-        </section>
 
-        {/* Features Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="rounded-2xl border border-slate-800/50 bg-[#0a1222]/60 backdrop-blur-sm p-6 md:p-8"
+          >
+            <CloakPrivacyAnimation size="normal" />
+          </motion.div>
+        </div>
+      </section>
 
-        {/* How It Works Section */}
-        <section
-          id="how-it-works"
-          className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-white dark:bg-black relative overflow-hidden"
+      {/* FEATURES - INVISIBLE BY DESIGN */}
+      <InvisibleByDesignSection />
+
+      {/* POW MINING */}
+      <section ref={miningRef} className="relative py-32 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#020617] via-[#050a14] to-[#020617]" />
+
+        <motion.div
+          className="absolute inset-0"
+          style={{ opacity: hashOpacity }}
         >
-          <div className="container px-4 md:px-6 relative">
+          <HashRain />
+        </motion.div>
+
+        <div className="relative z-10 max-w-6xl mx-auto px-6">
+          <div className="text-center mb-16">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="flex flex-col items-center justify-center space-y-4 text-center mb-8 sm:mb-12 md:mb-16"
+              className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 mb-6"
             >
-              <Badge
-                className="rounded-full px-4 py-1.5 text-xs sm:text-sm font-medium bg-accent text-accent-foreground border-0"
-                variant="secondary"
-              >
-                How It Works
-              </Badge>
-              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight font-space-grotesk text-foreground px-4">
-                Simple Process, Maximum Privacy
-              </h2>
-              <p className="max-w-[800px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
-                Experience true privacy in just a few steps. The entire process
-                happens in seconds while our privacy layer ensures your
-                transactions remain completely anonymous.
-              </p>
+              <Pickaxe className="w-4 h-4 text-amber-400" />
+              <span className="text-amber-400 font-mono text-sm tracking-wider uppercase">
+                Proof of Work Mining
+              </span>
             </motion.div>
 
-            <div className="grid md:grid-cols-3 gap-8 md:gap-12 relative px-4">
-              <div className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-border to-transparent -translate-y-1/2 z-0"></div>
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="text-4xl md:text-5xl font-bold mb-6 text-white"
+            >
+              Permissionless Security
+            </motion.h2>
 
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="text-slate-400 text-lg max-w-2xl mx-auto"
+            >
+              Anyone can mine. No stake required. Secure the network and earn
+              SOL rewards.
+            </motion.p>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="max-w-4xl mx-auto"
+          >
+            <div className="rounded-2xl border border-amber-900/30 bg-[#070a10]/90 backdrop-blur overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3 bg-[#0a0d14] border-b border-amber-900/20">
+                <div className="w-3 h-3 rounded-full bg-amber-500/60" />
+                <div className="w-3 h-3 rounded-full bg-amber-500/40" />
+                <div className="w-3 h-3 rounded-full bg-amber-500/20" />
+                <span className="ml-3 text-amber-400/60 text-sm font-mono">
+                  cloak-miner v1.0.0
+                </span>
+              </div>
+
+              <div className="p-6 md:p-8 font-mono text-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <motion.div
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="w-2 h-2 rounded-full bg-green-500"
+                  />
+                  <span className="text-green-400">Mining active...</span>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-6 mb-8">
+                  {[
+                    {
+                      icon: Users,
+                      label: "Active Miners",
+                      value: "247",
+                      color: "text-amber-400",
+                    },
+                    {
+                      icon: Cpu,
+                      label: "Hash Rate",
+                      value: "1.2 TH/s",
+                      color: "text-[#31146F]",
+                    },
+                    {
+                      icon: Coins,
+                      label: "Rewards Paid",
+                      value: "12,847 SOL",
+                      color: "text-green-400",
+                    },
+                  ].map((stat, i) => (
+                    <motion.div
+                      key={stat.label}
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.4 + i * 0.1 }}
+                      className="p-4 rounded-lg bg-slate-900/50 border border-slate-800/50"
+                    >
+                      <div className="flex items-center gap-2 text-slate-500 text-xs mb-2">
+                        <stat.icon className="w-3 h-3" />
+                        <span>{stat.label}</span>
+                      </div>
+                      <div className={`text-2xl font-bold ${stat.color}`}>
+                        {stat.value}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <div className="border-t border-slate-800/50 pt-6">
+                  <div className="text-slate-500 text-xs mb-3 flex items-center gap-2">
+                    <TrendingUp className="w-3 h-3" />
+                    Latest Proof Submitted
+                  </div>
+                  <motion.div
+                    animate={{ opacity: [0.6, 1, 0.6] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="text-amber-400/80 break-all"
+                  >
+                    <span className="text-slate-600">{"> "}</span>
+                    0x7f3d8a9c2b4e1f6a...8d3c9b7e2f1a4b5c
+                  </motion.div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4 mt-6">
               {[
-                {
-                  step: "01",
-                  title: "Deposit to Shield Pool",
-                  description:
-                    "Create a commitment by depositing SOL into the shared privacy pool. Your deposit is cryptographically linked to the commitment.",
-                },
-                {
-                  step: "02",
-                  title: "Generate ZK Proof",
-                  description:
-                    "Prove ownership of your commitment using zero-knowledge proofs. The proof doesn't reveal which commitment you control.",
-                },
-                {
-                  step: "03",
-                  title: "Withdraw Privately",
-                  description:
-                    "Withdraw to any address without revealing the link to your deposit. On-chain verification ensures privacy.",
-                },
-              ].map((step, i) => (
+                "No staking requirements — start mining immediately",
+                "Earn SOL rewards for every valid proof",
+                "Ensure fair access to the anonymity set",
+                "Decentralized hash power = network security",
+              ].map((benefit, i) => (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.1 }}
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  className="relative z-10 flex flex-col items-center text-center space-y-4"
+                  transition={{ delay: 0.5 + i * 0.08 }}
+                  className="flex items-center gap-3 text-slate-400 text-sm"
                 >
-                  <motion.div
-                    className="flex h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-base sm:text-lg md:text-xl font-bold shadow-lg"
-                    whileHover={{
-                      scale: 1.1,
-                      rotate: 5,
-                      boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
-                    }}
-                    animate={{
-                      boxShadow: [
-                        "0 4px 15px rgba(0,0,0,0.1)",
-                        "0 8px 25px rgba(0,0,0,0.15)",
-                        "0 4px 15px rgba(0,0,0,0.1)",
-                      ],
-                    }}
-                    transition={{
-                      boxShadow: {
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      },
-                    }}
-                  >
-                    {step.step}
-                  </motion.div>
-                  <motion.h3
-                    className="text-lg sm:text-xl font-bold font-space-grotesk text-foreground"
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    {step.title}
-                  </motion.h3>
-                  <p className="text-muted-foreground">{step.description}</p>
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-400/60" />
+                  <span>{benefit}</span>
                 </motion.div>
               ))}
             </div>
-          </div>
-        </section>
+          </motion.div>
+        </div>
+      </section>
 
-        {/* Documentation Section */}
-        <section className="w-full py-12 sm:py-16 md:py-24 lg:py-32 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/20 to-background" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(120,119,198,0.1),transparent_50%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(120,119,198,0.05),transparent_50%)]" />
+      {/* SDK / DEVELOPER */}
+      <section className="relative py-32 overflow-hidden">
+        <div className="absolute inset-0 z-0 opacity-30">
+          <Threads
+            color={[0.08, 0.45, 0.42]}
+            amplitude={1.0}
+            distance={0.3}
+            enableMouseInteraction={true}
+          />
+        </div>
 
-          <div className="container px-4 md:px-6 relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-center space-y-4 sm:space-y-6 mb-12 sm:mb-16 md:mb-20"
-            >
-              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-medium">
-                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                Complete Developer Guide
-              </div>
-              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight font-space-grotesk text-balance px-4">
-                Everything you need to ship private Solana exits
-              </h2>
-              <p className="mx-auto max-w-[700px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
-                Deep-dive reference for architects, protocol engineers, relayer
-                operators, and front-end teams working on Cloak.
-              </p>
-            </motion.div>
+        <div className="absolute inset-0 bg-[#020617]/75 z-[1]" />
 
-            {/* Main Documentation Grid */}
-            <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 mb-12 sm:mb-16">
-              {/* Left Column - Main Documentation Card */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
+        <div className="relative z-10 max-w-6xl mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="lg:col-span-1"
+                className="text-[#31146F] font-mono text-sm tracking-widest uppercase mb-4"
               >
-                <Card className="h-full border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background hover:border-primary/40 transition-all duration-500 group">
-                  <CardContent className="p-6 sm:p-8 h-full flex flex-col">
-                    <div className="flex items-center gap-3 mb-4 sm:mb-6">
-                      <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-xl bg-primary/20 flex items-center justify-center group-hover:bg-primary/30 transition-colors">
-                        <ExternalLink className="w-5 sm:w-6 h-5 sm:h-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl sm:text-2xl font-bold font-space-grotesk text-foreground">
-                          Full Documentation
-                        </h3>
-                        <p className="text-xs sm:text-sm text-muted-foreground">
-                          Complete technical reference
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-muted-foreground mb-6 flex-grow">
-                      Access our comprehensive documentation covering
-                      architecture, zero-knowledge proofs, services, and
-                      implementation guides. Everything you need to build with
-                      Cloak.
-                    </p>
-                    <div className="space-y-3">
-                      <a
-                        href="https://cloak-eqpl.vercel.app/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center w-full px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-all group-hover:scale-[1.02]"
-                      >
-                        <ExternalLink className="mr-2 h-4 w-4" />
-                        View Full Documentation
-                      </a>
-                      <p className="text-xs text-muted-foreground text-center">
-                        Opens in new tab
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              {/* Right Column - Quick Access Cards */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                Developer SDK
+              </motion.p>
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="lg:col-span-1 space-y-6"
+                transition={{ delay: 0.1 }}
+                className="text-4xl md:text-5xl font-bold mb-6"
+              >
+                <span className="text-white">Build Private</span>
+                <br />
+                <span className="text-slate-500">By Default</span>
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="text-slate-400 text-lg mb-8 leading-relaxed"
+              >
+                Integrate privacy into your Solana dApp with just a few lines of
+                code. Our SDK handles the cryptographic complexity.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+                className="space-y-3"
               >
                 {[
-                  {
-                    title: "Quick Start",
-                    description: "Get up and running in minutes",
-                    color: "from-emerald-500/10 to-emerald-600/5",
-                    borderColor: "border-emerald-200/50",
-                    icon: Rocket,
-                    link: "https://cloak-eqpl.vercel.app/overview/quickstart",
-                    highlight: true,
-                    badge: "Popular",
-                  },
-                  {
-                    title: "ZK Layer",
-                    description: "SP1 circuits and Groth16 verification",
-                    color: "from-purple-500/10 to-purple-600/5",
-                    borderColor: "border-purple-200/50",
-                    icon: Brain,
-                    link: "https://cloak-eqpl.vercel.app/zk",
-                    highlight: true,
-                    badge: "Core",
-                  },
-                  {
-                    title: "PoW Mining System",
-                    description: "Wildcard mining and performance",
-                    color: "from-orange-500/10 to-orange-600/5",
-                    borderColor: "border-orange-200/50",
-                    icon: Hash,
-                    link: "https://cloak-eqpl.vercel.app/pow/overview",
-                    highlight: true,
-                    badge: "Advanced",
-                  },
-                  {
-                    title: "Packages & Tooling",
-                    description: "SDK, CLI, and development tools",
-                    color: "from-blue-500/10 to-blue-600/5",
-                    borderColor: "border-blue-200/50",
-                    icon: Cog,
-                    link: "https://cloak-eqpl.vercel.app/packages/cloak-miner",
-                    highlight: true,
-                    badge: "Dev Tools",
-                  },
-                ].map((doc, index) => {
-                  const IconComponent = doc.icon;
-                  return (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.5, delay: 0.1 * index }}
-                    >
-                      <a
-                        href={doc.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block"
-                      >
-                        <Card
-                          className={`h-full bg-gradient-to-r ${
-                            doc.color
-                          } border-2 ${
-                            doc.borderColor
-                          } hover:shadow-lg transition-all duration-300 group cursor-pointer ${
-                            doc.highlight
-                              ? "ring-2 ring-primary/20 hover:ring-primary/40"
-                              : ""
-                          }`}
-                        >
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex items-center gap-3">
-                                <div
-                                  className={`w-10 h-10 rounded-xl ${
-                                    doc.highlight
-                                      ? "bg-primary/30"
-                                      : "bg-primary/20"
-                                  } flex items-center justify-center group-hover:bg-primary/40 transition-colors`}
-                                >
-                                  <IconComponent className="w-5 h-5 text-primary" />
-                                </div>
-                                <div>
-                                  <h4 className="font-bold text-foreground group-hover:text-primary transition-colors text-lg">
-                                    {doc.title}
-                                  </h4>
-                                  {doc.highlight && (
-                                    <Badge
-                                      variant="secondary"
-                                      className="mt-1 text-xs"
-                                    >
-                                      {doc.badge}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                              <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              {doc.description}
-                            </p>
-                          </CardContent>
-                        </Card>
-                      </a>
-                    </motion.div>
-                  );
-                })}
+                  "TypeScript-first API",
+                  "React hooks included",
+                  "Full documentation",
+                  "Open source (Apache 2.0)",
+                ].map((item, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#31146F]" />
+                    <span className="text-slate-300">{item}</span>
+                  </div>
+                ))}
               </motion.div>
             </div>
 
-            {/* Bottom CTA Section */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="text-center"
+              transition={{ delay: 0.4 }}
             >
-              <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-muted/50 border border-border/50">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-sm font-medium text-foreground">
-                  Documentation is live and updated regularly
-                </span>
+              <div className="rounded-xl overflow-hidden border border-slate-700/50 bg-[#080d18] shadow-2xl">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-800 bg-[#060a12]">
+                  <div className="w-3 h-3 rounded-full bg-red-500/70" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
+                  <div className="w-3 h-3 rounded-full bg-green-500/70" />
+                  <span className="ml-4 text-slate-500 text-sm font-mono">
+                    index.ts
+                  </span>
+                </div>
+
+                <div className="p-6 font-mono text-sm">
+                  <pre className="text-slate-300">
+                    <code>
+                      <span className="text-slate-500">
+                        // Initialize Cloak
+                      </span>
+                      {"\n"}
+                      <span className="text-[#31146F]">import</span>
+                      <span className="text-white">
+                        {" "}
+                        {"{"} Cloak {"}"}{" "}
+                      </span>
+                      <span className="text-[#31146F]">from</span>
+                      <span className="text-amber-300">
+                        {" "}
+                        &apos;@cloak/sdk&apos;
+                      </span>
+                      {"\n\n"}
+                      <span className="text-[#31146F]">const</span>
+                      <span className="text-slate-200"> cloak </span>
+                      <span className="text-white">= </span>
+                      <span className="text-[#31146F]">new</span>
+                      <span className="text-amber-200"> Cloak</span>
+                      <span className="text-white">({"{"}</span>
+                      {"\n"}
+                      <span className="text-white"> network: </span>
+                      <span className="text-amber-300">
+                        &apos;mainnet&apos;
+                      </span>
+                      {"\n"}
+                      <span className="text-white">{"})"}</span>
+                      {"\n\n"}
+                      <span className="text-slate-500">// Send privately</span>
+                      {"\n"}
+                      <span className="text-[#31146F]">await</span>
+                      <span className="text-slate-200"> cloak</span>
+                      <span className="text-white">.</span>
+                      <span className="text-amber-200">send</span>
+                      <span className="text-white">({"{"}</span>
+                      {"\n"}
+                      <span className="text-white"> amount: </span>
+                      <span className="text-[#5d2ba3]">1.5</span>
+                      <span className="text-white">,</span>
+                      {"\n"}
+                      <span className="text-white"> to: </span>
+                      <span className="text-amber-300">&apos;...&apos;</span>
+                      {"\n"}
+                      <span className="text-white">{"})"}</span>
+                    </code>
+                  </pre>
+                </div>
               </div>
-            </motion.div>
-          </div>
-        </section>
 
-        {/* Developer Tools Section removed (redundant with SDK section) */}
-
-        {/* Partners Section */}
-        <section className="w-full py-12 bg-white relative">
-          <div className="container px-4 md:px-6 relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-center"
-            >
-              <p className="text-sm text-muted-foreground mb-8">
-                Partnered with
-              </p>
-
-              <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
-                <div className="flex items-center justify-center">
-                  <Image
-                    src="https://cdn.prod.website-files.com/670670901c57408478ad4a9f/67121f25b01a10c4e680cc87_logo%20-%20source.svg"
-                    alt="Source Logo"
-                    width={100}
-                    height={50}
-                    className="opacity-60 hover:opacity-100 transition-opacity duration-300"
-                  />
+              <div className="mt-4 flex justify-end">
+                <div className="px-3 py-1.5 bg-slate-800/80 border border-slate-700/50 rounded-full text-xs font-mono text-slate-400">
+                  <Code className="w-3 h-3 inline mr-1.5" />
+                  v1.0.0
                 </div>
               </div>
             </motion.div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* CTA Section */}
-        <section className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground relative overflow-hidden">
-          <div className="absolute -top-12 sm:-top-24 -left-12 sm:-left-24 w-32 sm:w-48 md:w-64 h-32 sm:h-48 md:h-64 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-12 sm:-bottom-24 -right-12 sm:-right-24 w-32 sm:w-48 md:w-64 h-32 sm:h-48 md:h-64 bg-white/10 rounded-full blur-3xl"></div>
+      {/* CTA */}
+      <section className="relative py-32 overflow-hidden">
+        <div className="absolute inset-0 z-0 opacity-25">
+          <Aurora
+            colorStops={["#020617", "#31146F", "#020617"]}
+            amplitude={0.5}
+            blend={0.9}
+            speed={0.3}
+          />
+        </div>
 
-          <div className="container px-4 md:px-6 relative">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="flex flex-col items-center justify-center space-y-4 sm:space-y-6 text-center"
-            >
-              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight font-space-grotesk text-balance px-4">
-                Ready to Experience True Privacy?
-              </h2>
-              <p className="mx-auto max-w-[700px] text-primary-foreground/80 text-sm sm:text-base md:text-lg text-balance px-4">
-                Join the privacy revolution on Solana. Start sending SOL with
-                complete anonymity while maintaining speed and reliability.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-2 sm:mt-4">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {DAPP_AVAILABLE ? (
-                    <Link href="/transaction" className="w-full sm:w-auto">
-                      <Button
-                        size="lg"
-                        variant="default"
-                        className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base bg-primary text-primary-foreground hover:bg-primary/90"
-                      >
-                        <Shuffle className="mr-2 size-4" />
-                        Swap Privately
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Button
-                      size="lg"
-                      disabled
-                      className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base bg-muted text-muted-foreground cursor-not-allowed"
-                    >
-                      <Lock className="mr-2 size-4" />
-                      Coming Soon
-                    </Button>
-                  )}
-                </motion.div>
-                {/* <Button
-                  size="lg"
-                  variant="outline"
-                  className="rounded-full h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base bg-transparent border-white text-white hover:bg-white/10"
-                >
-                  Connect Wallet
-                </Button> */}
-              </div>
-              <p className="text-xs sm:text-sm text-primary-foreground/80 mt-2 sm:mt-4 px-4">
-                No registration required. Connect your Solana wallet to get
-                started.
-              </p>
-            </motion.div>
-          </div>
-        </section>
+        <div className="absolute inset-0 bg-[#020617]/70 z-[1]" />
 
-        {/* FAQ Section */}
-        <section
-          id="faq"
-          className="w-full py-12 sm:py-16 md:py-24 lg:py-32 bg-gradient-to-b from-background via-muted/20 to-background relative overflow-hidden"
-        >
-          <div className="container px-4 md:px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="flex flex-col items-center justify-center space-y-4 text-center mb-8 sm:mb-12"
-            >
-              <Badge
-                className="rounded-full px-4 py-1.5 text-xs sm:text-sm font-medium bg-accent text-accent-foreground border-0"
-                variant="secondary"
-              >
-                FAQ
-              </Badge>
-              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight font-space-grotesk text-foreground px-4">
-                Frequently Asked Questions
-              </h2>
-              <p className="max-w-[800px] text-muted-foreground text-sm sm:text-base md:text-lg text-balance px-4">
-                Find answers to common questions about Cloak's privacy features
-                and functionality.
-              </p>
-            </motion.div>
+        <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <div className="mb-8">
+              <Image
+                src="/cloak-solo.png"
+                alt="Cloak Logo"
+                width={80}
+                height={80}
+                className="mx-auto object-contain"
+              />
+            </div>
 
-            <div className="mx-auto max-w-3xl px-4 sm:px-0">
-              <Accordion type="single" collapsible className="w-full">
-                {[
-                  {
-                    question:
-                      "How do I know my transactions are really private?",
-                    answer:
-                      "Cloak uses Merkle tree commitments and zero-knowledge proofs that make it mathematically impossible to link deposits to withdrawals. When you deposit into the shared shield pool, only your commitment is stored. Later withdrawals prove ownership without revealing which commitment you control.",
-                  },
-                  {
-                    question: "How can I verify my deposits and withdrawals?",
-                    answer:
-                      "Every deposit creates a commitment hash stored in the Merkle tree. When you withdraw, your zero-knowledge proof is verified on-chain. You can trace your deposit signature and verify the commitment was included in the tree, while your withdrawal remains unlinkable to it.",
-                  },
-                  {
-                    question: "How does the proof-of-work mining system work?",
-                    answer:
-                      "Miners can mine wildcard claims that help prioritize withdrawals during periods of congestion. This optional system provides economic incentives while maintaining privacy. Miners don't learn anything about your transaction but help ensure faster processing.",
-                  },
-                  {
-                    question:
-                      "How long does it take to complete a private transfer?",
-                    answer:
-                      "After deposit confirmation, withdrawals require generating a zero-knowledge proof. Proof generation takes ~2 minutes on local CPU or ~30-45 seconds using SP1 network trusted execution. Once the proof is submitted, the on-chain withdrawal completes in seconds.",
-                  },
-                  {
-                    question: "How much does it cost to use Cloak?",
-                    answer:
-                      "Deposits are completely free (0% fee). Withdrawals cost 0.5% plus a fixed 0.0025 SOL fee. There are no hidden costs or subscriptions. For example, withdrawing 1 SOL costs 0.05 SOL plus 0.0025 SOL = 0.0525 SOL total (approximately $10.50 on mainnet at $200/SOL).",
-                  },
-                  {
-                    question: "How can I be sure my funds are safe?",
-                    answer:
-                      "Cloak is built on Solana's battle-tested blockchain using audited smart contracts. Your commitments are secured by zero-knowledge proofs verified on-chain. Double-spending is prevented by nullifiers. The code is open-source for independent security review, and all deposits remain in the on-chain shield pool backed by Solana's security.",
-                  },
-                ].map((faq, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.3, delay: i * 0.05 }}
-                  >
-                    <AccordionItem
-                      value={`item-${i}`}
-                      className="border-b border-border/40 py-2"
-                    >
-                      <AccordionTrigger className="text-left font-medium hover:no-underline font-space-grotesk text-foreground">
-                        {faq.question}
-                      </AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground">
-                        {faq.answer}
-                      </AccordionContent>
-                    </AccordionItem>
-                  </motion.div>
-                ))}
-              </Accordion>
-            </div>
-          </div>
-        </section>
-      </main>
-      <footer className="w-full border-t bg-background/95 backdrop-blur-sm">
-        <div className="container flex flex-col gap-8 px-4 py-10 md:px-6 lg:py-16">
-          <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-5">
-            <div className="space-y-4 md:col-span-2">
-              <div className="flex items-center gap-1 font-bold text-foreground">
-                <SvgIcon className="size-20" />
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Private, fast, and reliable SOL transfers on Solana. Experience
-                true transaction privacy without compromising on speed or
-                security.
-              </p>
-              <div className="flex gap-4">
-                <Link
-                  href="https://x.com/cloaklabz"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="size-5"
-                  >
-                    <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
-                  </svg>
-                  <span className="sr-only">Twitter</span>
-                </Link>
-                <Link
-                  href="https://github.com/Machine-Labz/cloak"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="size-5"
-                  >
-                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
-                  </svg>
-                  <span className="sr-only">GitHub</span>
-                </Link>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <h4 className="text-sm font-bold font-space-grotesk text-foreground">
-                Product
-              </h4>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <motion.div
-                    whileHover={{ x: 4 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Link
-                      href="#security"
-                      className="text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      Security
-                    </Link>
-                  </motion.div>
-                </li>
-                <li>
-                  <motion.div
-                    whileHover={{ x: 4 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <a
-                      href="https://cloak-eqpl.vercel.app/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      API Docs
-                    </a>
-                  </motion.div>
-                </li>
-              </ul>
-            </div>
-            <div className="space-y-4">
-              <h4 className="text-sm font-bold font-space-grotesk text-foreground">
-                Resources
-              </h4>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  <a
-                    href="https://cloak-eqpl.vercel.app/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Documentation
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div className="space-y-4">
-              <h4 className="text-sm font-bold font-space-grotesk text-foreground">
-                Stay Updated
-              </h4>
-              <p className="text-sm text-muted-foreground">
-                Get the latest updates on privacy features and platform
-                improvements.
-              </p>
-              <div className="flex gap-2">
-                <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="text-sm"
-                />
-                <Button size="sm" className="shrink-0">
-                  <Mail className="size-4" />
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                We respect your privacy. Unsubscribe at any time.
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-col gap-4 sm:flex-row justify-between items-center border-t border-border/40 pt-8">
-            <div className="flex flex-col items-center sm:items-start gap-2">
-              <p className="text-xs text-muted-foreground">
-                &copy; {new Date().getFullYear()} Cloak. All rights reserved.
-              </p>
-            </div>
-            <div className="flex gap-4">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
+              Cloak Your Transactions
+            </h2>
+
+            <p className="text-slate-400 text-xl mb-10 max-w-xl mx-auto">
+              Join thousands of users who&apos;ve taken back control of their
+              financial privacy on Solana.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/privacy"
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="px-10 py-4 bg-white text-[#31146F] rounded-full font-semibold text-lg transition-all duration-300 hover:bg-white/90 hover:shadow-[0_0_40px_rgba(255,255,255,0.3)]"
               >
-                Privacy Policy
+                Launch App
+                <ArrowRight className="w-5 h-5 inline ml-2" />
               </Link>
-              <Link
-                href="/terms"
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+
+              <a
+                href="https://github.com/Machine-Labz/cloak"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-10 py-4 border border-white/20 bg-transparent rounded-full font-semibold text-lg text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300"
               >
-                Terms of Service
-              </Link>
-              <Link
-                href="#"
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Security
-              </Link>
+                View on GitHub
+              </a>
             </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="relative py-12 border-t border-slate-800/50">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex flex-col items-center gap-6">
+            <div className="flex items-center gap-3">
+              <Image
+                src="/cloak-solo.png"
+                alt="Cloak Logo"
+                width={32}
+                height={32}
+                className="object-contain"
+              />
+              <span className="text-lg font-bold text-white">CLOAK</span>
+            </div>
+
+            <div className="flex items-center gap-8 text-slate-500 text-sm">
+              {["Docs", "GitHub", "Twitter", "Discord"].map((link) => (
+                <a
+                  key={link}
+                  href={
+                    link === "Docs"
+                      ? "https://cloak-eqpl.vercel.app"
+                      : link === "GitHub"
+                      ? "https://github.com/Machine-Labz/cloak"
+                      : link === "Twitter"
+                      ? "https://x.com/cloaklabz"
+                      : "https://discord.gg/cloak"
+                  }
+                  className="hover:text-white transition-colors"
+                >
+                  {link}
+                </a>
+              ))}
+            </div>
+
+            <p className="text-slate-600 text-sm">
+              © 2025 Cloak. Privacy by default.
+            </p>
           </div>
         </div>
       </footer>

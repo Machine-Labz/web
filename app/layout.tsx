@@ -1,22 +1,23 @@
 import type React from "react";
 import "@/app/globals.css";
 import "@/styles/wallet-adapter.css";
-import { Space_Grotesk, DM_Sans } from "next/font/google";
+import { Manrope, Darker_Grotesque } from "next/font/google";
 import type { Metadata, Viewport } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import { WalletContextProvider } from "@/components/wallet-provider";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "sonner";
 
-const spaceGrotesk = Space_Grotesk({
+const manrope = Manrope({
   subsets: ["latin"],
-  variable: "--font-space-grotesk",
+  variable: "--font-manrope",
   display: "swap",
 });
 
-const dmSans = DM_Sans({
+const darkerGrotesque = Darker_Grotesque({
   subsets: ["latin"],
-  variable: "--font-dm-sans",
+  weight: "400",
+  variable: "--font-darker-grotesque",
   display: "swap",
 });
 
@@ -49,7 +50,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${spaceGrotesk.variable} ${dmSans.variable} scroll-smooth`}
+      className={`${manrope.variable} ${darkerGrotesque.variable} scroll-smooth`}
     >
       <body className="font-sans">
         <ThemeProvider

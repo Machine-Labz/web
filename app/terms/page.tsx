@@ -21,7 +21,7 @@ export default function TermsOfUsePage() {
                 <Badge variant="secondary" className="mb-2">
                   Legal
                 </Badge>
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight font-space-grotesk">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight font-manrope">
                   Terms of Use
                 </h1>
                 <p className="text-sm text-muted-foreground">
@@ -37,7 +37,7 @@ export default function TermsOfUsePage() {
               <Card className="border-border/50 bg-card/50 backdrop-blur">
                 <CardContent className="p-6 sm:p-8 space-y-8 text-sm sm:text-base leading-relaxed">
                   <section className="space-y-3">
-                    <h2 className="text-lg sm:text-xl font-bold font-space-grotesk">
+                    <h2 className="text-lg sm:text-xl font-bold font-manrope">
                       Welcome to Cloak
                     </h2>
                     <p className="text-muted-foreground">
