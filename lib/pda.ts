@@ -72,3 +72,29 @@ export function getShieldPoolPDAs(mint?: PublicKey): ShieldPoolPDAs {
   };
 }
 
+/**
+ * Generate a deterministic stake account PDA based on stake authority and validator
+ * This ensures privacy - the stake account is derived deterministically without
+ * requiring the user to provide it upfront.
+ * 
+ * Seeds: ["stake_account", stake_authority, validator_vote_account]
+ * Program: Stake Program (11111111111111111111111111111111)
+ */
+export function deriveStakeAccountPDA(
+  stakeAuthority: PublicKey,
+  validatorVoteAccount: PublicKey
+): PublicKey {
+  const STAKE_PROGRAM_ID = new PublicKey("Stake11111111111111111111111111111111111112");
+  
+  const [stakeAccountPDA] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("stake_account"),
+      stakeAuthority.toBytes(),
+      validatorVoteAccount.toBytes(),
+    ],
+    STAKE_PROGRAM_ID
+  );
+  
+  return stakeAccountPDA;
+}
+

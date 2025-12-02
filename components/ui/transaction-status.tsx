@@ -40,7 +40,7 @@ interface TransactionStatusProps {
   amount?: string;
   recipients?: Array<{ address: string; amountLamports?: number }>;
   signature?: string;
-  mode?: "transfer" | "swap";
+  mode?: "transfer" | "swap" | "stake";
   swapOutputAmount?: string; // For swap mode: USDC amount to display
 }
 
@@ -216,8 +216,8 @@ export function TransactionStatus({
   mode = "transfer",
   swapOutputAmount,
 }: TransactionStatusProps) {
-  const baseConfig = statusConfig[status];
-  // Override descriptions for swap mode
+  const baseConfig = statusConfig[status] || statusConfig.error;
+  // Override descriptions for swap/stake mode
   const config = {
     ...baseConfig,
     description:
@@ -225,7 +225,11 @@ export function TransactionStatus({
         ? "SOL deposited privately"
         : mode === "swap" && status === "sent"
         ? "Swap completed successfully"
-        : baseConfig.description,
+        : mode === "stake" && status === "deposited"
+        ? "SOL deposited privately"
+        : mode === "stake" && status === "sent"
+        ? "Staking completed successfully"
+        : baseConfig?.description || "Processing...",
   };
   const Icon = config.icon;
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
@@ -526,10 +530,10 @@ export function TransactionStatus({
           <div className="bg-muted/50 rounded-lg p-4 space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">
-                {mode === "swap" ? "Swapping:" : "Amount:"}
+                {mode === "swap" ? "Swapping:" : mode === "stake" ? "Staking:" : "Amount:"}
               </span>
               <span className="font-medium">
-                {amount} {mode === "swap" ? "SOL → USDC" : "SOL"}
+                {amount} {mode === "swap" ? "SOL → USDC" : mode === "stake" ? "SOL → Stake" : "SOL"}
               </span>
             </div>
             {mode === "swap" && swapOutputAmount && (

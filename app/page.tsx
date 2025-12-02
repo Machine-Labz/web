@@ -400,6 +400,38 @@ export default function CloakLandingPage() {
                 >
                   {DAPP_AVAILABLE ? (
                     <Link
+                      href="/stake"
+                      className="block w-full sm:w-auto"
+                    >
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base border-primary/20 hover:bg-primary/5 bg-transparent text-foreground"
+                      >
+                        <TrendingUp className="mr-2 size-4" />
+                        Stake Privately
+                        <ChevronRight className="ml-2 size-4" />
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Button
+                      size="lg"
+                      disabled
+                      className="rounded-full w-full sm:w-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base bg-muted text-muted-foreground cursor-not-allowed"
+                    >
+                      <Lock className="mr-2 size-4" />
+                      Coming Soon
+                    </Button>
+                  )}
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: DAPP_AVAILABLE ? 1.05 : 1 }}
+                  whileTap={{ scale: DAPP_AVAILABLE ? 0.95 : 1 }}
+                  transition={{ duration: 0.2 }}
+                  className="w-full sm:w-auto"
+                >
+                  {DAPP_AVAILABLE ? (
+                    <Link
                       href="/transaction"
                       className="block w-full sm:w-auto"
                     >

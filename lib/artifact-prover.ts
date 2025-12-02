@@ -38,6 +38,9 @@ export interface SP1ProofInputs {
     recipient_ata: string;
     min_output_amount: number;
   } | null;
+  stakeParams?: {
+    stake_account: string;
+  } | null;
 }
 
 export interface SP1ProofResult {
@@ -57,9 +60,13 @@ export interface ArtifactConfig {
 
 /**
  * Default configuration
+ *
+ * NOTE: We currently use the legacy single-call `/api/prove` flow, which proxies
+ * to the indexer's `/api/v1/prove`. The TEE artifact endpoints on the indexer
+ * are not wired yet, so the artifact-based flow is disabled.
  */
 const DEFAULT_CONFIG: Required<ArtifactConfig> = {
-  apiUrl: "/api/tee", // Use Next.js server-side API route
+  apiUrl: "/api/prove",
   timeout: 5 * 60 * 1000, // 5 minutes
   pollInterval: 2000, // 2 seconds
   maxPollAttempts: 150, // 150 attempts * 2s = 5 minutes
@@ -85,7 +92,7 @@ export class SP1ArtifactProverClient {
   }
 
   /**
-   * Generate an SP1 ZK proof using artifact-based flow
+   * Generate an SP1 ZK proof using legacy single-call flow
    *
    * @param inputs The circuit inputs (private + public + outputs)
    * @returns Proof result with hex-encoded proof and public inputs
@@ -94,78 +101,55 @@ export class SP1ArtifactProverClient {
     const startTime = Date.now();
 
     try {
-      // Step 1: Create artifact and get upload URL
-      const artifactResponse = await fetch(`${this.config.apiUrl}/artifact`, {
+      // Build request body
+      const requestBody: any = {
+        private_inputs: JSON.stringify(inputs.privateInputs),
+        public_inputs: JSON.stringify(inputs.publicInputs),
+        outputs: JSON.stringify(inputs.outputs),
+      };
+
+      // Pass optional swap/stake params through for TEE
+      if (inputs.swapParams) {
+        requestBody.swap_params = inputs.swapParams;
+        console.log("[ArtifactProver] Including swap_params:", inputs.swapParams);
+      }
+      if (inputs.stakeParams) {
+        requestBody.stake_params = inputs.stakeParams;
+        console.log("[ArtifactProver] Including stake_params:", inputs.stakeParams);
+        console.log("[ArtifactProver] stake_params type:", typeof inputs.stakeParams);
+        console.log("[ArtifactProver] stake_params keys:", Object.keys(inputs.stakeParams));
+      }
+
+      // Log the full request body before stringifying
+      console.log("[ArtifactProver] Request body keys:", Object.keys(requestBody));
+      console.log("[ArtifactProver] Request body (stringified):", JSON.stringify(requestBody, null, 2));
+
+      // Legacy flow: single call to /api/prove (proxied to indexer /api/v1/prove)
+      const response = await fetch(this.config.apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          program_id: null, // Optional, can be set if needed
-        }),
+        body: JSON.stringify(requestBody),
       });
 
-      if (!artifactResponse.ok) {
-        const errorText = await artifactResponse.text();
+      if (!response.ok) {
+        const errorText = await response.text();
         throw new Error(
-          `Failed to create artifact: ${artifactResponse.status} ${artifactResponse.statusText}\n${errorText}`
+          `Failed to generate proof: ${response.status} ${response.statusText}\n${errorText}`
         );
       }
 
-      const artifactData = await artifactResponse.json();
-      const { artifact_id, upload_url } = artifactData;
+      const json = await response.json();
 
-      // Step 2: Prepare stdin data (combined private + public + outputs + optional swap_params)
-      const stdinPayload = JSON.stringify({
-        private: inputs.privateInputs,
-        public: inputs.publicInputs,
-        outputs: inputs.outputs,
-        ...(inputs.swapParams && { swap_params: inputs.swapParams }),
-      });
+      const proofResult: SP1ProofResult = {
+        success: !!json.success,
+        proof: json.proof,
+        publicInputs: json.public_inputs,
+        generationTimeMs: json.generation_time_ms ?? 0,
+        error: json.error,
+      };
 
-      // Step 3: Upload stdin via Next.js proxy (keeps INDEXER_URL private)
-      const uploadUrlProxy = `${this.config.apiUrl}/artifact/${artifact_id}/upload`;
-
-      const uploadResponse = await fetch(uploadUrlProxy, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: stdinPayload,
-      });
-
-      if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        throw new Error(
-          `Failed to upload stdin: ${uploadResponse.status} ${uploadResponse.statusText}\n${errorText}`
-        );
-      }
-
-      // Step 4: Request proof generation
-      const proofRequestResponse = await fetch(`${this.config.apiUrl}/request-proof`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          artifact_id,
-          program_id: null, // Optional
-          public_inputs: JSON.stringify(inputs.publicInputs),
-        }),
-      });
-
-      if (!proofRequestResponse.ok) {
-        const errorText = await proofRequestResponse.text();
-        throw new Error(
-          `Failed to request proof: ${proofRequestResponse.status} ${proofRequestResponse.statusText}\n${errorText}`
-        );
-      }
-
-      const proofRequestData = await proofRequestResponse.json();
-      const { request_id } = proofRequestData;
-
-      // Step 5: Poll for proof status
-      const proofResult = await this.pollProofStatus(request_id);
       const totalTime = Date.now() - startTime;
 
       return {
