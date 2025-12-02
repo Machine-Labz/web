@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { Buffer } from "buffer";
 import { blake3 } from "@noble/hashes/blake3.js";
 import { indexerClient, type MerkleProof } from "@/lib/indexer-client";
-import { SP1ProofInputs, type SP1ProofResult } from "@/lib/sp1-prover";
+import { SP1ProofInputs, type SP1ProofResult } from "@/lib/artifact-prover";
 import { useSP1Prover } from "@/hooks/use-sp1-prover";
 import {
   parseNote,

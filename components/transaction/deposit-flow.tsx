@@ -26,7 +26,6 @@ import {
 import { getShieldPoolPDAs } from "@/lib/pda";
 import { encryptNoteForRecipient, type NoteData } from "@/lib/keys";
 import { parseTransactionError, hasSufficientBalance } from "@/lib/program-errors";
-import { indexerClient } from "@/lib/indexer-client";
 
 const PROGRAM_ID = process.env.NEXT_PUBLIC_PROGRAM_ID;
 if (!PROGRAM_ID) {
@@ -138,51 +137,7 @@ export default function DepositFlow() {
         throw simError;
       }
       
-      // 🚀 PHASE 1: Prepare deposit (atomic - ensures root is on-chain BEFORE sending transaction)
-      toast.info("Preparing deposit (ensuring root is on-chain)...");
-      
-      // Serialize unsigned transaction to base64
-      const txBytes = depositTx.serialize({
-        requireAllSignatures: false,
-        verifySignatures: false,
-      });
-      const txBytesBase64 = Buffer.from(txBytes).toString('base64');
-      
-      // Get wallet's public view key for self-encryption
-      const publicViewKey = getPublicViewKey();
-      const pvkBytes = Buffer.from(publicViewKey, "hex");
-      
-      // Prepare note data
-      const noteData: NoteData = {
-        amount: note.amount,
-        r: note.r,
-        sk_spend: note.sk_spend,
-        commitment: note.commitment,
-      };
-      
-      // Encrypt note data using public view key (so we can scan it later)
-      const encryptedNote = encryptNoteForRecipient(noteData, pvkBytes);
-      
-      // Encode encrypted note as base64 JSON
-      const encryptedOutput = btoa(JSON.stringify(encryptedNote));
-      
-      // Call indexer prepare endpoint - this will allocate index, process, and push root on-chain
-      // If this fails, the transaction is NOT sent, so user funds are safe
-      let preparedDepositId: string;
-      try {
-        const prepareResponse = await indexerClient.prepareDeposit(
-          txBytesBase64,
-          note.commitment,
-          encryptedOutput
-        );
-        preparedDepositId = prepareResponse.prepared_deposit_id;
-        toast.success(`Deposit prepared! Root is on-chain. Leaf index: ${prepareResponse.leafIndex}`);
-      } catch (prepareError: any) {
-        toast.error(`Failed to prepare deposit: ${prepareError.message}`);
-        throw new Error(`Deposit preparation failed: ${prepareError.message}. Transaction was NOT sent - your funds are safe.`);
-      }
-      
-      // 🚀 PHASE 2: Sign and send transaction (only after prepare succeeds)
+      // 🚀 PHASE 1: Sign and send transaction
       toast.info("Please approve the transaction...");
       
       const signature = await sendTransaction(depositTx, connection, {
@@ -229,25 +184,51 @@ export default function DepositFlow() {
         throw new Error("Transaction confirmation timeout");
       }
 
-      // 🚀 PHASE 3: Confirm deposit (update with transaction signature)
-      toast.info("Confirming deposit...");
+      // 🚀 PHASE 2: Finalize deposit (register with indexer and get Merkle proof)
+      // console.log("📡 Calling server-side finalization endpoint...");
       
-      // Get transaction slot
-      const txDetails = await connection.getTransaction(signature, {
-        commitment: "confirmed",
-        maxSupportedTransactionVersion: 0,
+      // Get wallet's public view key for self-encryption
+      const publicViewKey = getPublicViewKey();
+      const pvkBytes = Buffer.from(publicViewKey, "hex");
+      
+      // Prepare note data
+      const noteData: NoteData = {
+        amount: note.amount,
+        r: note.r,
+        sk_spend: note.sk_spend,
+        commitment: note.commitment,
+      };
+      
+      // Encrypt note data using public view key (so we can scan it later)
+      const encryptedNote = encryptNoteForRecipient(noteData, pvkBytes);
+      
+      // Encode encrypted note as base64 JSON
+      const encryptedOutput = btoa(JSON.stringify(encryptedNote));
+
+      // Call server-side finalization endpoint (handles all critical operations)
+      const finalizePayload = {
+        tx_signature: signature,
+        commitment: note.commitment,
+        encrypted_output: encryptedOutput,
+      };
+
+      // console.log("📡 Finalizing deposit via server-side endpoint...");
+      toast.info("Registering deposit...");
+
+      const finalizeResponse = await fetch("/api/deposit/finalize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(finalizePayload),
       });
-      const slot = txDetails?.slot ?? 0;
-      
-      // Call indexer confirm endpoint to update the pending deposit with the actual signature
-      try {
-        await indexerClient.confirmDeposit(preparedDepositId, signature, slot);
-        toast.success("Deposit confirmed successfully!");
-      } catch (confirmError: any) {
-        // This is less critical - the deposit is already on-chain and root is already pushed
-        // But we should still log the error
-        toast.warning(`Deposit transaction succeeded but confirmation failed: ${confirmError.message}. The deposit may need manual recovery.`);
-        console.error("Deposit confirmation error:", confirmError);
+
+      if (!finalizeResponse.ok) {
+        const errorText = await finalizeResponse.text();
+        // console.error("❌ Finalization error:", errorText);
+        
+        // Save the signature for manual recovery
+        // console.warn("⚠️ Deposit may need manual recovery. Transaction:", signature);
+        
+        throw new Error(`Failed to finalize deposit: ${errorText}\n\nTransaction signature: ${signature}\n\nYou can recover this deposit later using the transaction signature.`);
       }
 
       const finalizeData = await finalizeResponse.json();

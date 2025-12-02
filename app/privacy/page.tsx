@@ -41,7 +41,7 @@ import {
 } from "@/lib/note-manager";
 import { getShieldPoolPDAs } from "@/lib/pda";
 import { useSP1Prover } from "@/hooks/use-sp1-prover";
-import { SP1ProofInputs, SP1ProofResult } from "@/lib/sp1-prover";
+import { SP1ProofInputs, SP1ProofResult } from "@/lib/artifact-prover";
 import { blake3 } from "@noble/hashes/blake3.js";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
 import { Buffer } from "buffer";

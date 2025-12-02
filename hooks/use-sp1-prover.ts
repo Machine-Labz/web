@@ -1,14 +1,16 @@
 import { useState, useCallback, useEffect } from 'react';
 import { 
-  SP1ProverClient, 
+  SP1ArtifactProverClient, 
   SP1ProofInputs, 
   SP1ProofResult,
-  defaultProver 
-} from '@/lib/sp1-prover';
+  defaultArtifactProver 
+} from '@/lib/artifact-prover';
 
 export interface UseProverOptions {
-  apiUrl?: string; // Optional API URL override (defaults to /api/prove)
+  apiUrl?: string; // Optional API URL override (defaults to /api/tee)
   timeout?: number;
+  pollInterval?: number; // Polling interval in milliseconds (default: 2 seconds)
+  maxPollAttempts?: number; // Maximum polling attempts (default: 150)
   onStart?: () => void;
   onSuccess?: (result: SP1ProofResult) => void;
   onError?: (error: string) => void;
@@ -45,9 +47,14 @@ export interface UseProverState {
  */
 export function useSP1Prover(options: UseProverOptions = {}) {
   const [prover] = useState(() => 
-    options.apiUrl 
-      ? new SP1ProverClient({ apiUrl: options.apiUrl, timeout: options.timeout })
-      : defaultProver
+    options.apiUrl || options.timeout || options.pollInterval || options.maxPollAttempts
+      ? new SP1ArtifactProverClient({ 
+          apiUrl: options.apiUrl, 
+          timeout: options.timeout,
+          pollInterval: options.pollInterval,
+          maxPollAttempts: options.maxPollAttempts,
+        })
+      : defaultArtifactProver
   );
 
   const [state, setState] = useState<UseProverState>({
@@ -138,8 +145,19 @@ export function useSP1Prover(options: UseProverOptions = {}) {
     });
   }, []);
 
-  const healthCheck = useCallback(() => {
-    return prover.healthCheck();
+  // Note: SP1ArtifactProverClient doesn't have healthCheck method
+  // You can check artifact endpoint health directly if needed
+  const healthCheck = useCallback(async () => {
+    try {
+      const response = await fetch(`${prover.getApiUrl()}/artifact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
   }, [prover]);
 
   return {
