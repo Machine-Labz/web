@@ -23,6 +23,13 @@ const RPC_URL = process.env.SOLANA_RPC_URL;
 if (!RPC_URL) {
   // console.error('[Deposit Finalize] Missing RPC_URL environment variable');
 }
+// Optional RPC API key for authenticated endpoints
+// Supports multiple authentication methods:
+// - SOLANA_RPC_API_KEY: Bearer token (for Helius, etc.)
+// - SOLANA_RPC_API_KEY_HEADER: Custom header name (default: 'Authorization')
+// - Some providers embed API key in URL (handled automatically)
+const RPC_API_KEY = process.env.SOLANA_RPC_API_KEY;
+const RPC_API_KEY_HEADER = process.env.SOLANA_RPC_API_KEY_HEADER || 'Authorization';
 
 interface FinalizeDepositRequest {
   tx_signature: string;
@@ -98,7 +105,28 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Step 1: Verify transaction on-chain
     // console.log('[Deposit Finalize] Step 1: Verifying transaction on-chain...');
-    const connection = new Connection(RPC_URL, 'confirmed');
+    
+    // Create custom fetch function with headers if API key is provided
+    // Supports different authentication methods based on header name
+    const fetchWithHeaders = RPC_API_KEY
+      ? async (input: RequestInfo | URL, init?: RequestInit) => {
+          const headers = new Headers(init?.headers);
+          // Support different header formats
+          if (RPC_API_KEY_HEADER.toLowerCase() === 'authorization') {
+            headers.set('Authorization', `Bearer ${RPC_API_KEY}`);
+          } else if (RPC_API_KEY_HEADER.toLowerCase() === 'x-api-key') {
+            headers.set('x-api-key', RPC_API_KEY);
+          } else {
+            headers.set(RPC_API_KEY_HEADER, RPC_API_KEY);
+          }
+          return fetch(input, { ...init, headers });
+        }
+      : fetch;
+    
+    const connection = new Connection(RPC_URL, {
+      commitment: 'confirmed',
+      fetch: fetchWithHeaders,
+    });
     
     let txDetails;
     let slot: number | undefined;
@@ -142,8 +170,28 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         // console.log(`[Deposit Finalize] Waiting for confirmation (${attempts + 1}/${maxAttempts})...`);
         await new Promise((resolve) => setTimeout(resolve, 2000));
         attempts++;
-      } catch (error) {
+      } catch (error: any) {
         // console.error('[Deposit Finalize] Error checking transaction status:', error);
+        
+        // Check for RPC blocking/authentication errors
+        if (error?.message?.includes('403') || error?.message?.includes('blocked') || error?.message?.includes('Forbidden')) {
+          const errorDetails = {
+            success: false,
+            error: `RPC endpoint blocked or requires authentication.`,
+            details: error.message,
+            troubleshooting: {
+              rpc_url_configured: !!RPC_URL,
+              api_key_configured: !!RPC_API_KEY,
+              suggestions: [
+                !RPC_API_KEY ? 'Set SOLANA_RPC_API_KEY environment variable if your RPC provider requires authentication' : null,
+                'Check if your RPC provider requires IP whitelisting',
+                'Verify SOLANA_RPC_URL is correct and accessible',
+                'Try using a different RPC provider (Helius, QuickNode, Alchemy, etc.)',
+              ].filter(Boolean),
+            },
+          };
+          return NextResponse.json(errorDetails, { status: 403 });
+        }
         
         if (attempts >= maxAttempts - 1) {
           throw error;
@@ -399,6 +447,9 @@ export async function GET() {
       { status: 500 }
     );
   }
+  
+  const RPC_API_KEY = process.env.SOLANA_RPC_API_KEY;
+  const RPC_API_KEY_HEADER = process.env.SOLANA_RPC_API_KEY_HEADER || 'Authorization';
 
   try {
     // Check indexer health
@@ -407,7 +458,24 @@ export async function GET() {
     });
 
     // Check RPC health
-    const connection = new Connection(RPC_URL, 'confirmed');
+    const fetchWithHeaders = RPC_API_KEY
+      ? async (input: RequestInfo | URL, init?: RequestInit) => {
+          const headers = new Headers(init?.headers);
+          if (RPC_API_KEY_HEADER.toLowerCase() === 'authorization') {
+            headers.set('Authorization', `Bearer ${RPC_API_KEY}`);
+          } else if (RPC_API_KEY_HEADER.toLowerCase() === 'x-api-key') {
+            headers.set('x-api-key', RPC_API_KEY);
+          } else {
+            headers.set(RPC_API_KEY_HEADER, RPC_API_KEY);
+          }
+          return fetch(input, { ...init, headers });
+        }
+      : fetch;
+    
+    const connection = new Connection(RPC_URL, {
+      commitment: 'confirmed',
+      fetch: fetchWithHeaders,
+    });
     const slot = await connection.getSlot();
 
     return NextResponse.json({
