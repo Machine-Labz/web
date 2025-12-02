@@ -233,7 +233,7 @@ export function TransactionStatus({
   // Helper to render icon (handles both regular icons and animated components)
   const renderIcon = () => {
     // Check if Icon is a function (animated component)
-    if (typeof Icon === 'function' && Icon.length === 0) {
+    if (typeof Icon === "function" && Icon.length === 0) {
       return <Icon />;
     }
     // Regular icon component
@@ -350,14 +350,12 @@ export function TransactionStatus({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div>
-            <div className="flex items-center gap-2">
-            <div className={`${config.textColor}`}>
-              {renderIcon()}
-            </div>
-              <h3 className={`font-semibold ${config.textColor}`}>
-                {config.label}
-              </h3>
-            </div>
+              <div className="flex items-center gap-2">
+                <div className={`${config.textColor}`}>{renderIcon()}</div>
+                <h3 className={`font-semibold ${config.textColor}`}>
+                  {config.label}
+                </h3>
+              </div>
               <p className="text-sm text-muted-foreground">
                 {config.description}
               </p>
@@ -428,11 +426,11 @@ export function TransactionStatus({
                 transition={{ duration: 0.5 }}
               >
                 <div className="relative w-12 h-12 flex items-center justify-center">
-                  {/* Rotating border - only rotates during generating_proof */}
+                  {/* Rotating border - rotates when in privacy zone */}
                   <motion.div
                     className="absolute inset-0 rounded-full border-2 border-dashed border-primary/50"
                     animate={
-                      status === "generating_proof"
+                      animationState.showZone
                         ? {
                             rotate: 360,
                           }
@@ -440,7 +438,7 @@ export function TransactionStatus({
                     }
                     transition={{
                       duration: 2,
-                      repeat: status === "generating_proof" ? Infinity : 0,
+                      repeat: animationState.showZone ? Infinity : 0,
                       ease: "linear",
                     }}
                   />
@@ -512,11 +510,13 @@ export function TransactionStatus({
                 <span className="text-xs text-muted-foreground">
                   {mode === "swap" ? `USDC` : "Destination"}
                 </span>
-                {mode === "swap" && swapOutputAmount && animationState.showDestination && (
-                  <span className="text-xs font-medium text-primary mt-1">
-                    {swapOutputAmount}
-                  </span>
-                )}
+                {mode === "swap" &&
+                  swapOutputAmount &&
+                  animationState.showDestination && (
+                    <span className="text-xs font-medium text-primary mt-1">
+                      {swapOutputAmount}
+                    </span>
+                  )}
               </motion.div>
             </div>
           </div>
@@ -541,16 +541,24 @@ export function TransactionStatus({
               </div>
             )}
             <div className="space-y-2">
-              <span className="text-muted-foreground text-xs uppercase">Recipients</span>
+              <span className="text-muted-foreground text-xs uppercase">
+                Recipients
+              </span>
               <div className="space-y-2">
                 {recipients.map((entry, idx) => {
                   // For swap mode, show USDC amount; for transfer mode, show SOL amount
-                  const formatted = mode === "swap" && swapOutputAmount
-                    ? `${swapOutputAmount} USDC`
-                    : entry.amountLamports !== undefined
-                    ? `${(entry.amountLamports / LAMPORTS_PER_SOL).toFixed(9)} SOL`
-                    : undefined;
-                  const display = `${entry.address.slice(0, 8)}...${entry.address.slice(-8)}`;
+                  const formatted =
+                    mode === "swap" && swapOutputAmount
+                      ? `${swapOutputAmount} USDC`
+                      : entry.amountLamports !== undefined
+                      ? `${(entry.amountLamports / LAMPORTS_PER_SOL).toFixed(
+                          9
+                        )} SOL`
+                      : undefined;
+                  const display = `${entry.address.slice(
+                    0,
+                    8
+                  )}...${entry.address.slice(-8)}`;
                   const copyKey = `recipient-${idx}`;
                   return (
                     <div
@@ -559,7 +567,9 @@ export function TransactionStatus({
                     >
                       <div className="flex items-center gap-2">
                         <a
-                          href={`https://solscan.io/account/${entry.address}?cluster=${getCluster()}`}
+                          href={`https://solscan.io/account/${
+                            entry.address
+                          }?cluster=${getCluster()}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-primary hover:underline"
@@ -567,7 +577,9 @@ export function TransactionStatus({
                           {display}
                         </a>
                         <button
-                          onClick={() => copyToClipboard(entry.address, copyKey)}
+                          onClick={() =>
+                            copyToClipboard(entry.address, copyKey)
+                          }
                           className="p-1 hover:bg-muted rounded transition-colors"
                           title="Copy full address"
                         >
@@ -579,7 +591,13 @@ export function TransactionStatus({
                         </button>
                       </div>
                       {formatted && (
-                        <span className={mode === "swap" ? "text-green-600 dark:text-green-400 font-medium" : ""}>
+                        <span
+                          className={
+                            mode === "swap"
+                              ? "text-green-600 dark:text-green-400 font-medium"
+                              : ""
+                          }
+                        >
                           {formatted}
                         </span>
                       )}
