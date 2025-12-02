@@ -67,7 +67,7 @@ export default function PrivacyPage() {
   const { connection } = useConnection();
 
   // Mode toggle
-  const [mode, setMode] = useState<TransactionMode>("swap");
+  const [mode, setMode] = useState<TransactionMode>("send");
 
   // Common state
   const [amount, setAmount] = useState("");
@@ -909,17 +909,6 @@ export default function PrivacyPage() {
               <div className="flex justify-center mb-6">
                 <div className="inline-flex bg-slate-900/80 rounded-full p-1 border border-slate-700/50">
                   <button
-                    onClick={() => setMode("swap")}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
-                      mode === "swap"
-                        ? "bg-white text-[#31146F]"
-                        : "text-slate-400 hover:text-white"
-                    }`}
-                  >
-                    <Shuffle className="w-4 h-4" />
-                    Swap
-                  </button>
-                  <button
                     onClick={() => setMode("send")}
                     className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
                       mode === "send"
@@ -929,6 +918,17 @@ export default function PrivacyPage() {
                   >
                     <Send className="w-4 h-4" />
                     Send
+                  </button>
+                  <button
+                    onClick={() => setMode("swap")}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
+                      mode === "swap"
+                        ? "bg-white text-[#31146F]"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    <Shuffle className="w-4 h-4" />
+                    Swap
                   </button>
                 </div>
               </div>
@@ -1677,7 +1677,6 @@ export default function PrivacyPage() {
                         })()
                       : undefined
                   }
-                  swapOutputToken={mode === "swap" ? outputToken : undefined}
                 />
               </motion.div>
             </motion.div>
