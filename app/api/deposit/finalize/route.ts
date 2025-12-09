@@ -294,7 +294,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         merkleProofResponse = await fetch(
           `${INDEXER_URL}/api/v1/merkle/proof/${leafIndex}`,
           {
-            signal: AbortSignal.timeout(10000), // 10 second timeout
+            signal: AbortSignal.timeout(30000), // 30 second timeout (increased from 10s)
           }
         );
 
@@ -308,14 +308,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         
         proofAttempts++;
         if (proofAttempts < maxProofAttempts) {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait 2s between retries
         }
-      } catch (error) {
+      } catch (error: any) {
         // console.error('[Deposit Finalize] Error fetching Merkle proof:', error);
-        proofAttempts++;
         
+        // If timeout, wait longer before retrying
+        if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+          console.warn(`[Deposit Finalize] Merkle proof fetch timed out, attempt ${proofAttempts + 1}/${maxProofAttempts}`);
+        }
+        
+        proofAttempts++;
         if (proofAttempts < maxProofAttempts) {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait 2s between retries
         }
       }
     }
@@ -343,6 +348,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       path_indices: merkleProofData.pathIndices ?? merkleProofData.path_indices,
     };
 
+    // Use root from Merkle proof response (matches the proof), not from deposit response
+    // The Merkle proof root corresponds to the tree state when the proof was generated
+    const merkleProofRoot = merkleProofData.root ?? root;
+
     // Step 4: Return success with all data
     const totalTime = Date.now() - startTime;
     // console.log('[Deposit Finalize] ✅ Finalization complete in', totalTime, 'ms');
@@ -350,7 +359,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const response: FinalizeDepositResponse = {
       success: true,
       leaf_index: leafIndex,
-      root: root,
+      root: merkleProofRoot, // Use root from Merkle proof, not deposit response
       merkle_proof: merkleProof,
       slot: slot,
     };

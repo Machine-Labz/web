@@ -22,13 +22,13 @@ export interface SP1ProofInputs {
       path_elements: string[];
       path_indices: number[];
     };
-  };
+  } | string; // Can also be JSON string
   publicInputs: {
     root: string;
     nf: string;
     outputs_hash: string;
     amount: number;
-  };
+  } | string; // Can also be JSON string
   outputs: Array<{
     address: string;
     amount: number;
@@ -40,6 +40,11 @@ export interface SP1ProofInputs {
   } | null;
   stakeParams?: {
     stake_account: string;
+  } | null;
+  unstakeParams?: {
+    stake_account: string;
+    r: string;
+    sk_spend: string;
   } | null;
 }
 
@@ -101,14 +106,24 @@ export class SP1ArtifactProverClient {
     const startTime = Date.now();
 
     try {
+      // Normalize private/public inputs: accept object or pre-stringified JSON
+      const privateInputsStr =
+        typeof inputs.privateInputs === "string"
+          ? inputs.privateInputs
+          : JSON.stringify(inputs.privateInputs);
+      const publicInputsStr =
+        typeof inputs.publicInputs === "string"
+          ? inputs.publicInputs
+          : JSON.stringify(inputs.publicInputs);
+
       // Build request body
       const requestBody: any = {
-        private_inputs: JSON.stringify(inputs.privateInputs),
-        public_inputs: JSON.stringify(inputs.publicInputs),
+        private_inputs: privateInputsStr,
+        public_inputs: publicInputsStr,
         outputs: JSON.stringify(inputs.outputs),
       };
 
-      // Pass optional swap/stake params through for TEE
+      // Pass optional swap/stake/unstake params through for TEE
       if (inputs.swapParams) {
         requestBody.swap_params = inputs.swapParams;
         console.log("[ArtifactProver] Including swap_params:", inputs.swapParams);
@@ -118,6 +133,10 @@ export class SP1ArtifactProverClient {
         console.log("[ArtifactProver] Including stake_params:", inputs.stakeParams);
         console.log("[ArtifactProver] stake_params type:", typeof inputs.stakeParams);
         console.log("[ArtifactProver] stake_params keys:", Object.keys(inputs.stakeParams));
+      }
+      if (inputs.unstakeParams) {
+        requestBody.unstake_params = inputs.unstakeParams;
+        console.log("[ArtifactProver] Including unstake_params:", inputs.unstakeParams);
       }
 
       // Log the full request body before stringifying
