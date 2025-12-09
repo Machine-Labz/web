@@ -56,6 +56,7 @@ import { WalletGuard } from "@/components/wallet-guard";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { ClientOnly } from "@/components/client-only";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type TransactionMode = "swap" | "send";
 
@@ -83,6 +84,7 @@ export default function PrivacyPage() {
   const [outputTokenBalance, setOutputTokenBalance] = useState<number | null>(
     null
   );
+  const [isTokenBalanceLoading, setIsTokenBalanceLoading] = useState(false);
   const [quoteOutAmount, setQuoteOutAmount] = useState<number | null>(null);
   const [quoteMinOut, setQuoteMinOut] = useState<number | null>(null);
   const [isQuoteLoading, setIsQuoteLoading] = useState(false);
@@ -119,6 +121,7 @@ export default function PrivacyPage() {
     if (!connected || !publicKey || !connection) {
       setSolBalance(null);
       setOutputTokenBalance(null);
+      setIsTokenBalanceLoading(false);
       return;
     }
     (async () => {
@@ -127,9 +130,11 @@ export default function PrivacyPage() {
         if (!token) {
           setSolBalance(null);
           setOutputTokenBalance(null);
+          setIsTokenBalanceLoading(false);
           return;
         }
 
+        setIsTokenBalanceLoading(true);
         const [sol, ata] = await Promise.all([
           connection.getBalance(publicKey),
           getAssociatedTokenAddress(token.mint, publicKey).catch(() => null),
@@ -148,6 +153,8 @@ export default function PrivacyPage() {
       } catch {
         setSolBalance(null);
         setOutputTokenBalance(null);
+      } finally {
+        setIsTokenBalanceLoading(false);
       }
     })();
   }, [connected, publicKey, connection, outputToken]);
@@ -910,22 +917,20 @@ export default function PrivacyPage() {
                 <div className="inline-flex bg-slate-900/80 rounded-full p-1 border border-slate-700/50">
                   <button
                     onClick={() => setMode("send")}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
-                      mode === "send"
-                        ? "bg-white text-[#31146F]"
-                        : "text-slate-400 hover:text-white"
-                    }`}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 ${mode === "send"
+                      ? "bg-white text-[#31146F]"
+                      : "text-slate-400 hover:text-white"
+                      }`}
                   >
                     <Send className="w-4 h-4" />
                     Send
                   </button>
                   <button
                     onClick={() => setMode("swap")}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
-                      mode === "swap"
-                        ? "bg-white text-[#31146F]"
-                        : "text-slate-400 hover:text-white"
-                    }`}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 ${mode === "swap"
+                      ? "bg-white text-[#31146F]"
+                      : "text-slate-400 hover:text-white"
+                      }`}
                   >
                     <Shuffle className="w-4 h-4" />
                     Swap
@@ -939,63 +944,7 @@ export default function PrivacyPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 shadow-2xl"
               >
-                {/* Token Selector (for Send mode) */}
-                {mode === "send" && (
-                  <div className="mb-4">
-                    <Label className="text-sm font-semibold text-slate-400 mb-3 block">
-                      Select Token
-                    </Label>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          /* SOL is default */
-                        }}
-                        className="inline-flex items-center gap-2 rounded-full border border-[#31146F] text-[#A855F7] bg-[#31146F]/10 px-4 py-2 text-sm font-medium transition-colors"
-                      >
-                        <SOLIcon className="w-5 h-5" />
-                        <span>SOL • Solana</span>
-                      </button>
-                      <button
-                        type="button"
-                        disabled
-                        className="inline-flex items-center gap-2 rounded-full border border-slate-700 text-slate-500 bg-transparent px-4 py-2 text-sm font-medium opacity-50 cursor-not-allowed"
-                      >
-                        <USDCIcon className="w-5 h-5" />
-                        <span>USDC (soon)</span>
-                      </button>
-                      <button
-                        type="button"
-                        disabled
-                        className="inline-flex items-center gap-2 rounded-full border border-slate-700 text-slate-500 bg-transparent px-4 py-2 text-sm font-medium opacity-50 cursor-not-allowed"
-                      >
-                        <ZCashIcon className="w-5 h-5" />
-                        <span>ZCash (soon)</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
 
-                {/* Balance Display */}
-                <div className="flex items-center justify-between text-xs text-slate-500 mb-4">
-                  <span>
-                    {solBalance !== null
-                      ? `${(solBalance / LAMPORTS_PER_SOL).toFixed(4)} SOL`
-                      : "Connect wallet"}
-                  </span>
-                  {mode === "swap" && outputTokenBalance !== null && (
-                    <span>
-                      {(() => {
-                        const token = getTokenBySymbol(outputToken);
-                        if (!token) return "";
-                        return `${(
-                          outputTokenBalance /
-                          10 ** token.decimals
-                        ).toFixed(4)} ${token.symbol}`;
-                      })()}
-                    </span>
-                  )}
-                </div>
 
                 {/* Amount Input */}
                 <div className="bg-slate-800/50 rounded-xl p-4 mb-4 border border-slate-700/30">
@@ -1063,9 +1012,8 @@ export default function PrivacyPage() {
                       }}
                       placeholder="0.00"
                       disabled={!connected || isLoading}
-                      className={`flex-1 text-2xl font-bold bg-transparent border-none px-0 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 outline-none ring-0 ${
-                        hasInsufficientBalance ? "text-red-400" : "text-white"
-                      }`}
+                      className={`flex-1 !text-2xl font-bold bg-transparent border-none px-0 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 outline-none ring-0 ${hasInsufficientBalance ? "text-red-400" : "text-white"
+                        }`}
                     />
                     <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-700/50">
                       <SOLIcon className="w-5 h-5" />
@@ -1078,25 +1026,34 @@ export default function PrivacyPage() {
                     </p>
                   )}
                 </div>
+                {/* Balance Display */}
+                {connected && publicKey && solBalance !== null && (
+                  <div className="flex items-center justify-end text-xs text-slate-500 my-4">
+                    <span>
+                      {`${(solBalance / LAMPORTS_PER_SOL).toFixed(4)} SOL`}
+                    </span>
+                  </div>
+                )}
 
                 {/* Swap Mode: Output Token Selection & Recipient */}
                 {mode === "swap" && (
                   <>
                     {/* Output Token Selection */}
                     <div className="mb-4">
-                      <Label className="text-sm font-semibold text-slate-400 mb-3 block">
-                        Select Output Token
-                      </Label>
+                      <div className="flex items-center justify-between mb-3">
+                        <Label className="text-sm font-semibold text-slate-400 block">
+                          Select Output Token
+                        </Label>
+                      </div>
                       <div className="flex flex-wrap items-center gap-2">
                         <button
                           type="button"
                           onClick={() => setOutputToken("USDC")}
                           disabled={isLoading}
-                          className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                            outputToken === "USDC"
-                              ? "border-[#31146F] text-[#A855F7] bg-[#31146F]/10"
-                              : "border-slate-700 text-slate-400 bg-transparent hover:border-slate-600 hover:text-slate-300"
-                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                          className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${outputToken === "USDC"
+                            ? "border-[#31146F] text-[#A855F7] bg-[#31146F]/10"
+                            : "border-slate-700 text-slate-400 bg-transparent hover:border-slate-600 hover:text-slate-300"
+                            } disabled:opacity-50 disabled:cursor-not-allowed`}
                         >
                           <USDCIcon className="w-5 h-5" />
                           <span>USDC</span>
@@ -1105,11 +1062,10 @@ export default function PrivacyPage() {
                           type="button"
                           onClick={() => setOutputToken("ZEC")}
                           disabled={isLoading}
-                          className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                            outputToken === "ZEC"
-                              ? "border-[#31146F] text-[#A855F7] bg-[#31146F]/10"
-                              : "border-slate-700 text-slate-400 bg-transparent hover:border-slate-600 hover:text-slate-300"
-                          } disabled:opacity-50 disabled:cursor-not-allowed`}
+                          className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${outputToken === "ZEC"
+                            ? "border-[#31146F] text-[#A855F7] bg-[#31146F]/10"
+                            : "border-slate-700 text-slate-400 bg-transparent hover:border-slate-600 hover:text-slate-300"
+                            } disabled:opacity-50 disabled:cursor-not-allowed`}
                         >
                           <ZCashIcon className="w-5 h-5" />
                           <span>ZCash</span>
@@ -1123,19 +1079,21 @@ export default function PrivacyPage() {
                         <span>Receive (est.)</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="flex-1 text-2xl font-bold text-white">
-                          {isQuoteLoading
-                            ? "..."
-                            : quoteOutAmount !== null
-                            ? (() => {
-                                const token = getTokenBySymbol(outputToken);
-                                if (!token) return "0";
-                                return (
-                                  quoteOutAmount /
-                                  10 ** token.decimals
-                                ).toFixed(6);
-                              })()
-                            : "0.00"}
+                        <div className="flex-1 text-4xl font-bold text-white">
+                          {isQuoteLoading ? (
+                            <Skeleton className="h-10 w-32 bg-slate-700/50" />
+                          ) : quoteOutAmount !== null ? (
+                            (() => {
+                              const token = getTokenBySymbol(outputToken);
+                              if (!token) return "0";
+                              return (
+                                quoteOutAmount /
+                                10 ** token.decimals
+                              ).toFixed(6);
+                            })()
+                          ) : (
+                            "0.00"
+                          )}
                         </div>
                         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-700/50">
                           {outputToken === "USDC" ? (
@@ -1147,23 +1105,29 @@ export default function PrivacyPage() {
                         </div>
                       </div>
                     </div>
+                      {/* Output Token Balance Display */}
+                      {connected && publicKey && (
+                        <div className="flex items-center justify-end text-xs text-slate-500 mt-2">
+                          {isTokenBalanceLoading ? (
+                            <Skeleton className="h-4 w-24 bg-slate-700/50" />
+                          ) : outputTokenBalance !== null ? (
+                            <span>
+                              {(() => {
+                                const token = getTokenBySymbol(outputToken);
+                                if (!token) return "0";
+                                return `${(outputTokenBalance / 10 ** token.decimals).toFixed(4)} ${outputToken}`;
+                              })()}
+                            </span>
+                          ) : null}
+                        </div>
+                      )}
 
                     {/* Swap Recipient */}
-                    <div className="mb-4">
+                    <div className="my-4">
                       <div className="flex items-center justify-between mb-2">
                         <Label className="text-sm text-slate-400">
                           Recipient Address
                         </Label>
-                        {connected && publicKey && (
-                          <button
-                            onClick={() =>
-                              setSwapRecipient(publicKey.toBase58())
-                            }
-                            className="text-xs text-[#31146F] hover:text-[#5d2ba3]"
-                          >
-                            Use my wallet
-                          </button>
-                        )}
                       </div>
                       <Input
                         value={swapRecipient}
@@ -1232,23 +1196,23 @@ export default function PrivacyPage() {
                             <span className="text-slate-400">
                               {swapRecipient
                                 ? `${swapRecipient.slice(
-                                    0,
-                                    4
-                                  )}...${swapRecipient.slice(-4)}`
+                                  0,
+                                  4
+                                )}...${swapRecipient.slice(-4)}`
                                 : "Not set"}
                             </span>
                             <span className="text-slate-300 font-mono">
                               {quoteOutAmount !== null
                                 ? (() => {
-                                    const token = getTokenBySymbol(outputToken);
-                                    if (!token) return "0";
-                                    return (
-                                      (
-                                        quoteOutAmount /
-                                        10 ** token.decimals
-                                      ).toFixed(6) + ` ${outputToken}`
-                                    );
-                                  })()
+                                  const token = getTokenBySymbol(outputToken);
+                                  if (!token) return "0";
+                                  return (
+                                    (
+                                      quoteOutAmount /
+                                      10 ** token.decimals
+                                    ).toFixed(6) + ` ${outputToken}`
+                                  );
+                                })()
                                 : `0 ${outputToken}`}
                             </span>
                           </div>
@@ -1309,11 +1273,10 @@ export default function PrivacyPage() {
                                 }}
                                 placeholder="Solana address..."
                                 disabled={!connected || isLoading}
-                                className={`bg-slate-700/30 border-slate-600/30 font-mono text-sm focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-                                  hasAddressError
-                                    ? "border-red-500/50 focus:border-red-500"
-                                    : ""
-                                }`}
+                                className={`bg-slate-700/30 border-slate-600/30 font-mono text-sm focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${hasAddressError
+                                  ? "border-red-500/50 focus:border-red-500"
+                                  : ""
+                                  }`}
                               />
                               {hasAddressError && (
                                 <p className="text-xs text-red-400 mt-1">
@@ -1378,15 +1341,13 @@ export default function PrivacyPage() {
                                     isLoading ||
                                     recipients.length === 1
                                   }
-                                  className={`flex-1 bg-slate-700/30 border-slate-600/30 text-sm focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-                                    hasAmountError
-                                      ? "border-red-500/50 focus:border-red-500"
-                                      : ""
-                                  } ${
-                                    recipients.length === 1
+                                  className={`flex-1 bg-slate-700/30 border-slate-600/30 text-sm focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${hasAmountError
+                                    ? "border-red-500/50 focus:border-red-500"
+                                    : ""
+                                    } ${recipients.length === 1
                                       ? "cursor-not-allowed opacity-70"
                                       : ""
-                                  }`}
+                                    }`}
                                 />
                                 {recipients.length > 1 && (
                                   <button
@@ -1498,9 +1459,9 @@ export default function PrivacyPage() {
                               );
                               const addressShort = recipient.address
                                 ? `${recipient.address.slice(
-                                    0,
-                                    4
-                                  )}...${recipient.address.slice(-4)}`
+                                  0,
+                                  4
+                                )}...${recipient.address.slice(-4)}`
                                 : "Not set";
 
                               return (
@@ -1528,13 +1489,12 @@ export default function PrivacyPage() {
                               Total to recipients:
                             </span>
                             <span
-                              className={`font-mono font-medium ${
-                                allocationMismatch && recipients.length > 1
-                                  ? remainingToAllocate < 0
-                                    ? "text-red-400"
-                                    : "text-amber-400"
-                                  : "text-white"
-                              }`}
+                              className={`font-mono font-medium ${allocationMismatch && recipients.length > 1
+                                ? remainingToAllocate < 0
+                                  ? "text-red-400"
+                                  : "text-amber-400"
+                                : "text-white"
+                                }`}
                             >
                               {formatAmount(totalSendAmount)} SOL
                             </span>
@@ -1552,11 +1512,11 @@ export default function PrivacyPage() {
                               >
                                 {remainingToAllocate < 0
                                   ? `⚠️ Over-allocated by ${formatAmount(
-                                      Math.abs(remainingToAllocate)
-                                    )} SOL`
+                                    Math.abs(remainingToAllocate)
+                                  )} SOL`
                                   : `⚠️ ${formatAmount(
-                                      remainingToAllocate
-                                    )} SOL remaining to allocate`}
+                                    remainingToAllocate
+                                  )} SOL remaining to allocate`}
                               </span>
                             </div>
                           )}
@@ -1572,8 +1532,8 @@ export default function PrivacyPage() {
                   <span>
                     {parseAmountToLamports(amount) > 0
                       ? formatAmount(
-                          calculateFee(parseAmountToLamports(amount))
-                        )
+                        calculateFee(parseAmountToLamports(amount))
+                      )
                       : "0"}{" "}
                     SOL
                   </span>
@@ -1588,8 +1548,8 @@ export default function PrivacyPage() {
                   {isLoading
                     ? "Processing..."
                     : mode === "swap"
-                    ? `Swap SOL → ${outputToken} Privately`
-                    : "Send Privately"}
+                      ? `Swap SOL → ${outputToken} Privately`
+                      : "Send Privately"}
                 </Button>
 
                 {!connected && (
@@ -1638,43 +1598,43 @@ export default function PrivacyPage() {
               >
                 {(transactionStatus === "error" ||
                   transactionStatus === "sent") && (
-                  <button
-                    onClick={resetForm}
-                    className="absolute top-4 right-4 text-slate-500 hover:text-white"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                )}
+                    <button
+                      onClick={resetForm}
+                      className="absolute top-4 right-4 text-slate-500 hover:text-white"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  )}
                 <TransactionStatus
                   status={transactionStatus}
                   amount={amount}
                   recipients={
                     mode === "swap"
                       ? [
-                          {
-                            address: swapRecipient,
-                            amountLamports:
-                              parseAmountToLamports(amount) -
-                              calculateFee(parseAmountToLamports(amount)),
-                          },
-                        ]
+                        {
+                          address: swapRecipient,
+                          amountLamports:
+                            parseAmountToLamports(amount) -
+                            calculateFee(parseAmountToLamports(amount)),
+                        },
+                      ]
                       : recipients.map((r) => ({
-                          address: r.address,
-                          amountLamports: parseAmountToLamports(r.amount),
-                        }))
+                        address: r.address,
+                        amountLamports: parseAmountToLamports(r.amount),
+                      }))
                   }
                   signature={transactionSignature}
                   mode={mode === "send" ? "transfer" : "swap"}
                   swapOutputAmount={
                     mode === "swap" && quoteOutAmount !== null
                       ? (() => {
-                          const token = getTokenBySymbol(outputToken);
-                          if (!token) return "0";
-                          return (
-                            quoteOutAmount /
-                            10 ** token.decimals
-                          ).toFixed(6);
-                        })()
+                        const token = getTokenBySymbol(outputToken);
+                        if (!token) return "0";
+                        return (
+                          quoteOutAmount /
+                          10 ** token.decimals
+                        ).toFixed(6);
+                      })()
                       : undefined
                   }
                 />
