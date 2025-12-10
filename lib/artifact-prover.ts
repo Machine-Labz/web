@@ -22,13 +22,13 @@ export interface SP1ProofInputs {
       path_elements: string[];
       path_indices: number[];
     };
-  } | string; // Can also be JSON string
+  };
   publicInputs: {
     root: string;
     nf: string;
     outputs_hash: string;
     amount: number;
-  } | string; // Can also be JSON string
+  };
   outputs: Array<{
     address: string;
     amount: number;
@@ -40,11 +40,6 @@ export interface SP1ProofInputs {
   } | null;
   stakeParams?: {
     stake_account: string;
-  } | null;
-  unstakeParams?: {
-    stake_account: string;
-    r: string;
-    sk_spend: string;
   } | null;
 }
 
@@ -66,12 +61,10 @@ export interface ArtifactConfig {
 /**
  * Default configuration
  *
- * NOTE: We currently use the legacy single-call `/api/prove` flow, which proxies
- * to the indexer's `/api/v1/prove`. The TEE artifact endpoints on the indexer
- * are not wired yet, so the artifact-based flow is disabled.
+ * Uses the TEE artifact-based flow with Next.js API routes that proxy to the indexer
  */
 const DEFAULT_CONFIG: Required<ArtifactConfig> = {
-  apiUrl: "/api/prove",
+  apiUrl: "/api/tee",
   timeout: 5 * 60 * 1000, // 5 minutes
   pollInterval: 2000, // 2 seconds
   maxPollAttempts: 150, // 150 attempts * 2s = 5 minutes
@@ -97,7 +90,7 @@ export class SP1ArtifactProverClient {
   }
 
   /**
-   * Generate an SP1 ZK proof using legacy single-call flow
+   * Generate an SP1 ZK proof using the TEE artifact-based flow
    *
    * @param inputs The circuit inputs (private + public + outputs)
    * @returns Proof result with hex-encoded proof and public inputs
@@ -106,45 +99,66 @@ export class SP1ArtifactProverClient {
     const startTime = Date.now();
 
     try {
-      // Normalize private/public inputs: accept object or pre-stringified JSON
-      const privateInputsStr =
-        typeof inputs.privateInputs === "string"
-          ? inputs.privateInputs
-          : JSON.stringify(inputs.privateInputs);
-      const publicInputsStr =
-        typeof inputs.publicInputs === "string"
-          ? inputs.publicInputs
-          : JSON.stringify(inputs.publicInputs);
+      // Step 1: Create artifact
+      const artifactResponse = await fetch(`${this.config.apiUrl}/artifact`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
 
-      // Build request body
+      if (!artifactResponse.ok) {
+        const errorText = await artifactResponse.text();
+        throw new Error(
+          `Failed to create artifact: ${artifactResponse.status} ${artifactResponse.statusText}\n${errorText}`
+        );
+      }
+
+      const artifactData = await artifactResponse.json();
+      const artifactId = artifactData.artifact_id;
+      const uploadUrl = artifactData.upload_url;
+
+      // Step 2: Upload private inputs (stdin) to TEE
+      // The indexer expects stdin as a JSON object with 'private', 'public', and 'outputs' fields
+      const stdinPayload = {
+        private: inputs.privateInputs,
+        public: inputs.publicInputs,
+        outputs: inputs.outputs,
+        ...(inputs.swapParams && { swap_params: inputs.swapParams }),
+        ...(inputs.stakeParams && { stake_params: inputs.stakeParams }),
+      };
+      
+      const uploadResponse = await fetch(`${this.config.apiUrl}/artifact/${artifactId}/upload`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(stdinPayload),
+      });
+
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        throw new Error(
+          `Failed to upload private inputs: ${uploadResponse.status} ${uploadResponse.statusText}\n${errorText}`
+        );
+      }
+
+      // Step 3: Request proof generation
       const requestBody: any = {
-        private_inputs: privateInputsStr,
-        public_inputs: publicInputsStr,
-        outputs: JSON.stringify(inputs.outputs),
+        artifact_id: artifactId,
+        public_inputs: JSON.stringify(inputs.publicInputs),
       };
 
-      // Pass optional swap/stake/unstake params through for TEE
+      // Pass optional swap/stake params through for TEE
       if (inputs.swapParams) {
         requestBody.swap_params = inputs.swapParams;
-        console.log("[ArtifactProver] Including swap_params:", inputs.swapParams);
       }
       if (inputs.stakeParams) {
         requestBody.stake_params = inputs.stakeParams;
-        console.log("[ArtifactProver] Including stake_params:", inputs.stakeParams);
-        console.log("[ArtifactProver] stake_params type:", typeof inputs.stakeParams);
-        console.log("[ArtifactProver] stake_params keys:", Object.keys(inputs.stakeParams));
-      }
-      if (inputs.unstakeParams) {
-        requestBody.unstake_params = inputs.unstakeParams;
-        console.log("[ArtifactProver] Including unstake_params:", inputs.unstakeParams);
       }
 
-      // Log the full request body before stringifying
-      console.log("[ArtifactProver] Request body keys:", Object.keys(requestBody));
-      console.log("[ArtifactProver] Request body (stringified):", JSON.stringify(requestBody, null, 2));
-
-      // Legacy flow: single call to /api/prove (proxied to indexer /api/v1/prove)
-      const response = await fetch(this.config.apiUrl, {
+      const requestProofResponse = await fetch(`${this.config.apiUrl}/request-proof`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -152,29 +166,18 @@ export class SP1ArtifactProverClient {
         body: JSON.stringify(requestBody),
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
+      if (!requestProofResponse.ok) {
+        const errorText = await requestProofResponse.text();
         throw new Error(
-          `Failed to generate proof: ${response.status} ${response.statusText}\n${errorText}`
+          `Failed to request proof: ${requestProofResponse.status} ${requestProofResponse.statusText}\n${errorText}`
         );
       }
 
-      const json = await response.json();
+      const requestProofData = await requestProofResponse.json();
+      const requestId = requestProofData.request_id;
 
-      const proofResult: SP1ProofResult = {
-        success: !!json.success,
-        proof: json.proof,
-        publicInputs: json.public_inputs,
-        generationTimeMs: json.generation_time_ms ?? 0,
-        error: json.error,
-      };
-
-      const totalTime = Date.now() - startTime;
-
-      return {
-        ...proofResult,
-        generationTimeMs: proofResult.generationTimeMs || totalTime,
-      };
+      // Step 4: Poll for proof status
+      return await this.pollProofStatus(requestId, 0);
     } catch (error) {
       const totalTime = Date.now() - startTime;
 
@@ -254,9 +257,6 @@ export class SP1ArtifactProverClient {
       return this.pollProofStatus(requestId, attempt + 1);
     }
   }
-
-  // Note: isValidTeeUrl removed - uploads now go through Next.js proxy
-  // which keeps INDEXER_URL private and handles security server-side
 
   /**
    * Get the current API URL

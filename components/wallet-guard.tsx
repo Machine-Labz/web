@@ -24,7 +24,7 @@ export function WalletGuard({ children, fallback }: WalletGuardProps) {
           <div className="min-h-screen bg-background flex flex-col">
             <DappHeader />
 
-            <div className="flex-1 flex items-center justify-center p-4">
+            <div className="flex-1 flex items-center justify-center p-4 pt-24">
               <Card className="w-full max-w-md">
                 <CardContent className="p-8 text-center space-y-6">
                   <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
@@ -32,7 +32,7 @@ export function WalletGuard({ children, fallback }: WalletGuardProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <h2 className="text-2xl font-bold font-space-grotesk text-foreground">
+                    <h2 className="text-2xl font-bold font-manrope text-foreground">
                       Wallet Required
                     </h2>
                     <p className="text-muted-foreground">

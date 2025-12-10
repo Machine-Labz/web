@@ -93,18 +93,6 @@ export default function DepositFlow() {
 
     const { pool: poolPubkey, commitments: commitmentsPubkey } = getShieldPoolPDAs();
     
-    // console.log("=".repeat(60));
-    // console.log("🚀 STARTING DEPOSIT FLOW");
-    // console.log("=".repeat(60));
-    // console.log("Configuration:", {
-    //   programId: PROGRAM_ID,
-    //   pool: poolPubkey.toBase58(),
-    //   commitments: commitmentsPubkey.toBase58(),
-    //   indexerUrl: INDEXER_URL,
-    //   amount: note.amount,
-    //   commitment: note.commitment,
-    // });
-
     try {
       // Build deposit instruction
       if (!PROGRAM_ID) {
@@ -135,35 +123,23 @@ export default function DepositFlow() {
         lastValidBlockHeight,
       }).add(depositIx);
 
-      // Log transaction details for debugging
-      // console.log("Transaction details:", {
-      //   feePayer: publicKey.toBase58(),
-      //   programId: programId.toBase58(),
-      //   pool: poolPubkey.toBase58(),
-      //   commitments: commitmentsPubkey.toBase58(),
-      //   amount: note.amount,
-      //   commitmentLength: commitmentBytes.length,
-      // });
-      
-
       // Simulate transaction first to catch errors early
       try {
         const simulation = await connection.simulateTransaction(depositTx);
-        // console.log("Simulation result:", simulation);
-        // console.log("Simulation logs:", simulation.value.logs);
         
         if (simulation.value.err) {
-          throw {
+          const errorObj = {
             message: `Transaction simulation failed: ${JSON.stringify(simulation.value.err)}`,
             logs: simulation.value.logs,
             err: simulation.value.err,
           };
+          throw errorObj;
         }
       } catch (simError: any) {
         throw simError;
       }
       
-      // console.log("✅ Simulation passed! Sending transaction...");
+      // 🚀 PHASE 1: Sign and send transaction
       toast.info("Please approve the transaction...");
       
       const signature = await sendTransaction(depositTx, connection, {
@@ -210,15 +186,9 @@ export default function DepositFlow() {
         throw new Error("Transaction confirmation timeout");
       }
 
-      // 🚨 CRITICAL: After this point, SOL is locked on-chain!
-      // We MUST complete the registration even if the client disconnects.
-      // Use server-side endpoint to ensure reliability.
-      
-      // console.log("=".repeat(60));
-      // console.log("🔒 POINT OF NO RETURN: Transaction confirmed on-chain");
+      // 🚀 PHASE 2: Finalize deposit (register with indexer and get Merkle proof)
       // console.log("📡 Calling server-side finalization endpoint...");
-      // console.log("=".repeat(60));
-
+      
       // Get wallet's public view key for self-encryption
       const publicViewKey = getPublicViewKey();
       const pvkBytes = Buffer.from(publicViewKey, "hex");
@@ -278,22 +248,6 @@ export default function DepositFlow() {
         pathIndices: finalizeData.merkle_proof.path_indices,
       };
       
-      // console.log("✅ Server-side finalization complete:", {
-      //   leafIndex,
-      //   slot: depositSlot,
-      //   root: historicalRoot,
-      // });
-
-      // Update note with deposit details (update existing saved note)
-      // console.log("💾 Updating note with deposit details:", {
-      //   commitment: note.commitment,
-      //   signature,
-      //   slot: depositSlot,
-      //   leafIndex,
-      //   root: historicalRoot,
-      //   merkleProof: historicalMerkleProof,
-      // });
-
       updateNote(note.commitment, {
         depositSignature: signature,
         depositSlot,
@@ -304,7 +258,6 @@ export default function DepositFlow() {
       
       if (typeof window !== "undefined") {
         window.dispatchEvent(new Event("cloak-notes-updated"));
-        // console.log("📢 Dispatched cloak-notes-updated event");
       }
 
       const updatedNote: CloakNote = {
@@ -366,7 +319,7 @@ export default function DepositFlow() {
   return (
     <Card className="border-border/40 bg-card/50 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="text-center font-space-grotesk">
+        <CardTitle className="text-center font-manrope">
           Deposit SOL Privately
         </CardTitle>
       </CardHeader>

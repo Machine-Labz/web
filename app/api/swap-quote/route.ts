@@ -1,95 +1,123 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getTokenBySymbol } from '@/lib/tokens';
 
-// Orca devnet pools API endpoint
-const ORCA_POOLS_API = 'https://pools-api.devnet.orca.so/swap-quote';
-const SOL_MINT = 'So11111111111111111111111111111111111111112';
-const DEVNET_USDC = 'BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k';
+export const runtime = 'nodejs';
 
-export async function GET(req: NextRequest) {
+/**
+ * GET endpoint to fetch swap quotes from Orca
+ * Query parameters:
+ * - amount: Input amount in lamports
+ * - outputToken: Output token symbol (e.g., "USDC", "ZEC") or mint address
+ * - slippageBps: Slippage tolerance in basis points (default: 50 = 0.5%)
+ */
+export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const amount = searchParams.get('amount'); // lamports (string)
-    const wallet = searchParams.get('wallet') || ''; // optional, base58
-    const slippageBpsParam = searchParams.get('slippageBps');
+    const searchParams = request.nextUrl.searchParams;
+    const amount = searchParams.get('amount');
+    const outputTokenParam = searchParams.get('outputToken');
+    const slippageBps = searchParams.get('slippageBps') || '50';
 
-    if (!amount) {
+    // Validate required parameters
+    if (!amount || !outputTokenParam) {
       return NextResponse.json(
-        { success: false, error: 'Missing amount (lamports) query param' },
+        {
+          success: false,
+          error: 'Missing required parameters: amount and outputToken are required',
+        },
         { status: 400 }
       );
     }
 
-    const slippageBps = Number.isFinite(Number(slippageBpsParam))
-      ? Number(slippageBpsParam)
-      : 100; // default 1%
+    // Validate and parse parameters
+    const amountLamports = parseInt(amount, 10);
+    const slippageBpsNum = parseInt(slippageBps, 10);
 
-    const url = new URL(ORCA_POOLS_API);
-    url.searchParams.set('from', SOL_MINT);
-    url.searchParams.set('to', DEVNET_USDC);
-    url.searchParams.set('amount', amount);
+    if (isNaN(amountLamports) || amountLamports <= 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid amount: must be a positive integer',
+        },
+        { status: 400 }
+      );
+    }
+
+    if (isNaN(slippageBpsNum) || slippageBpsNum < 0 || slippageBpsNum > 10000) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid slippageBps: must be between 0 and 10000',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Convert token symbol to mint address if needed
+    let outputTokenMint: string;
+    const token = getTokenBySymbol(outputTokenParam);
+    if (token) {
+      // It's a symbol, use the token's mint
+      outputTokenMint = token.mint.toString();
+    } else {
+      // Assume it's already a mint address
+      outputTokenMint = outputTokenParam;
+    }
+
+    // Determine network (devnet or mainnet) based on environment
+    const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet';
+    const orcaApiUrl =
+      network === 'mainnet'
+        ? 'https://pools-api.mainnet.orca.so/swap-quote'
+        : 'https://pools-api.devnet.orca.so/swap-quote';
+
+    // Build Orca API URL
+    const url = new URL(orcaApiUrl);
+    url.searchParams.set('from', 'So11111111111111111111111111111111111111112'); // Native SOL
+    url.searchParams.set('to', outputTokenMint);
+    url.searchParams.set('amount', amountLamports.toString());
     url.searchParams.set('isLegacy', 'false');
     url.searchParams.set('amountIsInput', 'true');
     url.searchParams.set('includeData', 'true');
     url.searchParams.set('includeComputeBudget', 'false');
     url.searchParams.set('maxTxSize', '1185');
-    if (wallet) url.searchParams.set('wallet', wallet);
 
-    const res = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        'accept': 'application/json',
-      },
-      // Conservative timeout; frontend will re-request if needed
-      signal: AbortSignal.timeout(10_000),
-    });
+    // Fetch quote from Orca
+    const response = await fetch(url.toString(), { method: 'GET' });
+    const json = (await response.json()) as {
+      data?: { swap?: { outputAmount?: string } };
+      error?: string;
+    };
 
-    if (!res.ok) {
-      const text = await res.text();
+    if (!response.ok || !json.data?.swap?.outputAmount) {
       return NextResponse.json(
-        { success: false, error: `Orca quote failed: ${res.status} ${text}` },
-        { status: 502 }
+        {
+          success: false,
+          error: json.error || `Orca quote API returned error: ${response.status}`,
+        },
+        { status: response.status || 500 }
       );
     }
 
-    const json = await res.json();
-    const outAmountStr = json?.data?.swap?.outputAmount;
-    const priceImpact = json?.data?.price_impact;
-
-    if (!outAmountStr) {
-      return NextResponse.json(
-        { success: false, error: 'Malformed Orca response: missing data.swap.outputAmount' },
-        { status: 502 }
-      );
-    }
-
-    const outAmount = Number(outAmountStr);
-    if (!Number.isFinite(outAmount)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid output amount from Orca' },
-        { status: 502 }
-      );
-    }
-
-    // Compute min output amount based on slippage
-    const minOutputAmount = Math.floor(outAmount * (1 - slippageBps / 10_000));
+    const outAmount = parseInt(json.data.swap.outputAmount, 10);
+    const minOutputAmount = Math.floor(
+      outAmount * (1 - slippageBpsNum / 10_000)
+    );
 
     return NextResponse.json({
       success: true,
       outAmount,
       minOutputAmount,
-      priceImpact,
     });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
-      { success: false, error: error?.message || 'Internal error' },
+      {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to fetch swap quote',
+      },
       { status: 500 }
     );
   }
 }
-
-
-
-
-
-
-

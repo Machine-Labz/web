@@ -20,7 +20,8 @@ import { toast } from "sonner";
 import { Buffer } from "buffer";
 import { blake3 } from "@noble/hashes/blake3.js";
 import { indexerClient, type MerkleProof } from "@/lib/indexer-client";
-import { SP1ProofInputs, type SP1ProofResult, SP1ArtifactProverClient } from "@/lib/artifact-prover";
+import { SP1ProofInputs, type SP1ProofResult } from "@/lib/artifact-prover";
+import { useSP1Prover } from "@/hooks/use-sp1-prover";
 import {
   parseNote,
   loadAllNotes,
@@ -459,7 +460,7 @@ export default function WithdrawFlow() {
   return (
     <Card className="border-border/40 bg-card/50 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="text-center font-space-grotesk">
+        <CardTitle className="text-center font-manrope">
           Withdraw Privately
         </CardTitle>
       </CardHeader>
