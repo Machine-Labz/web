@@ -935,7 +935,7 @@ function LandingContent() {
                       : link === "GitHub"
                       ? "https://github.com/Machine-Labz/cloak"
                       : link === "Twitter"
-                      ? "https://x.com/cloaklabz"
+                      ? "https://x.com/cloak_xyz"
                       : "https://discord.gg/cloak"
                   }
                   className="hover:text-white transition-colors"
